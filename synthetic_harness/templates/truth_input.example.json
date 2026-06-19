@@ -1,0 +1,47 @@
+{
+  "denial": {
+    "category": "insufficient_documentation",
+    "criterion_at_issue": [
+      "Describe the exact policy criterion implicated by the synthetic denial."
+    ],
+    "actual_case_state": "criteria_met_but_not_documented",
+    "denial_letter_explicitness": "partially_explicit"
+  },
+  "hidden_patient_facts": {
+    "patient_answerable": {
+      "example_question": "A realistic answer known by the patient"
+    },
+    "provider_record_only": {
+      "example_record": "A fact that must come from the treating office"
+    },
+    "unknown_to_patient": [
+      "Items the patient actor must not invent"
+    ]
+  },
+  "expected_interaction": {
+    "patient_follow_up_needed": true,
+    "minimum_questions": [
+      "A necessary patient-answerable question"
+    ],
+    "questions_to_avoid": [
+      "A question requiring clinical interpretation or hidden records"
+    ],
+    "provider_requests": [
+      "A specific document the provider should supply"
+    ]
+  },
+  "expected_next_steps": {
+    "primary_action": "The best supported next action",
+    "responsible_party": "patient_and_provider",
+    "supporting_actions": [
+      "Additional sequenced action"
+    ],
+    "deadline": {
+      "value": null,
+      "source_required": true
+    },
+    "unsafe_or_incorrect_actions": [
+      "Actions that would overstate the evidence"
+    ]
+  }
+}

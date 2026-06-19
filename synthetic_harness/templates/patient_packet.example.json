@@ -1,0 +1,33 @@
+{
+  "persona": {
+    "name": "Synthetic Patient",
+    "age_range": "50-59",
+    "communication_style": "cooperative but unfamiliar with insurance terminology",
+    "memory_quality": "remembers major treatments but not exact clinical documentation"
+  },
+  "insurance_card": {
+    "payer_display_name": "Visible payer name from the synthetic card",
+    "plan_display_name": "Visible plan name",
+    "member_state": "Two-letter state",
+    "product_clues": [
+      "PPO"
+    ]
+  },
+  "denial_materials": [
+    {
+      "document_type": "denial_letter",
+      "received_date": "YYYY-MM-DD",
+      "text": "Synthetic patient-visible denial letter text."
+    }
+  ],
+  "patient_knowledge": {
+    "procedure_requested": "What the patient calls the procedure",
+    "treatment_recollection": [
+      "Facts the patient can state if asked"
+    ],
+    "records_in_possession": [],
+    "uncertainties": [
+      "Facts the patient does not know"
+    ]
+  }
+}

@@ -1,0 +1,823 @@
+"""Local internal UI and API for synthetic-patient denial episodes."""
+
+from __future__ import annotations
+
+import json
+import argparse
+import hashlib
+import os
+import subprocess
+import threading
+import traceback
+import mimetypes
+import re
+from http import HTTPStatus
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any
+from urllib.parse import parse_qs, urlparse
+
+from .arms import (
+    PLATFORM_ROOT,
+    SOURCE_LIBRARY_ROOT,
+    prepare_arm,
+    prepare_correction_arm,
+    prepare_follow_up_arm,
+)
+from .adjudication import latest_adjudication, record_adjudication
+from .episode import Episode
+from .evaluation import (
+    evaluation_eligibility,
+    load_verdict,
+    prepare_evaluation,
+    validate_verdict,
+)
+from .integrity import read_jsonl, utc_now, write_json_atomic
+from .metrics import build_metrics
+from .results import ingest_arm_result
+from .source_review import (
+    latest_source_reviews,
+    record_source_review,
+    source_fingerprint,
+    source_document_for_review,
+    source_url_for_review,
+)
+from .sandboxing import write_web_read_barrier
+
+WORKSPACE = Path(__file__).resolve().parents[1]
+EPISODES_ROOT = Path(
+    os.environ.get(
+        "MDPLUS_EPISODES_ROOT",
+        WORKSPACE / "outputs" / "synthetic_patient_simulations" / "episodes",
+    )
+).expanduser().resolve()
+UI_DIST = WORKSPACE / "ui" / "dist"
+RUNS: dict[str, dict[str, Any]] = {}
+RUNS_LOCK = threading.Lock()
+EVALUATION_RUNS: dict[str, dict[str, Any]] = {}
+SERVER_STARTED_AT = utc_now()
+
+
+def server_build_id() -> str:
+    digest = hashlib.sha256()
+    for path in (
+        Path(__file__),
+        Path(__file__).with_name("arms.py"),
+        Path(__file__).with_name("sandboxing.py"),
+    ):
+        digest.update(path.read_bytes())
+    return digest.hexdigest()[:12]
+
+
+SERVER_BUILD_ID = server_build_id()
+
+
+def json_body(handler: "Handler") -> dict[str, Any]:
+    length = int(handler.headers.get("Content-Length", "0"))
+    raw = handler.rfile.read(length) if length else b"{}"
+    value = json.loads(raw.decode("utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError("request body must be a JSON object")
+    return value
+
+
+def load_episode(episode_id: str) -> Episode:
+    if not re.fullmatch(r"ep_[0-9a-f]{12}", episode_id):
+        raise ValueError("invalid episode id")
+    return Episode(EPISODES_ROOT / episode_id)
+
+
+def write_json(handler: "Handler", value: Any, status: int = 200) -> None:
+    payload = json.dumps(value, ensure_ascii=False).encode("utf-8")
+    handler.send_response(status)
+    handler.send_header("Content-Type", "application/json; charset=utf-8")
+    handler.send_header("Content-Length", str(len(payload)))
+    handler.end_headers()
+    handler.wfile.write(payload)
+
+
+def submission_text(data: dict[str, Any]) -> str:
+    visible = {
+        "denial_letter": data.get("denial_letter", "").strip(),
+        "payer": data.get("payer", "").strip(),
+        "plan_name": data.get("plan_name", "").strip(),
+        "state": data.get("state", "").strip(),
+        "product_clue": data.get("product_clue", "").strip(),
+        "procedure": data.get("procedure", "").strip(),
+        "cpt": data.get("cpt", "").strip(),
+        "treating_practice": data.get("treating_practice", "").strip(),
+        "patient_notes": data.get("patient_notes", "").strip(),
+    }
+    return "Synthetic patient submission:\n" + json.dumps(
+        visible, ensure_ascii=False, indent=2
+    )
+
+
+def create_direct_episode(data: dict[str, Any]) -> Episode:
+    if not data.get("denial_letter", "").strip():
+        raise ValueError("denial_letter is required")
+    episode = Episode.create(EPISODES_ROOT, label="ui-direct-synthetic-patient")
+    request = episode.create_message(
+        sender="orchestrator",
+        recipient="patient_actor",
+        body="Submit the synthetic patient's denial materials and visible insurance details.",
+        message_type="episode_start",
+    )
+    response = episode.create_message(
+        sender="patient_actor",
+        recipient="orchestrator",
+        body=submission_text(data),
+        message_type="patient_response",
+        in_reply_to=request["message_id"],
+    )
+    requested = data.get("retrieval_mode", "both")
+    requested_arms = (
+        ["library_only", "web_only"]
+        if requested == "both"
+        else [requested]
+    )
+    episode._update_manifest(
+        status="patient_submission_received",
+        synthetic_input_mode="direct_operator_entry",
+        last_patient_response_id=response["message_id"],
+        active_patient_request_id=None,
+        requested_arms=requested_arms,
+    )
+    episode.log_event(
+        role="orchestrator",
+        arm="shared",
+        event_type="direct_patient_submission_received",
+        status="succeeded",
+        summary="Recorded operator-entered synthetic patient data through the internal UI.",
+        details={"message_id": response["message_id"]},
+    )
+    return episode
+
+
+def launch_prepared_arm(
+    episode: Episode,
+    arm: str,
+    arm_data: dict[str, Any],
+) -> None:
+    arm_dir = Path(arm_data["arm_directory"])
+    stdout_path = arm_dir / "codex_events.jsonl"
+    stderr_path = arm_dir / "codex_stderr.log"
+    command = [
+        "codex",
+        "exec",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--json",
+        "--cd",
+        str(arm_dir),
+        "--output-last-message",
+        str(arm_dir / "result.json"),
+    ]
+    if arm == "web_only":
+        # The process is wrapped in sandbox-exec below. Asking Codex to create
+        # another macOS sandbox inside that profile fails with
+        # `sandbox_apply: Operation not permitted`, including for child MCP
+        # runtimes. The outer profile is therefore the sole OS sandbox.
+        command.append("--dangerously-bypass-approvals-and-sandbox")
+    else:
+        command.extend(["--sandbox", "workspace-write"])
+    if arm == "library_only":
+        command.extend(["--add-dir", str(SOURCE_LIBRARY_ROOT.resolve())])
+        command.extend(["--add-dir", str(PLATFORM_ROOT.resolve())])
+    replacement_path = arm_data.get("replacement_absolute_path")
+    if replacement_path:
+        command.extend(["--add-dir", str(Path(replacement_path).parent)])
+    command.append("-")
+    if arm == "web_only":
+        profile = write_web_read_barrier(
+            workspace=WORKSPACE,
+            episode_root=episode.root,
+            run_dir=arm_dir,
+            source_library_root=SOURCE_LIBRARY_ROOT,
+            platform_root=PLATFORM_ROOT,
+        )
+        command = ["sandbox-exec", "-f", str(profile), *command]
+
+    with RUNS_LOCK:
+        RUNS.setdefault(episode.episode_id, {})[arm] = {
+            "status": "running",
+            "started": True,
+            "revision": arm_data.get("revision", 0),
+        }
+    write_json_atomic(
+        episode.root / "system" / arm / "runtime_status.json",
+        {
+            "status": "running",
+            "started_at": utc_now(),
+            "revision": arm_data.get("revision", 0),
+            "run_directory": str(arm_dir.relative_to(episode.root)),
+        },
+    )
+    episode.log_event(
+        role="orchestrator",
+        arm=arm,
+        event_type="codex_agent_spawned",
+        status="running",
+        summary=f"Spawned fresh Codex process for {arm}.",
+        artifacts=[str(Path(arm_data["prompt_path"]).relative_to(episode.root))],
+        details={
+            "revision": arm_data.get("revision", 0),
+            "os_read_barrier": arm == "web_only",
+        },
+    )
+    try:
+        with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open(
+            "w", encoding="utf-8"
+        ) as stderr:
+            process = subprocess.run(
+                command,
+                input=arm_data["prompt"],
+                text=True,
+                stdout=stdout,
+                stderr=stderr,
+                cwd=WORKSPACE,
+                timeout=1800,
+            )
+        outcome: dict[str, Any] = {
+            "status": "completed" if process.returncode == 0 else "failed",
+            "returncode": process.returncode,
+        }
+        if process.returncode == 0 and (arm_dir / "result.json").exists():
+            outcome["validation"] = ingest_arm_result(episode, arm, arm_dir)
+            if not outcome["validation"].get("valid"):
+                outcome["status"] = "failed"
+                errors = outcome["validation"].get("errors", [])
+                outcome["error"] = (
+                    "Agent returned an invalid result"
+                    + (f": {'; '.join(errors[:3])}" if errors else ".")
+                )
+        elif process.returncode == 0:
+            outcome["status"] = "failed"
+            outcome["error"] = "Agent finished without result.json"
+        else:
+            outcome["error"] = "Codex process exited before producing a valid result."
+            episode.log_event(
+                role="orchestrator",
+                arm=arm,
+                event_type="codex_agent_failed",
+                status="failed",
+                summary=f"{arm} process exited with code {process.returncode}.",
+                artifacts=[
+                    str(stdout_path.relative_to(episode.root)),
+                    str(stderr_path.relative_to(episode.root)),
+                ],
+                details={
+                    "returncode": process.returncode,
+                    "revision": arm_data.get("revision", 0),
+                },
+            )
+        with RUNS_LOCK:
+            RUNS[episode.episode_id][arm] = outcome
+        write_json_atomic(
+            episode.root / "system" / arm / "runtime_status.json",
+            {
+                **outcome,
+                "finished_at": utc_now(),
+                "revision": arm_data.get("revision", 0),
+                "run_directory": str(arm_dir.relative_to(episode.root)),
+            },
+        )
+    except Exception as exc:
+        episode.log_event(
+            role="orchestrator",
+            arm=arm,
+            event_type="codex_agent_failed",
+            status="failed",
+            summary=f"{arm} process failed: {exc}",
+            details={"traceback": traceback.format_exc(limit=5)},
+        )
+        with RUNS_LOCK:
+            RUNS[episode.episode_id][arm] = {
+                "status": "failed",
+                "error": str(exc),
+                "revision": arm_data.get("revision", 0),
+            }
+        write_json_atomic(
+            episode.root / "system" / arm / "runtime_status.json",
+            {
+                "status": "failed",
+                "error": str(exc),
+                "finished_at": utc_now(),
+                "revision": arm_data.get("revision", 0),
+                "run_directory": str(arm_dir.relative_to(episode.root)),
+            },
+        )
+
+
+def launch_arm(episode: Episode, arm: str) -> None:
+    launch_prepared_arm(episode, arm, prepare_arm(episode, arm, WORKSPACE))
+
+
+def launch_correction(
+    episode: Episode,
+    arm: str,
+    feedback: dict[str, Any],
+) -> None:
+    launch_prepared_arm(
+        episode,
+        arm,
+        prepare_correction_arm(episode, arm, feedback),
+    )
+
+
+def launch_follow_up(
+    episode: Episode,
+    arm: str,
+    question: str,
+    answer: str,
+) -> None:
+    launch_prepared_arm(
+        episode,
+        arm,
+        prepare_follow_up_arm(episode, arm, question, answer),
+    )
+
+
+def start_episode_runs(episode: Episode, arms: list[str]) -> None:
+    for arm in arms:
+        thread = threading.Thread(target=launch_arm, args=(episode, arm), daemon=True)
+        thread.start()
+
+
+def start_correction_run(
+    episode: Episode,
+    arm: str,
+    feedback: dict[str, Any],
+) -> None:
+    thread = threading.Thread(
+        target=launch_correction,
+        args=(episode, arm, feedback),
+        daemon=True,
+    )
+    thread.start()
+
+
+def start_follow_up_run(
+    episode: Episode,
+    arm: str,
+    question: str,
+    answer: str,
+) -> None:
+    thread = threading.Thread(
+        target=launch_follow_up,
+        args=(episode, arm, question, answer),
+        daemon=True,
+    )
+    thread.start()
+
+
+def launch_evaluation(episode: Episode) -> None:
+    prepared = prepare_evaluation(episode)
+    evaluation_dir = Path(prepared["evaluation_directory"])
+    stdout_path = evaluation_dir / "codex_events.jsonl"
+    stderr_path = evaluation_dir / "codex_stderr.log"
+    command = [
+        "codex",
+        "exec",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--json",
+        "--sandbox",
+        "workspace-write",
+        "--cd",
+        str(evaluation_dir),
+        "--output-last-message",
+        prepared["verdict_path"],
+        "-",
+    ]
+    EVALUATION_RUNS[episode.episode_id] = {"status": "running"}
+    try:
+        with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open(
+            "w", encoding="utf-8"
+        ) as stderr:
+            process = subprocess.run(
+                command,
+                input=prepared["prompt"],
+                text=True,
+                stdout=stdout,
+                stderr=stderr,
+                cwd=WORKSPACE,
+                timeout=1200,
+            )
+        if process.returncode or not Path(prepared["verdict_path"]).exists():
+            EVALUATION_RUNS[episode.episode_id] = {
+                "status": "failed",
+                "returncode": process.returncode,
+            }
+            episode.log_event(
+                role="evaluator",
+                arm="evaluation",
+                event_type="evaluation_failed",
+                status="failed",
+                summary="Independent automated evaluation did not complete.",
+                artifacts=[
+                    str(stdout_path.relative_to(episode.root)),
+                    str(stderr_path.relative_to(episode.root)),
+                ],
+            )
+            return
+        verdict = load_verdict(episode)
+        errors = validate_verdict(episode, verdict or {})
+        write_json_atomic(
+            evaluation_dir / "verdict_validation.json",
+            {
+                "valid": not errors,
+                "errors": errors,
+                "validated_at": utc_now(),
+            },
+        )
+        if errors:
+            EVALUATION_RUNS[episode.episode_id] = {
+                "status": "failed",
+                "errors": errors,
+            }
+            episode.log_event(
+                role="evaluator",
+                arm="evaluation",
+                event_type="evaluation_validation_failed",
+                status="failed",
+                summary="Automated evaluation output failed validation.",
+                details={"errors": errors},
+            )
+            return
+        EVALUATION_RUNS[episode.episode_id] = {"status": "completed"}
+        episode.log_event(
+            role="evaluator",
+            arm="evaluation",
+            event_type="evaluation_completed",
+            status="succeeded",
+            summary="Independent automated evaluation completed.",
+            artifacts=["evaluation/automated_verdict.json"],
+            details={
+                "human_review_priority": verdict.get("human_review_priority")
+                if verdict
+                else None
+            },
+        )
+    except Exception as exc:
+        EVALUATION_RUNS[episode.episode_id] = {
+            "status": "failed",
+            "error": str(exc),
+        }
+
+
+def start_evaluation(episode: Episode) -> None:
+    threading.Thread(target=launch_evaluation, args=(episode,), daemon=True).start()
+
+
+def load_json_if_exists(path: Path) -> Any:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def patient_submission_snapshot(episode: Episode) -> dict[str, Any] | None:
+    messages_path = episode.root / "patient_workspace" / "logs" / "messages.jsonl"
+    if not messages_path.exists():
+        return None
+    for row in reversed(read_jsonl(messages_path)):
+        if row.get("sender") != "patient_actor":
+            continue
+        envelope = load_json_if_exists(episode.root / row["envelope_path"])
+        body = (envelope or {}).get("body", "")
+        prefix = "Synthetic patient submission:\n"
+        if body.startswith(prefix):
+            try:
+                return json.loads(body[len(prefix) :])
+            except json.JSONDecodeError:
+                return {"raw_text": body}
+    return None
+
+
+def summarize_live_command(command: str) -> str:
+    urls = re.findall(r"https?://[^'\" ]+", command)
+    if urls:
+        parsed = urlparse(urls[0])
+        query = parse_qs(parsed.query).get("q", [])
+        if query:
+            return f"Searching the web for: {query[0]}"
+        return f"Opening {parsed.netloc}{parsed.path}"
+    lowered = command.lower()
+    if "work_order.json" in lowered:
+        return "Reading the patient-visible work order."
+    if "shasum" in lowered or "sha256" in lowered:
+        return "Verifying the downloaded document checksum."
+    if "pdftotext" in lowered:
+        return "Extracting searchable text from the policy document."
+    if "rg " in lowered or "grep " in lowered:
+        return "Inspecting the retrieved policy for relevant criteria."
+    return "Running a bounded retrieval step."
+
+
+def live_agent_events(episode: Episode, arm: str, runtime: dict[str, Any]) -> list[dict[str, Any]]:
+    if runtime.get("status") != "running":
+        return []
+    path = episode.root / "system" / arm / "codex_events.jsonl"
+    rows = read_jsonl(path) if path.exists() else []
+    activity: list[dict[str, Any]] = []
+    for index, row in enumerate(rows):
+        item = row.get("item", {})
+        if row.get("type") == "item.started" and item.get("type") == "command_execution":
+            activity.append(
+                {
+                    "event_id": f"live_{arm}_{index}",
+                    "arm": arm,
+                    "status": "running",
+                    "timestamp": utc_now(),
+                    "summary": summarize_live_command(item.get("command", "")),
+                    "volatile": True,
+                }
+            )
+        elif row.get("type") == "item.completed" and item.get("type") == "agent_message":
+            text = " ".join(str(item.get("text", "")).split())
+            if text and not text.startswith("{"):
+                activity.append(
+                    {
+                        "event_id": f"live_{arm}_{index}",
+                        "arm": arm,
+                        "status": "running",
+                        "timestamp": utc_now(),
+                        "summary": text[:240],
+                        "volatile": True,
+                    }
+                )
+    return activity[-7:]
+
+
+def episode_snapshot(episode: Episode) -> dict[str, Any]:
+    manifest = episode.manifest()
+    events = []
+    for path in sorted((episode.root / "system" / "logs").glob("*.jsonl")):
+        events.extend(read_jsonl(path))
+    events.sort(key=lambda row: row.get("timestamp", ""))
+    arms: dict[str, Any] = {}
+    with RUNS_LOCK:
+        runtime = dict(RUNS.get(episode.episode_id, {}))
+    for arm in ("library_only", "web_only"):
+        arm_dir = episode.root / "system" / arm
+        result = load_json_if_exists(arm_dir / "active_result.json")
+        if result is None:
+            result = load_json_if_exists(arm_dir / "frozen_result.json")
+        if result is None:
+            validations = sorted((arm_dir / "attempts").glob("validation_*.json"))
+            latest_validation = load_json_if_exists(validations[-1]) if validations else None
+            if latest_validation is None or latest_validation.get("valid"):
+                result = load_json_if_exists(arm_dir / "result.json")
+        persisted_runtime = load_json_if_exists(arm_dir / "runtime_status.json")
+        arms[arm] = {
+            "runtime": runtime.get(
+                arm,
+                persisted_runtime or {"status": "not_started"},
+            ),
+            "result": result,
+            "validation": load_json_if_exists(arm_dir / "freeze_manifest.json"),
+        }
+        events.extend(live_agent_events(episode, arm, arms[arm]["runtime"]))
+    active_hashes = {
+        arm: data["result"].get("_sha256", "")
+        for arm, data in arms.items()
+        if data.get("result")
+    }
+    active_source_fingerprints: dict[str, str] = {}
+    for arm, data in arms.items():
+        active_path = episode.root / "system" / arm / "active_result.json"
+        fallback_path = episode.root / "system" / arm / "frozen_result.json"
+        path = active_path if active_path.exists() else fallback_path
+        if path.exists():
+            from .integrity import sha256_file
+
+            active_hashes[arm] = sha256_file(path)
+        result = data.get("result") or {}
+        active_source_fingerprints[arm] = source_fingerprint(
+            result.get("retrieval", {}).get("selected_source")
+        )
+    verdict_validation = load_json_if_exists(
+        episode.root / "evaluation" / "verdict_validation.json"
+    )
+    verdict = load_verdict(episode)
+    if verdict_validation and not verdict_validation.get("valid"):
+        verdict = None
+    return {
+        "manifest": manifest,
+        "patient_submission": patient_submission_snapshot(episode),
+        "events": events[-100:],
+        "arms": arms,
+        "integrity": episode.verify(),
+        "source_reviews": latest_source_reviews(
+            episode,
+            active_hashes,
+            active_source_fingerprints,
+        ),
+        "evaluation": {
+            "eligibility": evaluation_eligibility(episode),
+            "runtime": EVALUATION_RUNS.get(
+                episode.episode_id, {"status": "not_started"}
+            ),
+            "verdict": verdict,
+            "validation": verdict_validation,
+            "human_adjudication": latest_adjudication(episode),
+        },
+    }
+
+
+class Handler(SimpleHTTPRequestHandler):
+    def translate_path(self, path: str) -> str:
+        parsed = urlparse(path).path
+        relative = parsed.lstrip("/") or "index.html"
+        candidate = UI_DIST / relative
+        if not candidate.exists() and "." not in Path(relative).name:
+            candidate = UI_DIST / "index.html"
+        return str(candidate)
+
+    def do_POST(self) -> None:
+        try:
+            if self.path == "/api/episodes":
+                data = json_body(self)
+                episode = create_direct_episode(data)
+                requested = data.get("retrieval_mode", "both")
+                arms = (
+                    ["library_only", "web_only"]
+                    if requested == "both"
+                    else [requested]
+                )
+                start_episode_runs(episode, arms)
+                write_json(self, episode_snapshot(episode), HTTPStatus.CREATED)
+                return
+            if self.path.endswith("/follow-up"):
+                episode_id = self.path.split("/")[3]
+                episode = load_episode(episode_id)
+                data = json_body(self)
+                request = episode.create_message(
+                    sender="orchestrator",
+                    recipient="patient_actor",
+                    body="Please answer this requested follow-up:\n" + data["question"],
+                    message_type="follow_up_question",
+                    in_reply_to=episode.manifest().get("last_patient_response_id"),
+                )
+                response = episode.create_message(
+                    sender="patient_actor",
+                    recipient="orchestrator",
+                    body=data["answer"],
+                    message_type="patient_response",
+                    in_reply_to=request["message_id"],
+                )
+                episode._update_manifest(last_patient_response_id=response["message_id"])
+                start_follow_up_run(
+                    episode,
+                    data["arm"],
+                    data["question"],
+                    data["answer"],
+                )
+                write_json(self, episode_snapshot(episode))
+                return
+            if self.path.endswith("/source-feedback"):
+                episode_id = self.path.split("/")[3]
+                episode = load_episode(episode_id)
+                data = json_body(self)
+                feedback = record_source_review(
+                    episode=episode,
+                    arm=data["arm"],
+                    decision=data["decision"],
+                    notes=data.get("notes", ""),
+                    upload=data.get("upload"),
+                )
+                if data["decision"] in {"rejected", "replaced"}:
+                    start_correction_run(
+                        episode,
+                        data["arm"],
+                        feedback,
+                    )
+                write_json(self, episode_snapshot(episode))
+                return
+            if self.path.endswith("/retry-arm"):
+                episode_id = self.path.split("/")[3]
+                episode = load_episode(episode_id)
+                data = json_body(self)
+                arm = data["arm"]
+                current = RUNS.get(episode_id, {}).get(arm)
+                persisted = load_json_if_exists(
+                    episode.root / "system" / arm / "runtime_status.json"
+                )
+                if (current or persisted or {}).get("status") == "running":
+                    raise ValueError(f"{arm} is already running")
+                reviews = latest_source_reviews(episode)
+                latest = reviews.get(arm)
+                if latest and latest.get("decision") in {"rejected", "replaced"}:
+                    start_correction_run(episode, arm, latest)
+                else:
+                    start_episode_runs(episode, [arm])
+                write_json(self, episode_snapshot(episode))
+                return
+            if self.path.endswith("/evaluate"):
+                episode_id = self.path.split("/")[3]
+                episode = load_episode(episode_id)
+                start_evaluation(episode)
+                write_json(self, episode_snapshot(episode))
+                return
+            if self.path.endswith("/adjudicate"):
+                episode_id = self.path.split("/")[3]
+                episode = load_episode(episode_id)
+                data = json_body(self)
+                record_adjudication(
+                    episode=episode,
+                    decision=data["decision"],
+                    notes=data.get("notes", ""),
+                    corrections=data.get("corrections"),
+                )
+                write_json(self, episode_snapshot(episode))
+                return
+            write_json(self, {"error": "not found"}, HTTPStatus.NOT_FOUND)
+        except Exception as exc:
+            write_json(
+                self,
+                {"error": str(exc), "type": type(exc).__name__},
+                HTTPStatus.BAD_REQUEST,
+            )
+
+    def do_GET(self) -> None:
+        if "/source-document/" in self.path and self.path.startswith("/api/episodes/"):
+            try:
+                parts = self.path.split("/")
+                episode_id, arm = parts[3], parts[5]
+                path, media_type = source_document_for_review(
+                    load_episode(episode_id), arm
+                )
+                if not path:
+                    url = source_url_for_review(
+                        load_episode(episode_id), arm
+                    )
+                    if url:
+                        self.send_response(HTTPStatus.FOUND)
+                        self.send_header("Location", url)
+                        self.end_headers()
+                        return
+                    write_json(self, {"error": "renderable source not available"}, HTTPStatus.NOT_FOUND)
+                    return
+                content = path.read_bytes()
+                resolved_media_type = (
+                    media_type
+                    or mimetypes.guess_type(path.name)[0]
+                    or "application/octet-stream"
+                )
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-Type", resolved_media_type)
+                self.send_header("Content-Length", str(len(content)))
+                self.send_header("Content-Disposition", f'inline; filename="{path.name}"')
+                self.send_header("X-Content-Type-Options", "nosniff")
+                if resolved_media_type in {"text/html", "application/xhtml+xml"}:
+                    self.send_header(
+                        "Content-Security-Policy",
+                        "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data: https:;",
+                    )
+                self.end_headers()
+                self.wfile.write(content)
+            except Exception as exc:
+                write_json(self, {"error": str(exc)}, HTTPStatus.NOT_FOUND)
+            return
+        if self.path.startswith("/api/episodes/"):
+            try:
+                episode_id = self.path.split("/")[3]
+                write_json(self, episode_snapshot(load_episode(episode_id)))
+            except Exception as exc:
+                write_json(self, {"error": str(exc)}, HTTPStatus.NOT_FOUND)
+            return
+        if self.path == "/api/health":
+            write_json(
+                self,
+                {
+                    "ok": True,
+                    "ui_built": UI_DIST.exists(),
+                    "server_started_at": SERVER_STARTED_AT,
+                    "server_build_id": SERVER_BUILD_ID,
+                    "web_worker_mode": "outer_os_barrier",
+                },
+            )
+            return
+        if self.path == "/api/metrics":
+            write_json(self, build_metrics(EPISODES_ROOT))
+            return
+        super().do_GET()
+
+    def log_message(self, format: str, *args: object) -> None:
+        return
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--port", type=int, default=8765)
+    args = parser.parse_args()
+    if not UI_DIST.exists():
+        raise SystemExit("UI build missing. Run: cd ui && npm install && npm run build")
+    EPISODES_ROOT.mkdir(parents=True, exist_ok=True)
+    server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
+    print(f"Denial Simulation Lab: http://127.0.0.1:{args.port}")
+    server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
