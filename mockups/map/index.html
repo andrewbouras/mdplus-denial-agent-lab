@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OrthoAppeals — appeal a denied surgery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;640;680&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/base.css" />
+<style>
+  .stage { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 6px 24px 40px; }
+  .stage.flowing { max-width: 940px; }
+
+  /* hero / landing */
+  .hero { text-align: center; padding: 26px 8px 10px; }
+  .hero .promise-kicker { font-size: 15px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--teal-deep); }
+  .hero h1 { font-size: clamp(34px, 6vw, 56px); margin: 14px auto 16px; max-width: 16ch; }
+  .hero p { font-size: 21px; color: var(--ink-soft); max-width: 52ch; margin: 0 auto 30px; }
+  .hero .cta { display: grid; gap: 14px; max-width: 440px; margin: 0 auto; }
+  .hero .example-link { background: none; border: none; color: var(--teal-deep); font-family: var(--sans); font-size: 17px; font-weight: 640; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 6px; }
+  .hero .trust { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 28px; font-size: 15px; color: var(--ink-soft); }
+  .hero .trust span { display: inline-flex; align-items: center; gap: 7px; }
+
+  /* two-column layout */
+  .cols { display: grid; grid-template-columns: 250px 1fr; gap: 26px; align-items: start; }
+
+  .rail { padding: 18px 15px; position: sticky; top: 16px; }
+  .railhead { font-family: var(--serif); font-size: 18px; margin: 2px 6px 4px; }
+  .railsub { font-size: 13px; color: var(--ink-soft); margin: 0 6px 12px; }
+  .rstep { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: none; border: none; font-family: var(--sans); font-size: 15.5px; font-weight: 640; color: var(--ink-soft); padding: 9px 8px; border-radius: 10px; cursor: default; }
+  .rstep .rmark { width: 27px; height: 27px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 13.5px; font-weight: 700; background: var(--paper-2); color: var(--ink-soft); border: 2px solid var(--line); transition: .2s; }
+  .rstep.up { opacity: .48; }
+  .rstep.on { color: var(--ink); }
+  .rstep.on .rmark { background: var(--teal); color: #fff; border-color: var(--teal); transform: scale(1.06); }
+  .rstep.done { color: var(--ink); }
+  .rstep.done .rmark { background: var(--green); color: #fff; border-color: var(--green); }
+  .rstep[data-jump] { cursor: pointer; }
+  .rstep[data-jump]:hover { background: var(--paper-2); }
+  .rstep:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .panel { padding: 36px 34px; text-align: center; }
+  .eyebrow { font-size: 15px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--teal-deep); }
+  .panel h2 { font-size: clamp(24px, 3.6vw, 33px); margin: 10px 0 8px; }
+  .panel .help { font-size: 17px; color: var(--ink-soft); margin: 0 auto 24px; max-width: 42ch; }
+  .answers { display: grid; gap: 13px; max-width: 460px; margin: 0 auto; }
+  .field { width: 100%; font-family: var(--sans); font-size: 20px; padding: 16px 18px; border: 2px solid var(--line); border-radius: 14px; background: var(--paper); color: var(--ink); }
+  .field:focus-visible { outline: 4px solid var(--focus); outline-offset: 2px; border-color: var(--teal); }
+  textarea.field { min-height: 150px; resize: vertical; line-height: 1.5; }
+  .back { display: inline-flex; gap: 8px; margin-top: 20px; background: none; border: none; color: var(--ink-soft); font-family: var(--sans); font-size: 17px; font-weight: 640; cursor: pointer; }
+
+  .trustbar { text-align: center; margin: 22px auto 0; font-size: 14.5px; font-weight: 640; color: var(--teal-deep); background: var(--teal-tint); border-radius: 999px; padding: 9px 20px; display: inline-flex; align-items: center; gap: 8px; }
+  .trustwrap { text-align: center; }
+
+  /* summary */
+  .band { background: var(--teal-tint); color: var(--teal-deep); border-radius: 14px; padding: 16px 20px; font-size: 18px; font-weight: 640; max-width: 540px; margin: 0 auto 22px; }
+  .sum { display: grid; gap: 13px; text-align: left; max-width: 560px; margin: 0 auto 24px; }
+  .sum .item { display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: 18px 20px; align-items: start; }
+  .sum .item .ic { font-size: 22px; }
+  .sum .item h3 { font-size: 19px; margin-bottom: 3px; }
+  .sum .item p { font-size: 15.5px; color: var(--ink-soft); margin: 0; }
+  .sum .item .chip { margin-top: 8px; }
+
+  @media (max-width: 760px) {
+    .cols { grid-template-columns: 1fr; gap: 14px; }
+    .rail { position: static; display: flex; overflow-x: auto; gap: 6px; padding: 12px; -webkit-overflow-scrolling: touch; }
+    .railhead, .railsub { display: none; }
+    .rstep { flex: 0 0 auto; width: auto; padding: 8px 12px 8px 8px; }
+    .rstep .rname { white-space: nowrap; }
+    .panel { padding: 30px 22px; }
+  }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <div class="mark">◆</div>
+    <div class="name">Ortho<span>Appeals</span></div>
+    <div class="tag">Version A · Guided, one question at a time</div>
+  </div>
+
+  <div class="stage" id="stage"><div id="app"></div></div>
+
+  <a class="backlink" href="../index.html">← All versions</a>
+
+  <script src="../assets/data.js"></script>
+  <script>
+    const D = window.APPEAL;
+    const REQ = D.requirements;
+    const app = document.getElementById('app');
+    const stage = document.getElementById('stage');
+
+    const flow = ['surgery', 'insurer', 'letter', ...REQ.map(r => r.id), 'summary'];
+    const stepName = key => {
+      if (key === 'surgery') return 'Your surgery';
+      if (key === 'insurer') return 'Your insurance';
+      if (key === 'letter') return 'Denial letter';
+      if (key === 'summary') return 'Your appeal packet';
+      return REQ.find(r => r.id === key).title;
+    };
+
+    let started = false, i = 0;
+    const A = { surgery: '', insurer: '', letter: '', req: {} }; // starts EMPTY
+
+    function showHero() {
+      started = false; stage.classList.remove('flowing');
+      app.innerHTML = `
+        <section class="hero rise">
+          <div class="promise-kicker">Free · Plain language · Takes a few minutes</div>
+          <h1>${D.product.tagline}</h1>
+          <p>${D.product.promise}</p>
+          <div class="cta">
+            <button class="btn btn-primary btn-lg" id="start">Start my appeal →</button>
+            <button class="example-link" id="ex">Or see how it works with an example</button>
+          </div>
+          <div class="trust">
+            <span>🔒 Private — nothing leaves your computer</span>
+            <span>💬 No insurance jargon</span>
+            <span>📄 Ends with a ready appeal packet</span>
+          </div>
+        </section>`;
+      document.getElementById('start').onclick = () => { started = true; i = 0; render(); };
+      document.getElementById('ex').onclick = loadExample;
+    }
+
+    function loadExample() {
+      const ex = D.example;
+      A.surgery = ex.surgery; A.insurer = ex.plan; A.letter = ex.denialLetter;
+      A.req = {}; REQ.forEach(r => A.req[r.id] = { have: true, note: ex.answers[r.id] });
+      started = true; i = flow.length - 1; render();
+    }
+
+    function railHTML() {
+      const done = i;
+      const steps = flow.map((key, idx) => {
+        const st = idx < i ? 'done' : idx === i ? 'on' : 'up';
+        const jump = idx < i ? ` data-jump="${idx}"` : ' disabled';
+        const mark = idx < i ? '✓' : (idx + 1);
+        const cur = idx === i ? ' aria-current="step"' : '';
+        return `<button class="rstep ${st}"${jump}${cur}>
+          <span class="rmark">${mark}</span><span class="rname">${stepName(key)}</span></button>`;
+      }).join('');
+      return `<div class="railhead">Your appeal</div>
+        <p class="railsub">${done} of ${flow.length} steps done — every step is right here.</p>${steps}`;
+    }
+
+    function render() {
+      if (!started) return showHero();
+      stage.classList.add('flowing');
+      // Build the two-column shell once; afterwards update the rail IN PLACE so its
+      // scroll position is kept and the active step advances one at a time
+      // (step N → N+1) instead of the strip resetting to step 1 and racing across.
+      if (!app.querySelector('.cols')) {
+        app.innerHTML = `
+          <div class="cols">
+            <aside class="rail card">${railHTML()}</aside>
+            <section>
+              <div id="q"></div>
+              <div class="trustwrap"><div class="trustbar">🔒 Always free · No email or credit card — ever.</div></div>
+              <div id="backwrap" style="text-align:center"></div>
+            </section>
+          </div>`;
+      }
+      updateRail();
+      updateBack();
+      drawStep();
+      centerActiveStep();
+    }
+
+    function updateRail() {
+      const rail = app.querySelector('.rail');
+      if (!rail) return;
+      rail.querySelectorAll('.rstep').forEach((btn, idx) => {
+        const st = idx < i ? 'done' : idx === i ? 'on' : 'up';
+        btn.className = 'rstep ' + st;
+        btn.querySelector('.rmark').textContent = idx < i ? '✓' : (idx + 1);
+        if (idx < i) {
+          btn.dataset.jump = idx; btn.removeAttribute('disabled');
+          btn.onclick = () => { i = idx; render(); };
+        } else {
+          delete btn.dataset.jump; btn.setAttribute('disabled', ''); btn.onclick = null;
+        }
+        if (idx === i) btn.setAttribute('aria-current', 'step'); else btn.removeAttribute('aria-current');
+      });
+      const sub = rail.querySelector('.railsub');
+      if (sub) sub.textContent = `${i} of ${flow.length} steps done — every step is right here.`;
+    }
+
+    function updateBack() {
+      const wrap = app.querySelector('#backwrap');
+      if (!wrap) return;
+      if (i > 0) {
+        wrap.innerHTML = `<button class="back" id="back">← Go back</button>`;
+        wrap.querySelector('#back').onclick = () => { i = Math.max(0, i - 1); render(); };
+      } else {
+        wrap.innerHTML = '';
+      }
+    }
+
+    // On mobile the roadmap is a horizontal strip; keep the active step in view.
+    function centerActiveStep() {
+      const rail = app.querySelector('.rail');
+      if (!rail) return;
+      const active = rail.querySelector('.rstep.on');
+      if (!active) return;
+      requestAnimationFrame(() => {
+        const r = rail.getBoundingClientRect();
+        const a = active.getBoundingClientRect();
+        const delta = (a.left - r.left) - (r.width - a.width) / 2;
+        if (Math.abs(delta) > 1) rail.scrollBy({ left: delta, behavior: 'smooth' });
+      });
+    }
+
+    function panel(inner) { document.getElementById('q').innerHTML = `<div class="card panel rise">${inner}</div>`; }
+
+    function drawStep() {
+      const key = flow[i];
+      if (key === 'surgery') return drawSurgery();
+      if (key === 'insurer') return drawInsurer();
+      if (key === 'letter') return drawLetter();
+      if (key === 'summary') return drawSummary();
+      drawReq(REQ.find(r => r.id === key));
+    }
+
+    function drawSurgery() {
+      panel(`
+        <h2>Let's start simple — which surgery did they say no to?</h2>
+        <p class="help">Pick one, or type your own. This is just so we use the right words in your appeal.</p>
+        <div class="answers">
+          ${D.surgeries.map(s => `<button class="btn btn-ghost btn-lg" data-s="${s}">${s}</button>`).join('')}
+          <input class="field" id="sother" placeholder="Type another surgery (optional)" value="${A.surgery && !D.surgeries.includes(A.surgery) ? A.surgery : ''}" />
+        </div>`);
+      document.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { A.surgery = b.dataset.s; next(); });
+      document.getElementById('sother').onkeydown = e => { if (e.key === 'Enter' && e.target.value.trim()) { A.surgery = e.target.value.trim(); next(); } };
+    }
+
+    function drawInsurer() {
+      panel(`
+        <h2>Who's your insurance company?</h2>
+        <p class="help">The name on your insurance card is fine — for example, Aetna, Blue Cross, or Medicare.</p>
+        <div class="answers">
+          <input class="field" id="ins" placeholder="Your insurance's name" value="${A.insurer}" />
+          <button class="btn btn-primary btn-lg" id="ins-next">Continue →</button>
+        </div>`);
+      const f = document.getElementById('ins'); f.focus();
+      const go = () => { A.insurer = f.value.trim(); next(); };
+      document.getElementById('ins-next').onclick = go;
+      f.onkeydown = e => { if (e.key === 'Enter') go(); };
+    }
+
+    function drawLetter() {
+      panel(`
+        <h2>Do you have the letter they sent you?</h2>
+        <p class="help">If you have it, paste it below and we'll pick out what your insurance is asking for. If not, that's okay — we'll continue without it.</p>
+        <div class="answers">
+          <textarea class="field" id="lt" placeholder="Paste your denial letter here…">${A.letter}</textarea>
+          <button class="btn btn-primary btn-lg" id="lt-yes">Use this letter →</button>
+          <button class="btn btn-ghost btn-lg" id="lt-no">I don't have it — keep going</button>
+        </div>`);
+      document.getElementById('lt-yes').onclick = () => { A.letter = document.getElementById('lt').value.trim(); next(); };
+      document.getElementById('lt-no').onclick = () => { A.letter = ''; next(); };
+    }
+
+    function drawReq(r) {
+      panel(`
+        <h2>${r.q}</h2>
+        <p class="help">${r.why}</p>
+        <div class="answers">
+          <button class="btn btn-primary btn-lg" data-h="yes">Yes, I did</button>
+          <button class="btn btn-ghost btn-lg" data-h="no">No / not yet</button>
+          <button class="btn btn-ghost btn-lg" data-h="unsure">I'm not sure</button>
+        </div>`);
+      document.querySelectorAll('[data-h]').forEach(b => b.onclick = () => {
+        A.req[r.id] = { have: b.dataset.h === 'yes', answer: b.dataset.h };
+        next();
+      });
+    }
+
+    function drawSummary() {
+      const have = REQ.filter(r => A.req[r.id]?.have);
+      const gather = REQ.filter(r => !A.req[r.id]?.have);
+      const line = A.surgery ? A.surgery.toLowerCase() : 'your surgery';
+      const who = A.insurer ? A.insurer : 'your insurance';
+      panel(`
+        <div class="eyebrow">Your appeal plan</div>
+        <h2>Here's how to get ${line} approved</h2>
+        <div class="band">${D.product.reassure}</div>
+        ${have.length ? `<div class="sum">${have.map(r => item(r, 'have')).join('')}</div>` : ''}
+        ${gather.length ? `<p class="help" style="margin-top:6px"><b>Next, gather these:</b></p><div class="sum">${gather.map(r => item(r, 'gather')).join('')}</div>` : ''}
+        <div class="answers">
+          <button class="btn btn-primary btn-lg">Build my appeal packet for ${who}</button>
+          <button class="btn btn-ghost btn-lg" id="restart">Start over</button>
+        </div>`);
+      document.getElementById('restart').onclick = () => { A.surgery=''; A.insurer=''; A.letter=''; A.req={}; showHero(); };
+    }
+
+    function item(r, mode) {
+      const chip = mode === 'have'
+        ? `<span class="chip done"><span class="dot"></span>You have this</span>`
+        : `<span class="chip request"><span class="dot"></span>Need to request</span>`;
+      const note = (A.req[r.id]?.note) ? `<p>${A.req[r.id].note}</p>` : `<p>${mode === 'have' ? r.plain : r.how}</p>`;
+      return `<div class="item card" style="box-shadow:none">
+        <div class="ic">${mode === 'have' ? '✅' : '📎'}</div>
+        <div><h3>${r.title}</h3>${note}${chip}</div>
+      </div>`;
+    }
+
+    function next() { i = Math.min(flow.length - 1, i + 1); render(); }
+
+    showHero();
+  </script>
+</body>
+</html>

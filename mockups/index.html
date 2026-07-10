@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OrthoAppeals — compare the versions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;640;680&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/base.css" />
+<style>
+  .stage { position: relative; z-index: 1; max-width: 940px; margin: 0 auto; padding: 6px 24px 56px; }
+  .intro { text-align: center; padding: 20px 8px 6px; }
+  .intro .kick { font-size: 15px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--teal-deep); }
+  .intro h1 { font-size: clamp(30px, 5vw, 46px); margin: 12px auto 14px; max-width: 20ch; }
+  .intro p { font-size: 19px; color: var(--ink-soft); max-width: 60ch; margin: 0 auto; }
+
+  .group { margin-top: 40px; }
+  .group > h2 { font-family: var(--serif); font-size: 24px; font-weight: 560; margin: 0 0 4px; }
+  .group > .gsub { font-size: 15.5px; color: var(--ink-soft); margin: 0 0 18px; }
+  .group.liked > h2::after { content: "Group favorite"; font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #205937; background: var(--green-tint); padding: 3px 10px; border-radius: 999px; margin-left: 12px; vertical-align: 3px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .tile { display: flex; flex-direction: column; padding: 22px 22px 20px; text-decoration: none; color: var(--ink); transition: transform .14s ease, box-shadow .2s ease, border-color .2s ease; }
+  .tile:hover { transform: translateY(-3px); border-color: var(--teal); box-shadow: var(--shadow); }
+  .tile .tag { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--teal-deep); }
+  .tile h3 { font-family: var(--serif); font-size: 23px; font-weight: 560; margin: 7px 0 8px; }
+  .tile p { font-size: 15.5px; color: var(--ink-soft); margin: 0 0 16px; line-height: 1.5; flex: 1; }
+  .tile .go { font-weight: 680; color: var(--teal-deep); }
+  .tile.muted { opacity: .82; }
+  .tile.muted .tag { color: var(--amber); }
+
+  .note { text-align: center; font-size: 14px; color: var(--ink-soft); margin-top: 40px; }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <div class="mark">◆</div>
+    <div class="name">Ortho<span>Appeals</span></div>
+    <div class="tag">Compare the versions</div>
+  </div>
+
+  <div class="stage">
+    <header class="intro rise">
+      <div class="kick">For the review group</div>
+      <h1>Same free tool — two front doors</h1>
+      <p>Pick either version below to try it end to end. Each one starts from zero, like a real visitor, and ends with a ready-to-send appeal packet. Always free — no sign-up, no email, no credit card.</p>
+    </header>
+
+    <section class="group rise">
+      <div class="grid">
+        <a class="tile card" href="map/">
+          <div class="tag">Version A</div>
+          <h3>Guided</h3>
+          <p>One question at a time, with a roadmap down the side so you always see every step and how far along you are.</p>
+          <span class="go">Open →</span>
+        </a>
+        <a class="tile card" href="checklist-steps/">
+          <div class="tag">Version B</div>
+          <h3>One page, step by step</h3>
+          <p>Everything on one scrollable, printable page — but each question opens up only after you answer the one above it, so it never feels like a wall of questions.</p>
+          <span class="go">Open →</span>
+        </a>
+      </div>
+    </section>
+
+    <p class="note">These are clickable mockups — no data leaves your device, and nothing is sent anywhere.</p>
+  </div>
+</body>
+</html>
