@@ -1,0 +1,14 @@
+{
+  "name": "orthoappeals-browser-capture",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Repo-local Playwright capture that emits the Plinth synthetic-emr trajectory contract for a real UHC policy-retrieval browse.",
+  "scripts": {
+    "capture": "node capture_uhc_policy.mjs"
+  },
+  "dependencies": {
+    "@playwright/test": ">=1.44.0"
+  },
+  "playwrightResolution": "The @playwright/test module is resolved at runtime from the Plinth app's node_modules (NODE_PATH set by scripts/emit_plinth_trace.py) so we do not duplicate the ~big install; a local `npm install` here also works. The browser itself is snap chromium (/snap/bin/chromium) driven via Playwright executablePath, or the ms-playwright bundled chromium if downloaded."
+}

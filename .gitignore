@@ -24,3 +24,6 @@ data/policy_platform/*
 *.pem
 *.key
 *.log
+
+# GoalBuddy generated board artifact (regenerable)
+docs/goals/*/.goalbuddy-board/
