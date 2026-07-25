@@ -12,7 +12,7 @@ goal:
   oracle:
     signal: "A reproducible eval run over the corrected benchmark that reports, per row, the model's document claim AND its confidence, scored so that CONFIDENT-BUT-WRONG answers are counted separately and prominently. The headline metric is the count of confident-wrong answers, not raw accuracy."
     cadence: "after each Worker package and at final audit"
-    final_proof: "Receipt-backed evidence of: (1) a corrected answer key where every surviving row has a firsthand-fetched URL that resolves without login and contains CPT 27447; (2) a cold eval run (model has no access to the key) emitting a scored report with zero or explicitly-enumerated confident-wrong rows; (3) a walkthrough of the patient website producing a retrieval result for at least one case end to end."
+    final_proof: "Receipt-backed evidence of: (1) a corrected answer key where every retrievable row has a firsthand-fetched URL that resolves without login, contains CPT 27447, and carries a document-attested applicability quote; (2) a cold eval run over ALL 39 rows in three classes (retrievable, gated, none), with the model having no access to the key, emitting the fixed headline block with the confident-wrong count and the correct-retrieval count side by side; (3) a walkthrough of the patient website producing a retrieval result for at least one case end to end."
   intake:
     original_request: "Parse the Akin meeting for next steps, then use goal-prep to make this work."
     interpreted_outcome: "Turn the agreed post-call plan into an executable board that produces an honest retrieval benchmark and connects the website to the AI, in time for MD Catalyst."
@@ -74,13 +74,13 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/policy-retrieval-eval/"
     command: "node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/policy-retrieval-eval"
 
-active_task: T001
+active_task: T003
 
 tasks:
   - id: T001
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Map what already exists toward the retrieval eval and the website wireup, so no existing capability is rebuilt from scratch."
     inputs:
@@ -106,12 +106,48 @@ tasks:
       - "What already exists toward the Claude-attempt + judge-model architecture"
       - "The concrete website-to-backend seam and what is missing"
       - "Verification commands that actually run in this repo, and an honest note that there is no gate test suite"
-    receipt: null
+    receipt:
+      result: done
+      evidence:
+        - "scripts/run_policy_retrieval.py L61-109 build_candidates/rank_and_select; L211-213 self_verdict"
+        - "synthetic_harness/kiss_oracle.py L38-47 urls_match/compute_oracle"
+        - "scripts/emit_row_trace.py L43,L59,L192,L205"
+        - "runs/run_0001.jsonl (6 lines), runs/run_0001.meta.json"
+        - "data/policy_platform/seed_review_39_spec.json 39 rows, 3 shapes, 13 with target_url"
+        - "grep fetch(|XMLHttpRequest|axios|/api|endpoint in mockups/ -> zero matches"
+        - "mockups/checklist-steps/index.html L92 state object A, L457 restUnlocked gate"
+        - "tests/ has 4 pytest files; pyproject testpaths=['tests']; pytest not installed"
+        - "data/policy_platform/criteria_extractions.json and source_registry.json are []"
+      summary: "A per-row retrieval runner exists but calls NO model. It is keyword-overlap ranking plus a real HTTP fetch, and build_candidates injects the ground-truth URL into its own candidate set, so it cannot be reused for a cold run. No confidence signal, no abstention path, and no judge model exist in the retrieval path. mockups/ is confirmed fully static with zero network calls. Only 13 of 39 spec rows carry a target_url, and the row schema is non-uniform across three shapes."
+      key_findings:
+        - "scripts/run_policy_retrieval.py L61-109: build_candidates() injects row.ground_truth.target_url into the candidate list; rank_and_select() always returns scored[0]. There is no abstention. This function is UNUSABLE for a cold eval without a rewrite."
+        - "No Anthropic SDK, no OpenAI SDK, no API key read, and no WebSearch exist anywhere in scripts/ or browser_capture/. The retrieval path is entirely deterministic Python and Node."
+        - "The only field resembling confidence is self_verdict at run_policy_retrieval.py L211-213, a hardcoded English string chosen by an if on HTTP status. It is not a self-assessed certainty and has no scale."
+        - "No judge/grader model step exists for retrieval. Grading is synthetic_harness/kiss_oracle.py compute_oracle(), a normalized host+path URL equality check returning reward 1/-1, plus manual human labels written by scripts/read_run.py into meta.json['label']."
+        - "synthetic_harness/evaluation.py L200 contains a judge PROMPT STRING with a 0-4 rubric and a not_judgeable enum, but nothing calls a model with it. It belongs to the unrelated synthetic-patient harness."
+        - "seed_review_39_spec.json has THREE distinct row shapes: public (13 rows, has target_url), login_gated (20 rows, has portal_url), no_public_policy (6 rows, no URL field). 26 of 39 rows have no target_url at all."
+        - "mockups/ confirmed static: grep for fetch(|XMLHttpRequest|axios|/api|endpoint returned ZERO matches. assets/data.js L6 states verbatim 'Nothing here makes a network call.' No package.json, no build step."
+        - "Website seam is mockups/checklist-steps/index.html L457 inside updateLocks(): 'const restUnlocked = insUnlocked && !!A.insurer;'. This is the first moment all retrieval inputs exist. State object A declared at L92. Available: A.surgery, A.catId, A.bodyPart, A.state, A.insurer. CPT exists in assets/data.js procedureCategories but is NEVER copied onto A. The mirror flow mockups/map/index.html has the same gate chain and needs the same insertion."
+        - "Trace schema in runs/*.jsonl: {i:int, action:str, args:obj, obs:str, self_verdict:str}. Actions: load_row, build_candidates, rank_select, fetch, inspect, return_policy. runs/ holds exactly ONE run, from 2026-07-12."
+        - "data/policy_platform/criteria_extractions.json and source_registry.json are both literally []. source_registry.csv is a header row only."
+        - "browser_capture/capture_policy_row.mjs needs NO credentials; login_gated rows deliberately dead-end at reward -1. It cannot run today because Playwright is unresolvable (~/.cache/ms-playwright empty), though /snap/bin/chromium and /usr/bin/chromium-browser are present."
+      contradictions_to_board:
+        - "Board recorded gate_suite as 'none. This repo has no test suite.' REFUTED as to source: tests/ contains test_kiss_run.py, test_oracle_to_rating.py, test_plinth_contract_conformance.py, test_synthetic_harness.py, verify_artifact_sha.py, and pyproject.toml sets testpaths=['tests']. CONFIRMED as to executability: pytest is not installed and there is no .venv, so nothing runs today."
+        - "T004 constraint says 'Reuse whatever T001 found already exists; do not rebuild a runner that is already present.' The runner that is present is answer-leaking keyword matching with no model. It cannot be reused for a cold model eval."
+      ambiguity_requiring_judge:
+        - "Only 13 of 39 rows carry a target_url. Whether the corrected key covers 39 rows or only the 13 public ones changes the scope of every downstream task."
+        - "Whether run_policy_retrieval.py is reusable scaffolding or dead code for the cold-eval purpose."
+      verification_run:
+        - "python3 scripts/run_policy_retrieval.py --help -> PASS"
+        - "python3 scripts/emit_row_trace.py --help -> PASS"
+        - "python3 scripts/read_run.py runs/run_0001 -> PASS, prints 6 steps, correct=True reachable=True reward=1"
+        - "python3 -m pytest --collect-only -q -> FAIL, No module named pytest"
+        - "node -e \"import('@playwright/test')\" -> FAIL, ERR_MODULE_NOT_FOUND"
 
   - id: T002
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Validate the agreed 8-point plan against T001 evidence and the known-broken answer key, then fix the scoring rubric before any run happens."
     inputs:
@@ -130,36 +166,72 @@ tasks:
       - "Ruling on whether benchmark size is sufficient, and what is needed if not"
       - "Exact Worker objective for T003 with allowed_files, verify, stop_if"
       - "Any task that must be blocked pending Andrew's MA ruling"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      evidence:
+        - "seed_review_39_spec.json is an 11-payer x 4-line-of-business grid; NO row carries a state field, yet state is required to pick the governing LCD."
+        - "The 13 public rows resolve to only 5 UNIQUE documents (L36007 x6, Blue Shield CA knee PDF x3, Premera 7.01.550 x2, Highmark S-39-008 x1, Carelon joint-surgery PDF x1). Effective independent-document N on the retrievable side is 5, not 13."
+        - "bm_0073/bm_0084 share one URL; bm_0068/bm_0079/bm_0058 share one URL. Row count overstates evidence."
+        - "run_policy_retrieval.py L69 'candidates = [{\"url\": gt[\"target_url\"]}]' and L109 'return scored[0], scored' confirm the answer leak and the absence of abstention."
+        - "Rule-of-three 95% upper bound on confident-wrong rate given zero observed errors: N=9 -> 28.3%, N=13 -> 20.6%, N=39 -> 7.4%, N=60 -> 4.9%."
+        - "criteria_extractions.json and source_registry.json are empty arrays; there is no local policy library yet for the T007 lookup-first path."
+        - "Pre-T003 immutability baseline sha256(seed_review_39_spec.json) = 76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053"
+      summary: "Plan validated with three amendments. SCOPE AMENDED: score all 39 rows in three classes (retrievable / gated / none), NOT the 13 public rows. Gated and no-policy rows are the strongest confident-wrong tests available and cost nothing to add; restricting to ~9 rows makes every claim statistically dead. Rubric v1 written in full and frozen at docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md. T004's reuse constraint is refuted by T001 and rewritten. NO task is blocked on Andrew's MA ruling, because the key records both conventions and the scorer emits three parallel grades from one run."
+      rubric_location: "docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md (rubric v1, frozen 2026-07-25)"
+      key_rulings:
+        - "SCOPE: all 39 rows, three classes. GATED rows are scored as adjudicated-abstention tests, not excluded. A claim on a gated row that verifies as genuinely public is KEY_DEFECT_FOUND (a win) and promotes the row to retrievable. This is the only design in which the benchmark grows without further human research."
+        - "SUFFICIENCY: N=39 supports 'we can rule out a confident-wrong rate above about 7%'. N=9 supports nothing. Mandatory caveat in any presentation: the 39 rows are 11 payers x 4 lines of business and collapse to 5 unique documents on the retrievable side, so they are not 39 independent draws."
+        - "CONFIDENT_WRONG definition frozen: claim_type=document_identified AND confidence>=80 AND adjudicated grade is WRONG_DOCUMENT or UNRESOLVABLE. The 80 threshold may not be moved after any run is seen."
+        - "ANTI-DEGENERACY: always-abstaining scores zero confident-wrong. The report format therefore REQUIRES the confident-wrong line and the correct-retrieval line printed together; a report with one without the other is a failing build."
+        - "MA: every Medicare Advantage row graded three times in one pass (dual_accept, lcd_strict, plan_strict). Headline uses dual_accept. Andrew's ruling is applied by switching the headline column; no research is redone. Unconditionally, naming an LCD whose MAC does not cover the row's state is WRONG_DOCUMENT."
+        - "GRADING is two-stage: Stage A deterministic code decides mechanically checkable facts; Stage B model adjudicator only where Stage A is not decisive. Never delegate a mechanically checkable fact to a model. If NEEDS_HUMAN_REVIEW exceeds 20% of rows, the run is not reportable."
+        - "NEW PROBLEM FOUND: no row has a state field, and CareFirst (MD/DC/VA) and Regence (OR/WA/ID/UT) straddle MAC jurisdictions. Every row must be pinned to exactly one state before an LCD can be chosen."
+        - "CIRCULARITY MITIGATION: labels must be document-attested, not model-asserted. Every retrievable row carries a verbatim quote in which the document itself says it governs that payer, plan type, and state, plus a fetched sha256. Rows that cannot produce that quote are marked unverified and excluded, never guessed."
+      blocked_tasks: []
+      timing_warning: "Akin returns to clinical rotations 2026-07-27, two days away. T009 (his handoff note and the MA question for Andrew) must be pulled forward or his last window is lost."
 
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Produce a corrected, evidence-backed answer key containing only rows that are genuinely valid and publicly retrievable."
+    objective: "Produce data/policy_platform/answer_key_v1.json: a corrected, evidence-backed 39-row answer key covering ALL rows in three scored classes (retrievable, gated, none) plus an invalid class, with every row pinned to a single US state, every Medicare Advantage row recording BOTH candidate conventions, and every retrievable row carrying firsthand fetch evidence."
     inputs:
-      - "T002 receipt"
+      - "T002 receipt and docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md"
       - data/policy_platform/seed_review_39_spec.json
     constraints:
+      - "Do NOT mutate seed_review_39_spec.json. It is the historical record. Write a new file answer_key_v1.json."
+      - "Pin every row to exactly one US state. The spec has NO state field today, and state is required to choose the governing LCD. CareFirst spans MD/DC/VA and Regence spans OR/WA/ID/UT, so each must be pinned deliberately."
       - "Finish firsthand verification of the 4 unverified Medicare Advantage rows: bm_0056 BCBS Michigan, bm_0057 BCBS North Carolina, bm_0059 CareFirst, bm_0061 Horizon BCBS NJ."
       - "For each: determine whether the plan publishes its own MA knee policy or genuinely defers to CMS, and if it defers, which LCD actually applies in that state."
       - "Fix the blanket L36007 assignment. One LCD cannot govern Michigan, North Carolina, Maryland/NJ/PA, and Washington simultaneously."
       - "Carry forward the two already-verified findings: bm_0063 Premera is INVALID (exited Medicare Advantage 2025-01-01; its public policy 7.01.550 states it does not apply to Medicare Advantage and cites L36575). bm_0065 UPMC publishes its own MP.PA.133 covering CMS-MA HMO/PPO/DSNP and correctly cites L36007 for Pennsylvania."
-      - "Never invent or pattern-guess a URL. Every surviving row must carry a URL actually fetched, returning HTTP 200 without a login, and containing CPT 27447."
-      - "Where the MA deferral convention is unsettled, record BOTH candidate answers per row so Andrew's later ruling can be applied without redoing research."
+      - "Never invent or pattern-guess a URL. Every retrievable row must carry a URL actually fetched in this session, returning HTTP 200 without a login, containing CPT 27447, with a recorded sha256."
+      - "LABELS MUST BE DOCUMENT-ATTESTED, NOT MODEL-ASSERTED. Every retrievable row carries attestation_quote: a verbatim quote in which the document itself says it governs that payer, that plan type, and that state. A row that cannot produce that quote is row_class=unverified and excluded, never guessed."
+      - "Record BOTH candidate MA answers per row (ma_convention.lcd and ma_convention.plan_page) so Andrew's later ruling applies without redoing research. plan_page is null when the plan publishes nothing of its own."
       - "Mark invalid rows as invalid with the reason. Do not silently delete them."
-      - "Drop all login-gated rows from the scored set, per the agreed plan."
+      - "Do NOT drop the 20 gated and 6 no-policy rows. Per the T002 scope ruling they are scored abstention tests and are the strongest confident-wrong evidence available."
+      - "Document every change in docs/goals/policy-retrieval-eval/notes/key-corrections.md with the URL fetched, the HTTP status, and a verbatim quote."
     allowed_files:
       - data/policy_platform/
       - docs/goals/policy-retrieval-eval/notes/
     verify:
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/seed_review_39_spec.json'));print(len(d['rows']))\""
-      - "Every surviving scored row has a fetched_url, an http_status of 200, a no_login boolean, and evidence that CPT 27447 appears in the document."
+      - "sha256sum data/policy_platform/seed_review_39_spec.json | grep -q 76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053 && echo ORIGINAL_UNTOUCHED"
+      - "python3 -c \"import json,collections;d=json.load(open('data/policy_platform/answer_key_v1.json'));r=d['rows'];print(len(r), collections.Counter(x['row_class'] for x in r))\""
+      - "python3 -c \"import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];req=('id','payer','plan_type','state','cpt','row_class','provenance');bad=[x['id'] for x in r if any(k not in x or x[k] in (None,'') for k in req)];print('MISSING_FIELDS',bad);assert not bad\""
+      - "python3 -c \"import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];t=[x for x in r if x['row_class']=='retrievable'];bad=[x['id'] for x in t if not(x['fetched']['http_status']==200 and x['fetched']['login_required'] is False and x['fetched']['cpt_27447_present'] is True and x['fetched'].get('sha256') and x.get('attestation_quote'))];print('BAD_RETRIEVABLE',bad);print('N_RETRIEVABLE',len(t));assert not bad\""
+      - "python3 -c \"import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];m=[x for x in r if x['plan_type']=='Medicare Advantage'];bad=[x['id'] for x in m if 'ma_deferral_status' not in x or 'lcd' not in x.get('ma_convention',{}) or 'plan_page' not in x.get('ma_convention',{})];print('BAD_MA',bad);assert not bad\""
+      - "python3 -c \"import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];bad=[(x['id'],x['state']) for x in r if x.get('ma_convention',{}).get('lcd') and x['state'] not in x['ma_convention']['lcd']['jurisdiction_states']];print('LCD_JURISDICTION_VIOLATIONS',bad);assert not bad\""
+      - "test -f docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md && grep -c 'CONFIDENT-BUT-WRONG' docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md"
     stop_if:
       - "Need files outside allowed_files."
-      - "A payer's status cannot be determined from public sources after genuine effort; record UNVERIFIED and continue rather than guessing."
-      - "The corrected scored set falls below 8 rows, which materially weakens every downstream claim; escalate to PM."
+      - "About to record a URL that was not actually fetched in this session, or to infer a document's applicability without a verbatim quote from the document itself."
+      - "About to change a row's retrievability class on reasoning alone; class changes require fetch evidence."
+      - "Research would require a login, an NPI, a credential, or a phone call to a payer; mark the row gated and move on."
+      - "A payer's Medicare Advantage status cannot be settled from public sources after genuine effort; record row_class=unverified with what was tried, and continue."
+      - "Fewer than 6 rows survive as retrievable; record the count, escalate to PM, and continue rather than halting."
+      - "About to delete any original row; invalid rows are marked invalid with a reason, never removed."
     receipt: null
 
   - id: T004
@@ -176,14 +248,19 @@ tasks:
       - "The retrieval model must NOT have access to the answer key. Enforce this structurally, not by convention."
       - "Every attempt must emit an explicit claim plus a confidence, and must be able to answer 'I cannot confidently identify the controlling document'."
       - "The judge model grades the attempt against the key and outputs 'confident + correct', 'confident + wrong', 'honest abstention', or 'needs human review'."
-      - "Reuse whatever T001 found already exists; do not rebuild a runner that is already present."
-      - "The report must show the confident-wrong count as the headline number, above accuracy."
+      - "Do NOT reuse scripts/run_policy_retrieval.py on the cold path. T001 proved build_candidates() L61-109 injects the ground-truth URL and rank_and_select() L100-109 always returns scored[0], so it leaks the answer and cannot abstain. Reuse is limited to three things: the JSONL trace record shape {i, action, args, obs}, scripts/read_run.py for reading traces, and the fetch() helper at L112-135 for HTTP evidence capture. All model-path code is new."
+      - "No Anthropic SDK, no API-key handling, and no search tool exists in this repo. The harness must define and document how the retrieval model is invoked and how it searches, and must record the model identifier and version in every run artifact."
+      - "STRUCTURAL KEY ISOLATION. A query-emitter step reads the key and writes runs/<id>/queries.jsonl containing ONLY {row_id, payer, plan_type, state, cpt, procedure_name}. The retrieval step reads only queries.jsonl. The harness asserts, and the artifact records, that no key URL and no key host appears in any retrieval prompt."
+      - "Grading is two-stage. Stage A is deterministic code (normalize, fetch, status, login-wall detection, CPT-27447 presence, URL match). Stage B is the model adjudicator, invoked only where Stage A is not decisive. Never delegate a mechanically checkable fact to a model."
+      - "Implement rubric v1 EXACTLY as written in docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md. Record the rubric sha256 and the key sha256 in every run artifact."
+      - "The report must show the confident-wrong count as the headline number, above accuracy, and must print the correct-retrieval line together with it (anti-degeneracy rule, rubric section 4)."
     allowed_files:
       - scripts/
       - docs/goals/policy-retrieval-eval/notes/
     verify:
       - "The harness runs end to end on at least 2 rows and emits a scored report file."
-      - "A deliberately wrong injected answer is classified as confident-wrong by the judge, proving the scorer actually discriminates."
+      - "Three-way discrimination self-test passes: an injected wrong URL at confidence 95 grades CONFIDENT_WRONG; the exact key URL at confidence 95 grades CORRECT; an abstention on a retrievable row grades MISSED_RETRIEVABLE; a fabricated host grades CONFIDENT_FABRICATED."
+      - "grep the retrieval prompt log for every key URL host: zero matches."
     stop_if:
       - "Need files outside allowed_files."
       - "The answer key is not yet corrected (T003 incomplete)."
@@ -201,6 +278,9 @@ tasks:
       - "T003 corrected key"
     constraints:
       - "Cold run: the retrieval model sees no answers."
+      - "Run over ALL 39 rows in three classes (retrievable, gated, none), per the T002 scope ruling. Do not restrict to the retrievable subset."
+      - "Emit the fixed headline block verbatim from rubric v1 section 7, including BOTH the confident-wrong line and the correct-retrieval line."
+      - "This 39-row set is FROZEN as the comparison denominator for T008. Expansion rows from T010 are reported separately and never mixed into the before-and-after."
       - "Report per-row outcomes plus the aggregate, with confident-wrong first."
       - "State the denominator explicitly and state what was excluded and why."
       - "Do not tune anything mid-run to improve the number."
@@ -213,6 +293,35 @@ tasks:
     stop_if:
       - "Need files outside allowed_files."
       - "Harness is not verified (T004 incomplete)."
+    receipt: null
+
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Expand the benchmark to 60 or more scored rows using only openly published policies, so the confident-wrong rate has a denominator that can support a claim."
+    inputs:
+      - "T005 baseline"
+      - "docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md"
+      - data/policy_platform/answer_key_v1.json
+    constraints:
+      - "NO phone contact with any payer. That path is a proven dead end: payers demanded an NPI, treated the caller as a provider opening a practice, and redirected to marketing."
+      - "Candidate sources, all openly published: UnitedHealthcare, Aetna, Cigna, Humana, Elevance/Anthem via Carelon, Centene/Ambetter, Molina, HCSC, Kaiser, crossed with lines of business."
+      - "Also enumerate the CMS knee-arthroplasty LCD set across ALL Medicare Administrative Contractor jurisdictions. This is a small, authoritative, unambiguous ground-truth set and it directly tests the exact error the human key made."
+      - "Every new row must pass the same Stage A checker built in T004: fetched, HTTP 200, no login, contains CPT 27447, sha256 recorded, plus a document-attested applicability quote."
+      - "The original 39-row set stays frozen and separate. Expansion rows are reported on their own denominator and are never mixed into the T005-versus-T008 before-and-after."
+      - "data/policy_platform/kiss_row_uhc_27447.json already exists as a row template."
+    allowed_files:
+      - data/policy_platform/
+      - docs/goals/policy-retrieval-eval/notes/
+    verify:
+      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));print(len(d['rows']))\" reports 60 or more rows, or the receipt states honestly how many were reachable and why."
+      - "Every added row passes the same Stage A validator used in T004, with zero exceptions."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A source requires a login or a credential; skip it and record why."
+      - "T005 baseline has not been run, which would let expansion contaminate the frozen comparison set."
     receipt: null
 
   - id: T006
@@ -294,6 +403,7 @@ tasks:
     status: queued
     reasoning_hint: medium
     objective: "Package the two human-dependency asks so they are not silently forgotten: Andrew's MA scoring ruling, and the request to Phil for real denial cases."
+    pulled_forward: "T002 ruled this must run IMMEDIATELY AFTER T003, not at the end of the board. Akin returns to clinical rotations 2026-07-27, which is two days out, and his last usable window closes then."
     inputs:
       - "T002 rubric"
       - "T003 corrected key"
@@ -332,13 +442,24 @@ tasks:
     receipt: null
 
 checks:
-  dirty_fingerprint: unknown
+  dirty_fingerprint: "clean at a45d66d before T001; T001 is read-only and wrote nothing"
+  spec_immutability_baseline:
+    file: data/policy_platform/seed_review_39_spec.json
+    sha256: "76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053"
+    recorded_by: T002
+  rubric:
+    version: v1
+    frozen: "2026-07-25"
+    path: docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md
   last_verification:
-    result: unknown
-    task: null
-    commands: []
+    result: pass
+    task: T001
+    commands:
+      - "python3 scripts/run_policy_retrieval.py --help"
+      - "python3 scripts/emit_row_trace.py --help"
+      - "python3 scripts/read_run.py runs/run_0001"
   notes:
-    gate_suite: "none. This repo has no test suite. Verification is per-task command execution plus artifact inspection."
+    gate_suite: "CORRECTED BY T001. A pytest suite EXISTS in source (tests/ with 4 test files plus verify_artifact_sha.py; pyproject.toml testpaths=['tests']) but pytest is NOT installed and there is no .venv, so no gate runs today. Verification is per-task command execution plus artifact inspection. Installing pytest is a candidate cheap win."
     available_scripts:
       - scripts/run_policy_retrieval.py
       - scripts/emit_row_trace.py
