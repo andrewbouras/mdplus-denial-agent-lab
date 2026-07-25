@@ -1,0 +1,42 @@
+{
+  "row": {
+    "payer": "UnitedHealthcare",
+    "plan": "UnitedHealthcare (employer/group)",
+    "line_of_business": "Commercial",
+    "state": "National",
+    "cpt": "27447"
+  },
+  "payer": "UnitedHealthcare",
+  "plan": "UnitedHealthcare (employer/group)",
+  "cpt": "27447",
+  "target": "https://www.uhcprovider.com/content/dam/provider/docs/public/policies/comm-medical-drug/surgery-knee.pdf",
+  "fetch": {
+    "url": "https://www.uhcprovider.com/content/dam/provider/docs/public/policies/comm-medical-drug/surgery-knee.pdf",
+    "status": 200,
+    "content_type": "application/pdf",
+    "bytes": 402114,
+    "sha256": "ce887339facae80eb6967da6d7f222a6c0310447fbbf363ae2430e2e82be3048",
+    "error": null
+  },
+  "oracle": {
+    "correct": true,
+    "reachable": true,
+    "reward": 1
+  },
+  "oracle_detail": {
+    "url_match": true,
+    "sha256_checked": false,
+    "observed_status": 200,
+    "observed_content_type": "application/pdf"
+  },
+  "ground_truth": {
+    "target_url": "https://www.uhcprovider.com/content/dam/provider/docs/public/policies/comm-medical-drug/surgery-knee.pdf",
+    "doc_id": "N01",
+    "provenance": "final_consolidated Google Sheet"
+  },
+  "label": {
+    "fail_state": "none",
+    "failure_type": "none",
+    "expert_action": "reviewed"
+  }
+}

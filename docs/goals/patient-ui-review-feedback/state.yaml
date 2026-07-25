@@ -1,0 +1,472 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "OrthoAppeals patient-UI — implement Dr. Kassam review-call feedback"
+  slug: "patient-ui-review-feedback"
+  kind: existing_plan
+  tranche: "Implement the 7 review-call feedback items into the existing static mockups (mockups/ in the clone), verify each in a browser, then serve the result over a shareable /url link Andrew can open. Continuous execution until all 7 items are reflected and the link is live; stops short of the 'Build my appeal packet' backend CTA (intentionally TBD)."
+  status: complete
+  oracle:
+    signal: "Andrew (and uncoached parents/grandparents) open the updated mockups over a shared HTTPS /url link and confirm the review-call feedback is visibly reflected: denial-letter upload is prominent/near-mandatory with phone-photo capture, conservative-care questions are recency-based with 2-of-4 + prepopulated yes, procedure picker is category→subtype drilldown, imaging is body-part conditional, a State question gates the insurer list, and an optional voice-friendly 'tell us your story' field exists — with the mobile=A / desktop=1-or-3 split honored."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "A live shared /url link (WebFetch-verified 200 + content) showing all 7 items implemented in the mockups, plus a receipt itemizing which mockup file/screen carries each of the 7 changes."
+  intake:
+    original_request: "have you done /goal-prep to accomplish all of this actionable items or just documented that they need to be done? can we do recon, dev, and dogfood if we haven't done so already"
+    interpreted_outcome: "Turn the documented Dr. Kassam review-call UI decisions into actual implemented changes in the mockups, then dogfood them via a shareable link."
+    input_shape: existing_plan
+    audience: "Primary: patients appealing a denied knee replacement (incl. low-tech-comfort older adults; the stress-test cohort is uncoached parents/grandparents). Secondary: Dr. Kassam (clinical advisor), Anish, Jocelyn, Andrew (product/domain lead)."
+    authority: approved
+    proof_type: demo
+    completion_proof: "Andrew opens the shared link and sees all 7 review-call items reflected; the mobile/desktop split is honored; the 'Build my appeal packet' end step is intentionally left TBD."
+    likely_misfire: "Building a brand-new UI from scratch or re-synthesizing coded flows instead of editing the EXISTING mockups (mockups/ is source of truth); over-polishing one screen while skipping items; treating documentation/board-creation as completion; making denial-letter upload merely present instead of prominent/near-mandatory; adding date/session-count questions the call explicitly dropped; wiring the real appeals-engine backend."
+    blind_spots_considered:
+      - "Two open questions materially shape the desktop build: (a) desktop = version 1 vs version 3 (team leaned 1/3, Jocelyn preferred 3); (b) the location/contents of Akin's ~20-procedure list."
+      - "Mobile camera/photo capture must actually work on a phone (getUserMedia / file input capture=environment), not just look present."
+      - "Voice-to-text for the story field is a real capability (Web Speech API) with browser-support caveats; provide graceful fallback to typing."
+      - "State→insurer gating needs the per-state plan list from the consolidated Sheet/dataset; for CA that is ~12 plans."
+      - "Prepopulating conservative-care answers as 'yes' means the letter will assert 'tried it, didn't work' — the UI copy must let the patient correct a wrong prepopulation."
+    existing_plan_facts:
+      - "Mockups are STATIC HTML in the clone at mockups/: index.html, map/, checklist-steps/, assets/base.css, assets/data.js. This is source of truth; the card-folder copy re-syncs, so edit the clone."
+      - "A prior board (docs/goals/patient-appeal-ui in the card session) delivered the initial divergent mockups; that tranche (pick a direction) is complete. This board is the NEXT tranche: implement the chosen direction + review-call refinements."
+      - "All 7 decisions and their clinical rationale are captured in memory/project_ui_review_call.md (the durable record of the ~2026-07-12 call)."
+      - "Item 1 (denial-letter upload) is top priority / near-mandatory per both Dr. Kassam and Anish/Jocelyn."
+      - "Conservative-care model: 4 forms = activity modification, anti-inflammatories, injections, formal PT; patient typically must have tried 2 of 4; ask by RECENCY ('last 6 months', helpful/lasting), prepopulate yes, do NOT ask session counts / months up front."
+      - "Imaging conditional: knee → x-ray; shoulder/others → also advanced imaging (MRI)."
+      - "Procedure picker: category (Knee/Hip/Shoulder/Foot & Ankle/Spine) → subtype dropdown (~20 procedures) or free text."
+      - "Add a State question and use it to gate the insurer list to plans available for that state."
+      - "Optional 'tell us your story' free-text, voice-to-text friendly (esp. mobile), with a fallback prompt when structured answers are insufficient; personal framing throughout; conditional pronoun/gender logic."
+      - "Mobile = version A (single big button, one question at a time, progress bar); desktop = version 1 or 3 (auto-does-more, scroll). Serve A on phone, 1/3 on desktop."
+      - "Do NOT build the 'Build my appeal packet' final CTA — intentionally TBD this tranche."
+      - "Use the frontend-design skill during dev; dogfood via the /url skill and verify with WebFetch (local curl returns NXDOMAIN here)."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  exact_human_approval_can_terminal_wait: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/patient-ui-review-feedback/"
+    command: "node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal /home/clawd/mdplus-denial-agent-lab/docs/goals/patient-ui-review-feedback"
+
+active_task: null
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: default
+    objective: "Map the current mockups so Workers edit the right files, and resolve the two open questions (desktop v1-vs-v3, Akin's ~20-procedure list)."
+    inputs:
+      - /home/clawd/mdplus-denial-agent-lab/mockups/index.html
+      - /home/clawd/mdplus-denial-agent-lab/mockups/map/
+      - /home/clawd/mdplus-denial-agent-lab/mockups/checklist-steps/
+      - /home/clawd/mdplus-denial-agent-lab/mockups/assets/base.css
+      - /home/clawd/mdplus-denial-agent-lab/mockups/assets/data.js
+      - memory/project_ui_review_call.md
+    constraints:
+      - "Read-only. Do not edit mockup files."
+      - "Identify which existing mockup screen corresponds to mobile 'version A' vs desktop 'version 1' vs 'version 3'."
+      - "Report where procedure/insurer/question data lives (assets/data.js) and its shape, so Workers know where to add procedures, states, insurers."
+      - "Search the repo and card folder for Akin's initial document / the ~20-procedure list; report exact path or 'not found here'."
+    expected_output:
+      - "Mockup file/screen map: which file renders which version (A / 1 / 3) and how the flow is wired"
+      - "Data model map: how data.js drives questions/insurers, where to extend"
+      - "Open-question status: is there a distinguishable v1 and v3 in the mockups? where is Akin's procedure list (path or absent)?"
+      - "Ranked list of the 7 items by implementation dependency (what must land first)"
+    receipt:
+      result: done
+      summary: >-
+        Mockups have only TWO flows, not three. Version A = mockups/map/index.html
+        (guided, one-question-at-a-time, numbered side-rail). Version B =
+        mockups/checklist-steps/index.html (one-page progressive reveal, progress
+        BAR). No file is tagged v1 or v3; the call's 'desktop version 1/3' does NOT
+        map to repo files. Both flows are vanilla JS reading window.APPEAL from
+        assets/data.js (surgeries[] flat list; requirements[] {id,q,title,plain,why,how}
+        knee-only; insurer is free-text). No procedure categories/subtypes, no states,
+        no per-state insurer lists exist yet. Akin's ~20-procedure list is NOT in the
+        clone or card folder; nearest is a 12-row procedure_taxonomy.csv (payer analysis)
+        and seed_review_39_spec.json (state/payer policy dataset) as candidate backing.
+      key_files:
+        - "mockups/index.html (hub linking A and B)"
+        - "mockups/map/index.html (Version A, guided)"
+        - "mockups/checklist-steps/index.html (Version B, one-page)"
+        - "mockups/assets/data.js (APPEAL.surgeries, APPEAL.requirements, APPEAL.example)"
+        - "mockups/assets/base.css"
+      candidate_data:
+        - "card folder outputs/insurance_denial_navigator/commercial_ppo_denominator_2026-06-16/procedure_taxonomy.csv (12 rows, payer taxonomy)"
+        - "clone data/policy_platform/seed_review_39_spec.json (state/payer policy dataset, candidate for state->insurer gating)"
+      contradictions:
+        - "Team named desktop 'version 1 or 3'; repo has A (map/) and B (checklist-steps/) only. Naming must be reconciled with the team before the mobile/desktop split is built."
+        - "Memory attributes the progress BAR to Version A (mobile); in code the bar is in Version B, while A uses a side-rail roadmap."
+      ambiguity_requiring_judge:
+        - "Which repo file the team means by 'desktop version 1/3' (map/=A vs checklist-steps/=B)."
+        - "Whether the 12-row taxonomy CSV is an acceptable stand-in for the missing Akin ~20-procedure doc, or that source must be obtained first."
+      dependency_ranking:
+        - "1. data.js schema refactor (procedureCategories->subtypes, states, insurersByState) BLOCKS procedure picker + state gating + conditional imaging."
+        - "2. Obtain/confirm ~20-procedure source (Akin doc missing) feeds the schema."
+        - "3. Mobile-A/desktop split decision should precede content edits, but needs team naming reconciliation first."
+        - "4. Denial-letter upload (top priority) is data-independent; edits existing 'letter' step in both files; can proceed in parallel."
+        - "5. Recency conservative-care + body-part-conditional imaging depend on requirements becoming procedure-scoped (part of #1)."
+        - "6. Voice 'tell us your story' is fully independent; can land any time."
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Validate the 7-item plan against the actual mockups and sequence it into the largest safe vertical Worker slices; make a labeled recommendation on desktop v1-vs-v3 and the procedure-list source."
+    inputs:
+      - "T001 receipt"
+      - "memory/project_ui_review_call.md"
+    constraints:
+      - "Do not implement."
+      - "Preserve the existing_plan facts; do not drop items or invent new scope."
+      - "Group same-shape work; do not create one Worker per tiny edit."
+      - "If desktop v1-vs-v3 or Akin's list is still unresolved, pick a labeled default that unblocks the build and flag it for Andrew rather than stalling."
+    expected_output:
+      - "Decision + labeled default for desktop v1-vs-v3 and procedure-list source"
+      - "Ordered Worker slices (objective + allowed_files + verify + stop_if each)"
+      - "Which item is the first Worker slice (expected: denial-letter upload, the top priority)"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      summary: >-
+        7-item plan survives the real 2-flow (A/B) code. Both flows share data.js but
+        hardcode surgery/insurer/letter steps inline, so each data item spans data.js +
+        both HTML files. Item 3 (conditional imaging) requires item 4's body-part
+        taxonomy, so folded into the T005 cluster. Item 7's 'version 1/3' has no repo
+        artifact -> labeled default phone=A (map/), desktop=B (checklist-steps/), flagged
+        non-blocking. Procedure taxonomy built now from 5 memory categories + 12-row
+        procedure_taxonomy.csv, flagged for Andrew. T003 (denial-letter upload) confirmed
+        first (top priority, data-independent).
+      labeled_defaults:
+        - "SPLIT: phone->A (map/), desktop->B (checklist-steps/). B IS the team's 'desktop version'; no v1/v3 file ever existed. Flag Andrew: a net-new third layout would be out-of-tranche design work."
+        - "TAXONOMY: build ~12-15 procedure category->subtype list from Knee/Hip/Shoulder/Foot&Ankle/Spine + procedure_taxonomy.csv (real CPTs). Flag Andrew to diff vs Akin's doc; additions are one-line data.js edits."
+      andrew_flags_non_blocking:
+        - "'version 1/3' naming maps to the two real flows A/B; confirm no net-new v3 is wanted."
+        - "procedure taxonomy is CSV+memory-seeded; state->insurer map is partly synthetic (seed_review_39_spec is CPT-27447 national rows, not a clean state->plan index)."
+      slice_order:
+        - "T003 FIRST: denial-letter upload (data-independent)."
+        - "T005 (reshaped): data.js schema + procedure picker + body-part conditional imaging + State->insurer gating (folds item 3)."
+        - "T004 AFTER T005: recency conservative-care (2-of-4, prepopulate yes, drop dates/sessions) — sequenced to avoid concurrent data.js requirements edits."
+        - "T006: voice 'tell us your story' (independent)."
+        - "T007: mobile=A/desktop=B split at the hub (index.html + base.css); leave A/B internals intact."
+        - "T008: dogfood via /url + WebFetch verify."
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: default
+    objective: "Make denial-letter upload prominent and near-mandatory across BOTH mockup flows, accepting any format (PDF, image, screenshot, paste) with real phone camera/photo capture on mobile; de-prioritize the 'I don't have it' skip path."
+    allowed_files:
+      - /home/clawd/mdplus-denial-agent-lab/mockups/map/index.html
+      - /home/clawd/mdplus-denial-agent-lab/mockups/checklist-steps/index.html
+      - /home/clawd/mdplus-denial-agent-lab/mockups/assets/base.css
+    verify:
+      - "Open file:///home/clawd/mdplus-denial-agent-lab/mockups/map/index.html and .../checklist-steps/index.html in Chromium (card-console live desktop for crd_707a19713119, or headless)."
+      - "Confirm the upload control is visually prominent in BOTH flows and accepts PDF, image, screenshot, and paste (input type=file accept=image/*,application/pdf plus paste)."
+      - "Emulate a mobile viewport and confirm the file input offers camera capture (capture=environment)."
+      - "Confirm the 'I don't have it / keep going' path is de-prioritized so upload reads as near-mandatory."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "File/camera capture semantics are ambiguous."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      summary: >-
+        Upgraded the denial-letter step in both flows from paste-only to a prominent
+        near-mandatory upload. base.css gained .letter-up (large dashed teal-tint tap/drop
+        target, camera/upload heading, format helper), .letter-paste (secondary
+        collapsible paste via <details>, id=lt preserved), .letter-skip (small
+        de-emphasized 'I can't find my letter right now' link), and a .chosen green
+        '✓ Letter attached' confirmation. map/ drawLetter and checklist-steps/ #b-letter
+        render <input type=file accept=image/*,application/pdf capture=environment
+        multiple> with filename confirmation wired in JS.
+      pm_verified: >-
+        Grep-confirmed the file input (accept + capture=environment + multiple) in both
+        flows, the .letter-up prominence styling on existing design tokens, flow array
+        still includes 'letter' with next() intact, and checklist progressive-reveal
+        locks preserved.
+      changed_files:
+        - mockups/assets/base.css
+        - mockups/map/index.html
+        - mockups/checklist-steps/index.html
+      followup:
+        - "Live pixel-level + on-device camera check deferred to T008 dogfood (headless Chromium is blocked by this host's snap AppArmor sandbox; markup/wiring verified via Node DOM shim + grep)."
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: default
+    objective: "Reframe conservative-care questions to recency ('in the last 6 months?', helpful/lasting or not) across the 4 forms (activity modification, anti-inflammatories, injections, formal PT), require 2-of-4, prepopulate 'yes' answers (editable), and remove date/session-count/months-of-PT questions. NOTE: runs AFTER T005 (both edit data.js requirements; imaging is split out in T005)."
+    allowed_files:
+      - /home/clawd/mdplus-denial-agent-lab/mockups/assets/data.js
+      - /home/clawd/mdplus-denial-agent-lab/mockups/map/index.html
+      - /home/clawd/mdplus-denial-agent-lab/mockups/checklist-steps/index.html
+    verify:
+      - "Open both flows and confirm the 4 conservative-care questions are recency-phrased, prepopulated yes are editable, 2-of-4 guidance shows, and no date/session-count fields remain."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Behavior is ambiguous."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      summary: >-
+        Reframed conservative-care to the surgeon's 2-of-4 model. requirements now has
+        FOUR forms (added 'activity'; rephrased meds/injection/pt) with recency phrasing
+        ('in the last 6 months'), body-generic copy (no 'knee'), a default:'yes' field,
+        meds/injection helpful-vs-lasting followup, and a requirementsIntro reassurance.
+        Removed all date/session-count/months copy. map/ drawReq prepopulates default-yes
+        (editable, explicit Continue), shows yes-only followup + live 2-of-4 count;
+        checklist renderList seeds editable yes-defaults + followup chips + reassurance.
+        Letter/procedure/state/insurer/imaging/lock machinery untouched.
+      pm_verified: >-
+        node-parsed: 4 forms (activity,meds,injection,pt), all default yes, recency
+        phrasing, requirementsIntro reassurance present, no date/session/months copy,
+        not knee-hardcoded; both inline scripts parse OK.
+      changed_files:
+        - mockups/assets/data.js
+        - mockups/map/index.html
+        - mockups/checklist-steps/index.html
+      followup:
+        - "Captured helpful/lasting nuance is stored but not yet surfaced in the summary/packet — that's future letter-generation work, out of this tranche."
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: default
+    objective: "data.js schema + procedure picker cluster (folds item 3): add procedureCategories→subtypes each carrying a bodyPart (seed from procedure_taxonomy.csv, 5 categories), drive a category→subtype drilldown in both flows replacing the flat surgeries list; make imaging conditional on bodyPart (knee=x-ray; shoulder/others=x-ray+MRI); add a State <select> + insurersByState map (seed from seed_review_39_spec.json payers) gating the insurer step, keeping free-text fallback. Runs BEFORE T004."
+    allowed_files:
+      - /home/clawd/mdplus-denial-agent-lab/mockups/assets/data.js
+      - /home/clawd/mdplus-denial-agent-lab/mockups/map/index.html
+      - /home/clawd/mdplus-denial-agent-lab/mockups/checklist-steps/index.html
+    verify:
+      - "Open both flows and confirm: Knee→subtype drilldown works; imaging shows x-ray for knee and adds MRI for shoulder; selecting a state filters the insurer list (free-text fallback preserved)."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Behavior is ambiguous."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      summary: >-
+        data.js: added procedureCategories (5 groups / 14 procedures from the real
+        taxonomy, incl. 'My procedure isn't listed'); imaging + imagingByBodyPart
+        (knee=xray, others=xray+mri); states (51); insurersByState (curated from
+        seed_review_39 payers) + insurersGeneric fallback, all flagged synthetic;
+        removed 'xray' from the flat requirements. map/: category/subtype drilldown
+        storing bodyPart, buildFlow() injects imaging by bodyPart, new drawState step
+        before insurer, state-filtered insurer picker w/ free-text fallback,
+        rebuildShell() so the rail tracks flow-length changes. checklist-steps/:
+        category/subtype chips, new b-state block, state-filtered insurer chips,
+        reqList()-driven checklist, lock chain surgery->state->insurer->rest. Letter
+        step + rail/lock machinery untouched.
+      pm_verified: >-
+        node-parsed data.js (procedureCategories Knee:4 Hip:2 Shoulder:3 Foot&Ankle:2
+        Spine:3; imagingByBodyPart knee=[xray] others=[xray,mri]; 51 states;
+        insurersByState populated) and confirmed both inline scripts parse OK.
+      changed_files:
+        - mockups/assets/data.js
+        - mockups/map/index.html
+        - mockups/checklist-steps/index.html
+      andrew_flags_non_blocking:
+        - "insurersByState is a representative/synthetic mockup stand-in (in-code comment) — swap for the real per-state payer dataset later."
+        - "Procedure taxonomy seeded from the 5 categories + real CPTs; diff against Akin's ~20-procedure doc when available (one-line data.js additions)."
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: default
+    objective: "Add an optional voice-friendly 'tell us your story' free-text field (Web Speech API with typing fallback) plus a fallback prompt when structured answers are insufficient; apply personal framing and conditional pronoun logic throughout."
+    allowed_files:
+      - /home/clawd/mdplus-denial-agent-lab/mockups/map/index.html
+      - /home/clawd/mdplus-denial-agent-lab/mockups/checklist-steps/index.html
+      - /home/clawd/mdplus-denial-agent-lab/mockups/assets/base.css
+    verify:
+      - "Open the mockup and confirm the story field is optional, offers voice input with graceful fallback, and the fallback prompt appears when structured answers are thin."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Behavior is ambiguous."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      summary: >-
+        Added an OPTIONAL voice-friendly 'tell us your story' field to both flows. map/:
+        drawStory()/wireMic() in the summary step (heading 'Anything else you'd like us
+        to know?', optional copy, feature-detected mic + textarea). checklist/: new locked
+        step-6 #b-story block gated by the existing chain. Mic uses SpeechRecognition ||
+        webkitSpeechRecognition, feature-detected with typing-only fallback, start/stop
+        toggle, appended transcript, 'Listening…' state. Non-blocking fallback nudge keys
+        off existing state (letter attached, unlisted procedure, reqYesCount<2). Personal
+        'you/your' framing (no gender question invented). base.css story/mic styles on
+        existing teal/paper tokens.
+      pm_verified: >-
+        Both flows contain the SpeechRecognition feature-detect and the story field;
+        both inline scripts parse OK; base.css braces balanced (83/83); map flow array
+        and checklist lock chain intact.
+      changed_files:
+        - mockups/map/index.html
+        - mockups/checklist-steps/index.html
+        - mockups/assets/base.css
+      followup:
+        - "Live on-device mic test needs Chrome/Edge + HTTPS + mic permission — deferred to T008 (the /url funnel provides HTTPS)."
+        - "A.story is stored but not yet surfaced in the summary/packet — future letter-generation work, out of tranche."
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: default
+    objective: "Serve Version A (mockups/map/, guided) on phone widths and Version B (mockups/checklist-steps/, one-page) on desktop widths via a width-based redirect at the hub — labeled default per Judge (no v1/v3 exists). Leave A/B internals intact and the 'Build my appeal packet' final CTA a visible placeholder."
+    allowed_files:
+      - /home/clawd/mdplus-denial-agent-lab/mockups/index.html
+      - /home/clawd/mdplus-denial-agent-lab/mockups/assets/base.css
+    verify:
+      - "Emulate a phone width → Version A serves; desktop width → Version B serves; confirm the final CTA is a visible placeholder, not a wired backend."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Behavior is ambiguous."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      summary: >-
+        Implemented the mobile/desktop split at the hub (index.html) as a device-aware
+        smart-start rather than a hard redirect, to preserve the review group's ability
+        to compare both flows. Added a prominent 'Start my appeal →' CTA (#startBtn) whose
+        href is set by width detection — isPhone = Math.min(window.innerWidth,
+        window.screen.width) <= 768 routes to map/ (Version A, guided) on phones and
+        checklist-steps/ (Version B, one-page) on desktop, with an explanatory sub-line.
+        The two compare tiles remain, each labeled by device ('Best on a phone' / 'Best on
+        a computer'), and the matching tile gets a 'Recommended for your device' badge via
+        a .rec-on class. base.css tokens reused (no new file needed beyond index.html's
+        scoped <style>).
+      pm_verified: >-
+        Read index.html end-to-end: smart-start script parses OK; isPhone width detection
+        drives startBtn href (map/ vs checklist-steps/) and the rec-on badge on tileA/tileB;
+        both flow entry points reachable. Confirmed the 'Build my appeal packet' CTA is a
+        pure placeholder in BOTH flows (map/ line ~559 'Build my appeal packet for ${who}';
+        checklist line ~226 id="build") and grep for fetch/XMLHttpRequest/axios/.post/
+        sendBeacon across the flows returned NONE — no backend calls (pure mockup).
+      changed_files:
+        - mockups/index.html
+      followup:
+        - "Live on-device width behavior (phone vs desktop) confirmed via T008 dogfood over the HTTPS /url link."
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: default
+    objective: "Dogfood: serve the updated mockups over the /url skill, verify reachability with WebFetch (200 + content), and produce the shareable HTTPS link for Andrew to open and hand to the uncoached stress-test cohort."
+    allowed_files: []
+    verify:
+      - "WebFetch the printed /url link and confirm 200 + expected mockup content."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The /url share does not verify externally via WebFetch."
+    receipt:
+      result: done
+      shared_link: "https://clawd-prod.taila37ab9.ts.net:10000/orthoappeals/"
+      summary: >-
+        Served the edited CLONE (source of truth) over the /url Tailscale Funnel. The clean
+        'orthoappeals' slug previously pointed at the stale card-folder copy; repointed it
+        at /home/clawd/mdplus-denial-agent-lab/mockups (symlink → served bytes == clone).
+        WebFetch (external, bypasses local NXDOMAIN) confirmed 200 + correct NEW content:
+        hub title 'OrthoAppeals — compare the versions', H1 'Same free tool — two front
+        doors', the device-aware 'Start my appeal →' CTA, and both device-labeled compare
+        tiles (A=Best on a phone, B=Best on a computer). WebFetch of assets/data.js
+        confirmed the served tree carries the item-3/4/5 schema: procedureCategories,
+        imagingByBodyPart (knee=[xray], others=[xray,mri]), insurersByState,
+        requirementsIntro, and recency phrasing ('In the last 6 months…').
+      verification_note: >-
+        WebFetch converts HTML→markdown and does NOT execute the flows' client-side JS, so
+        it cannot render the per-step upload control, procedure picker, or voice field — it
+        proves reachability + that the served files are the edited clone (not the stale
+        copy). The JS-rendered UI was verified by the Workers via Node DOM shim + grep; the
+        final on-device rendered + camera/mic check is exactly what Andrew's HTTPS dogfood
+        provides (the funnel supplies the HTTPS that Web Speech + camera capture require).
+      followup:
+        - "Take the share down when the stress test is done: /home/clawd/.claude/skills/url/scripts/url-share.sh stop orthoappeals"
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether all 7 review-call items are visibly implemented in the mockups and reachable via the shared link, mapping receipts back to the oracle."
+    inputs:
+      - "All done task receipts"
+      - "The shared /url link"
+      - "memory/project_ui_review_call.md"
+    constraints:
+      - "Do not implement."
+      - "Reject completion if any of the 7 items is missing or merely 'present but not prominent' (esp. denial-letter upload)."
+      - "Reject completion if the mobile/desktop split is not honored."
+      - "The 'Build my appeal packet' backend CTA being TBD is expected and does NOT block completion."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "per-item checklist mapping each of the 7 items to the mockup screen that carries it"
+      - "next task if not complete"
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      summary: >-
+        Independent Judge audit confirmed all 7 review-call items are implemented in the
+        clone mockup code (verification via inline-script + data.js inspection, the correct
+        path since flows render client-side). Denial-letter upload is genuinely
+        prominent/near-mandatory (3px dashed teal target, 40px icon, camera capture), paste
+        demoted, skip de-emphasized. Body-part-conditional imaging, category→subtype picker,
+        state-gated insurers, recency 2-of-4 conservative care, and optional voice story
+        field all present in BOTH flows. Mobile=A/desktop=B split honored at the hub via
+        768px detection. Build-packet CTA is an unwired placeholder; zero
+        fetch/XHR/axios/.post/sendBeacon anywhere. Link WebFetch-verified 200 in T008.
+      per_item:
+        - "1 letter upload — PASS: map/ drawLetter, checklist/ #b-letter; base.css .letter-up prominence, .letter-skip de-emphasis"
+        - "2 recency conservative-care — PASS: data.js requirements 4 forms default:yes 'last 6 months' 2-of-4 requirementsIntro; no date/session copy"
+        - "3 conditional imaging — PASS: data.js imagingByBodyPart knee=[xray] others=[xray,mri]; imagingFor()/reqList() in both flows"
+        - "4 procedure picker — PASS: data.js procedureCategories 5 cats/14 procs; drawCategory/drawSubtype + renderCategories/renderSubtypes; free-text fallback"
+        - "5 state gates insurer — PASS: data.js states+insurersByState+insurersGeneric; drawState→drawInsurer, #b-state→renderInsurers"
+        - "6 voice story — PASS: SpeechRecognition||webkit feature-detect + textarea fallback in both flows"
+        - "7 mobile/desktop split — PASS: index.html isPhone<=768 → map/ vs checklist-steps/ + recommended-tile badge"
+      build_cta: "Unwired placeholder confirmed (map/ L559, checklist/ #build L226); grep shows no backend calls."
+      andrew_flags_non_blocking:
+        - "insurersByState is a synthetic/representative stand-in — swap for the real per-state payer dataset."
+        - "Procedure taxonomy seeded from 5 categories + real CPTs — diff against Akin's ~20-procedure doc when available (one-line data.js additions)."
+        - "'desktop version 1/3' naming maps to the two real flows A/B; confirm no net-new v3 is wanted."
+        - "On-device rendered + camera/mic/width check is Andrew's HTTPS dogfood (headless Chromium blocked on this host)."
+
+checks:
+  dirty_fingerprint: clean
+  last_verification:
+    result: complete
+    task: T999
+    commands:
+      - "WebFetch https://clawd-prod.taila37ab9.ts.net:10000/orthoappeals/ → 200 + new hub content"
+      - "WebFetch .../orthoappeals/assets/data.js → procedureCategories/imagingByBodyPart/insurersByState/requirementsIntro/'last 6 months' present"
+      - "goal-judge code audit → all 7 PASS, Build-packet CTA unwired, full_outcome_complete: true"

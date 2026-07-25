@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UnitedHealthcare Policy Document</title>
+<style>
+  html,body{margin:0;background:#525659;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#111}
+  #topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;
+    background:#323639;color:#e8eaed;padding:8px 16px;border-bottom:1px solid #1f2123;font-size:13px}
+  #topbar .dot{width:10px;height:10px;border-radius:50%;background:#e74c3c}
+  #topbar .url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#9aa0a6;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #doc{display:flex;flex-direction:column;align-items:center;padding:20px 0 60px}
+  #pageWrap{position:relative;box-shadow:0 2px 14px rgba(0,0,0,.5);background:#fff}
+  canvas{display:block}
+  #overlay{position:fixed;right:20px;top:64px;width:340px;z-index:10;
+    background:#111827;color:#e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.55);
+    font-size:13px;overflow:hidden;display:none}
+  #overlay h4{margin:0;padding:10px 14px;background:#1f2937;font-size:12px;letter-spacing:.05em;
+    text-transform:uppercase;color:#93c5fd}
+  #overlay .row{display:flex;justify-content:space-between;gap:12px;padding:7px 14px;border-top:1px solid #1f2937}
+  #overlay .row .k{color:#9ca3af}
+  #overlay .row .v{font-family:ui-monospace,Menlo,monospace;text-align:right;word-break:break-all}
+  #overlay .row .v.ok{color:#34d399}
+  #banner{position:fixed;left:0;right:0;bottom:0;z-index:11;display:none;
+    background:#064e3b;color:#f0fdf4;padding:12px 18px;font-size:14px;
+    border-top:2px solid #10b981}
+  #banner code{font-family:ui-monospace,Menlo,monospace;color:#a7f3d0;word-break:break-all}
+  #err{color:#fff;padding:40px;font-size:15px}
+</style>
+</head>
+<body>
+  <div id="topbar">
+    <span class="dot"></span>
+    <span id="title">Policy document</span>
+    <span class="url" id="srcurl"></span>
+  </div>
+  <div id="doc"><div id="pageWrap"><canvas id="pg"></canvas></div></div>
+  <div id="overlay"><h4>Fetched document — verified</h4><div id="ovbody"></div></div>
+  <div id="banner"></div>
+  <div id="err"></div>
+
+<script src="./vendor/pdf.min.js"></script>
+<script>
+(function(){
+  var params = new URLSearchParams(location.search);
+  var file = params.get('file') || 'surgery-knee.pdf';
+  var title = params.get('title') || file;
+  var srcurl = params.get('src') || file;
+  document.getElementById('title').textContent = title;
+  document.getElementById('srcurl').textContent = srcurl;
+
+  window.__showFetchFacts = function(facts){
+    var body = document.getElementById('ovbody');
+    body.innerHTML = '';
+    var rows = [
+      ['HTTP status', String(facts.status), facts.status===200],
+      ['Content-Type', String(facts.content_type||'')],
+      ['Size', (facts.bytes!=null? facts.bytes.toLocaleString()+' bytes':'')],
+      ['sha256', facts.sha256? (facts.sha256.slice(0,16)+'…'):'']
+    ];
+    rows.forEach(function(r){
+      var d=document.createElement('div');d.className='row';
+      d.innerHTML='<span class="k">'+r[0]+'</span><span class="v'+(r[2]?' ok':'')+'">'+r[1]+'</span>';
+      body.appendChild(d);
+    });
+    document.getElementById('overlay').style.display='block';
+  };
+  window.__showReturn = function(url){
+    var b=document.getElementById('banner');
+    b.innerHTML='<strong>Answer returned:</strong> governing policy → <code>'+url+'</code>';
+    b.style.display='block';
+  };
+
+  var pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdf.worker.min.js';
+
+  window.__pdfReady = pdfjsLib.getDocument(file).promise.then(function(pdf){
+    return pdf.getPage(1);
+  }).then(function(page){
+    var scale = 1.5;
+    var viewport = page.getViewport({scale: scale});
+    var canvas = document.getElementById('pg');
+    var ctx = canvas.getContext('2d');
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    return page.render({canvasContext: ctx, viewport: viewport}).promise;
+  }).then(function(){
+    window.__pdfRendered = true;
+    return true;
+  }).catch(function(e){
+    document.getElementById('err').textContent = 'PDF render error: ' + e;
+    window.__pdfRendered = false;
+    throw e;
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Policy-retrieval trajectory environment — KISS v0"
+  slug: "policy-retrieval-env"
+  kind: existing_plan
+  tranche: "Produce ONE real stored trajectory (jsonl + meta with automatic oracle) for one policy-retrieval row, plus a thin CLI reader/labeler, reusing existing repo machinery. Stop for review before more rows, batch oracle, parallelism, or any UI."
+  status: done
+  oracle:
+    signal: "For the chosen row, run_XXXX.meta.json.oracle.correct is computed by comparing the agent's retrieved policy id to the known-correct governing policy (right plan variant + current version) in the ground-truth registry (data/policy_platform/source_registry.json and/or the consolidated Google Sheet)."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "A real runs/run_XXXX.jsonl + runs/run_XXXX.meta.json produced by an actual retrieval run (not hardcoded), whose oracle verdict was computed from ground truth, readable and labelable via the thin CLI."
+  intake:
+    original_request: "can we build the full rl environment to be ran for our use cases? (narrowed to: policy-retrieval use case, start KISS / bare essentials)"
+    interpreted_outcome: "For one row, an agent actually attempts policy retrieval and writes a real structured trajectory to disk (jsonl steps + meta with automatic oracle), readable and labelable — proving the storable data unit before any dashboard."
+    input_shape: existing_plan
+    audience: "Andrew (domain/product lead) + human reviewers; downstream buyer = frontier labs"
+    authority: requested
+    proof_type: artifact
+    completion_proof: "One real runs/run_XXXX.jsonl + runs/run_XXXX.meta.json for one row, oracle computed from ground truth, readable/labelable via thin CLI. Not hardcoded."
+    likely_misfire: "Rebuilding the fleet/cockpit UI or the full RL environment (reward shaping, branching, 5 streams) before one real stored trajectory exists; or faking the trajectory with scripted data again; or over-engineering storage (DB) when two flat files suffice."
+    blind_spots_considered:
+      - "The HTML mockup stores nothing — every value is hardcoded; real storage does not exist yet."
+      - "Repo already targets policy-retrieval agents (pyproject) and ships source_registry.json + criteria_extractions.json — map and reuse, don't reinvent."
+      - "Oracle must be automatic (compare to ground truth), not human-declared, or output is just annotated data."
+      - "PHI: policy retrieval uses public payer docs — no patient data; keep it that way."
+      - "Full RL env is the endgame, not v0."
+    existing_plan_facts:
+      - "Data unit = two flat files per run: runs/run_XXXX.jsonl (one JSON line per step) + runs/run_XXXX.meta.json (row + oracle + human label)."
+      - "Minimal step line: {i, action, choice/args, obs, self_verdict}."
+      - "Minimal meta: {row, payer, plan, cpt, target, oracle:{correct,reachable,reward}, label:{fail_state,failure_type,expert_action}}."
+      - "Build order: (1) schema+storage, (2) one real run writes them, (3) thin reader/labeler."
+      - "Durable home = this repo; not the card folder (sync reverts), not /tmp (ephemeral)."
+      - "Task is policy retrieval only, not filing appeals."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  exact_human_approval_can_terminal_wait: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: none
+  local:
+    status: not_requested
+    url: null
+    command: "node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/policy-retrieval-env"
+
+active_task: null
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: medium
+    objective: "Map the repo's existing policy-retrieval machinery and the ground-truth oracle so the KISS two-file trajectory can reuse what exists instead of reinventing it."
+    inputs:
+      - README.md
+      - SYNTHETIC_LAB.md
+      - pyproject.toml
+      - synthetic_harness/ (episode.py, arms.py, cli.py, source_review.py, adjudication.py, evaluation.py, results.py, metrics.py)
+      - data/policy_platform/source_registry.json
+      - data/policy_platform/criteria_extractions.json
+      - scripts/run_denial_simulation_lab.sh
+      - tests/test_synthetic_harness.py
+      - "Consolidated Google Sheet (payer-policy retrievability dataset) as candidate oracle ground truth — note access path, do not fetch if it needs interactive auth."
+    constraints:
+      - "Read-only. Do not edit implementation files."
+      - "Prefer concrete file-path + line evidence over generic advice."
+      - "Answer specifically: does anything already run a retrieval agent and store a per-run trajectory? What is reusable for runs/*.jsonl + meta.json? What is the authoritative known-correct-policy source for the oracle? Where should the runner + runs/ live?"
+    expected_output:
+      - "Repo map focused on policy retrieval"
+      - "Reuse candidates (modules/functions/data) for the KISS two-file trajectory"
+      - "Authoritative oracle ground-truth source + how to compute correct=true/false for a row"
+      - "Proposed fit (or gaps) of the minimal schema against what exists"
+      - "Candidate next tasks"
+    receipt:
+      result: done
+      summary: "Repo already runs isolated retrieval agents and writes per-run trajectories, but as hash-chained EPISODE dirs under outputs/synthetic_patient_simulations/episodes/, not the KISS runs/run_XXXX.{jsonl,meta.json} form. Reusable: arms.result_schema()/result_contract() (case_identification.payer/plan/cpt/procedure + retrieval.selected_source), results.validate_arm_result, source_review.source_fingerprint (oracle comparator), authoring.PolicyIndex + build_anchor_snapshot (per-row correct-policy anchor), CLI list-candidates. CRITICAL GAP: committed source_registry.json + criteria_extractions.json are EMPTY ([]); local ground truth is per-episode sealed/encrypted, not a per-row correct policy. No automatic oracle.correct exists yet. External candidate: consolidated Google Sheet (company/plan/state/target_url/retrievability_grade/doc_id), non-interactive service-account key. Judge must pick the truth source and define reachable/reward."
+      evidence:
+        - "synthetic_harness/episode.py:44-58,111-145 — per-episode dir with hash-chained *.events.jsonl logs (existing trajectory store, not runs/run_XXXX.jsonl)"
+        - "synthetic_harness/arms.py:74-176 — result_contract/result_schema: case_identification.payer/plan_name/product_type/state/procedure/cpt + selected_source (title,url,path,sha256,evidence_role)"
+        - "synthetic_harness/arms.py:268-320 — agent_prompt runs a real retrieval attempt, writes result.json + agent_events.jsonl"
+        - "synthetic_harness/authoring.py:59-172 — PolicyIndex loads registry+criteria (keyed source_id/criteria_id); build_anchor_snapshot yields per-row governing source_id/official_url/effective_date/source_sha256"
+        - "synthetic_harness/authoring.py:175-344 — ground truth is openssl-encrypted per-episode (sealed/ground_truth.enc), controller-key gated; NOT a plain per-row oracle"
+        - "synthetic_harness/source_review.py:73-87 — source_fingerprint(): canonical hash to compare retrieved vs known source"
+        - "synthetic_harness/results.py:15-63 — validate_arm_result reusable"
+        - "data/policy_platform/source_registry.json + criteria_extractions.json — both committed as empty '[]' (wc -c = 3); real data git-ignored"
+        - "synthetic_harness/cli.py:81-246 — CLI entrypoint convention (list-candidates, author-case); default outputs/ roots"
+      facts:
+        - "arms.result_schema()/result_contract() supply row/payer/plan/cpt/target via case_identification and retrieval.selected_source"
+        - "authoring.PolicyIndex + build_anchor_snapshot map a criteria_id to governing source_id/official_url/effective_date/source_sha256 = per-row correct-policy anchor"
+        - "source_review.source_fingerprint is the ready-made comparator for oracle.correct"
+        - "results.validate_arm_result validates a retrieval result against the contract"
+        - "Existing trajectory format = hash-chained JSONL event logs per episode under outputs/ (git-ignored); CLI in synthetic_harness/cli.py"
+        - "External ground-truth candidate: Google Sheet final_consolidated id 1Im48XYqt50prRy46Rvtfl7ge96hy7dA58M5wElwTHjs (company/plan/state/target_url/retrievability_grade/doc_id); service-account key /home/clawd/.config/gog/service-account.json (non-interactive)"
+      contradictions:
+        - "Repo self-describes as launching retrieval agents with a source_registry/criteria dataset, but the committed source_registry.json and criteria_extractions.json are empty ([]) — no local ground-truth data to compute an oracle without the private library or the external Sheet"
+      ambiguity_requiring_judge:
+        - "Ground-truth source for oracle.correct: derive from PolicyIndex criteria->source anchor (requires populating the empty registry/criteria files) OR from the consolidated Google Sheet (target_url + retrievability_grade per row)?"
+        - "How to compute oracle.correct: exact match on source sha256/fingerprint, official_url/target_url, or source_id? source_fingerprint expects a rich source dict; Sheet only has target_url + doc_id"
+        - "oracle.reachable and oracle.reward have no existing analog; Judge must define them (likely reachable = target_url resolves + content verified from Sheet retrievability_grade)"
+        - "Existing machinery is per-episode sealed/encrypted and multi-arm; KISS wants one flat unencrypted meta.json per run — confirm reuse schema/validators but NOT the episode/sealing/controller-key flow"
+        - "New runs/ dir does not exist; place under repo root runs/ (goal names it) or outputs/ (git-ignored, private)?"
+      commands:
+        - "ls -la repo/synthetic_harness/outputs/data"
+        - "Read pyproject/README/SYNTHETIC_LAB"
+        - "Read synthetic_harness/{episode,evaluation,adjudication,metrics,authoring,source_review,results,cli}.py"
+        - "wc -c + head data/policy_platform/*"
+        - "grep oracle/reachable/reward/google-sheet; Read tests + memory reference_orthoappeals_sheet.md"
+      note_needed: false
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: medium
+    objective: "Validate the KISS two-file trajectory schema against Scout findings, decide reuse-vs-build, and specify the single Worker slice that produces one real stored trajectory for one row."
+    inputs:
+      - "T001 receipt"
+      - "docs/goals/policy-retrieval-env/goal.md (existing_plan_facts)"
+    constraints:
+      - "Do not implement."
+      - "Keep it KISS: two flat files, automatic oracle, thin CLI reader — reject scope creep to fleet/cockpit UI, DB, batch, or parallelism."
+      - "Pick ONE largest-safe-useful Worker slice with explicit allowed_files, verify commands, and stop_if."
+    expected_output:
+      - "Decision (reuse vs build, and the confirmed schema)"
+      - "Exact Worker objective"
+      - "allowed_files"
+      - "verify"
+      - "stop_if"
+      - "Any blocked/deferred tasks (e.g. oracle source needs credentials)"
+    receipt:
+      result: done
+      summary: "Decision (verified by reading + live checks): reuse arms.py schema vocab (case_identification + selected_source) and source_review.source_fingerprint as the correctness comparator; do NOT drag in episode/sealing/multi-arm. Local registry/criteria are genuinely empty ([]) so they cannot be the oracle. Oracle source = consolidated Google Sheet tab final_consolidated (gid 1011508420), non-interactive service-account read confirmed. Chosen row: UnitedHealthcare employer/group Commercial, CPT 27447, target_url surgery-knee.pdf, doc_id N01 — curl confirms HTTP 200 application/pdf (402KB). Honesty guard: agent picks from a candidate URL set with >=1 wrong option and REALLY fetches; oracle compares fetched host/path+sha256 to Sheet target_url. reward: +1 correct&reachable / 0 reachable-but-wrong / -1 unreachable. One vertical Worker slice: runner + thin reader/labeler + kiss_oracle + single-row snapshot + test."
+      decision:
+        reuse:
+          - "synthetic_harness/arms.py:74-183 result_contract/result_schema field vocabulary (payer/plan_name/product_type/state/procedure/cpt + selected_source{url,sha256,effective_date,evidence_role})"
+          - "synthetic_harness/source_review.py:73-87 source_fingerprint() as correctness comparator"
+        build_fresh:
+          - "scripts/run_policy_retrieval.py (runner: agent selects from candidate URLs, REAL HTTP fetch, writes jsonl+meta)"
+          - "scripts/read_run.py (thin CLI reader/labeler)"
+          - "synthetic_harness/kiss_oracle.py (grade one run vs Sheet/snapshot)"
+          - "data/policy_platform/kiss_row_uhc_27447.json (single-row ground-truth snapshot from Sheet, NOT a fake trajectory)"
+          - tests/test_kiss_run.py
+          - runs/.gitkeep
+        oracle_source: "Google Sheet tab final_consolidated.csv gid 1011508420 (company,plan,line_of_business,state,retrievability_grade,target_url,url_resolves,content_verified,doc_id,effective_date); only source with real per-row ground truth + non-interactive access via /home/clawd/.config/gog/service-account.json. Local registry empty."
+        oracle_fields:
+          correct: "bool — agent's returned policy URL host+path (or fetched sha256) matches the Sheet row target_url. Computed, never literal true."
+          reachable: "bool — the known target_url actually returned HTTP 200 policy content-type during the run (corroborated by Sheet url_resolves=Y/content_verified=Y)."
+          reward: "scalar — +1 if correct and reachable; 0 if reachable but wrong selection; -1 if selected URL unreachable."
+        chosen_row: "UnitedHealthcare employer/group, Commercial, National, CPT 27447; target_url https://www.uhcprovider.com/content/dam/provider/docs/public/policies/comm-medical-drug/surgery-knee.pdf; doc_id N01; content_verified Y (sheet_row 2)"
+        runs_location: "/home/clawd/mdplus-denial-agent-lab/runs/ (new dir; NOT git-ignored, unlike outputs/)"
+        retrieval_honesty: "Agent handed a small candidate set of payer-domain URLs (true UHC surgery-knee PDF + >=1 plausible-but-wrong payer URL), picks one, runner performs a REAL HTTP fetch of the pick and logs each step to jsonl; oracle compares fetched result to Sheet ground truth. The answer URL must NOT be fed straight into the agent's choice."
+      worker_spec:
+        objective: "For the one UHC row, implement a runner where an agent really selects-and-fetches a payer policy URL from a small candidate set, writes runs/run_0001.jsonl (one JSON step per line) + runs/run_0001.meta.json (row + automatic oracle computed by comparing the fetched URL/host+sha256 to the Sheet ground truth), plus a thin CLI reader that prints steps and writes a human label into meta."
+        allowed_files:
+          - scripts/run_policy_retrieval.py
+          - scripts/read_run.py
+          - synthetic_harness/kiss_oracle.py
+          - tests/test_kiss_run.py
+          - runs/.gitkeep
+          - data/policy_platform/kiss_row_uhc_27447.json
+        verify:
+          - "python scripts/run_policy_retrieval.py --row data/policy_platform/kiss_row_uhc_27447.json --out runs/run_0001 (exits 0, network fetch actually performed)"
+          - "test -f runs/run_0001.jsonl && test -f runs/run_0001.meta.json"
+          - "python -c \"import json; [json.loads(l) for l in open('runs/run_0001.jsonl') if l.strip()]; print('jsonl ok')\""
+          - "python -c \"import json; m=json.load(open('runs/run_0001.meta.json')); o=m['oracle']; assert isinstance(o['correct'],bool) and isinstance(o['reachable'],bool) and isinstance(o['reward'],(int,float)); print('oracle', o)\""
+          - "python scripts/read_run.py runs/run_0001 --label-fail-state none --failure-type none --expert-action 'reviewed' && python -c \"import json; m=json.load(open('runs/run_0001.meta.json')); assert m['label']['expert_action']; print('label written', m['label'])\""
+          - "python -m pytest tests/test_kiss_run.py -q"
+        stop_if:
+          - "Google Sheet read or service-account key at /home/clawd/.config/gog/service-account.json unavailable/needs interactive auth: mark blocked, seed follow-up, snapshot the single row's ground truth into data/policy_platform/kiss_row_uhc_27447.json (target_url, doc_id, host, content_verified) as the honest oracle input rather than faking correct=true."
+          - "Chosen target_url stops returning HTTP 200: pick another success row from final_consolidated.csv (gid 1011508420) with url_resolves=Y and content_verified=Y and record which row."
+          - "Need files outside allowed_files, or oracle would require populating the empty registry/criteria (out of scope) — stop and report."
+          - "Any temptation to hardcode oracle.correct or read the answer URL straight into the agent's selection — stop; the candidate set must contain >=1 wrong payer URL so a miss yields correct=false."
+          - "Verification fails twice."
+      deferred_tasks: []
+      evidence:
+        - "synthetic_harness/arms.py:74-183 — schema vocab to reuse"
+        - "synthetic_harness/source_review.py:73-87 — source_fingerprint comparator"
+        - "synthetic_harness/authoring.py:59-102 + data/policy_platform/{source_registry,criteria_extractions}.json=[] — PolicyIndex path yields no oracle (rejected)"
+        - "Sheet final_consolidated gid 1011508420: 968 rows, success=425; non-interactive read via service-account succeeded"
+        - "curl HTTP 200 application/pdf size=402114 on UHC surgery-knee.pdf — real fetch will succeed"
+        - ".gitignore keeps outputs/* ignored; runs/ is new and NOT ignored"
+      note_needed: false
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "For the one UHC row (employer/group Commercial, CPT 27447), implement a runner where an agent really selects-and-fetches a payer policy URL from a small candidate set (>=1 wrong), writes runs/run_0001.jsonl (one JSON step per line) + runs/run_0001.meta.json (row + automatic oracle computed by comparing the fetched URL host/path+sha256 to the Google Sheet ground truth), plus a thin CLI reader that prints steps and writes a human label into meta. Reuse arms.py schema vocab + source_review.source_fingerprint; do NOT import episode/sealing/multi-arm."
+    allowed_files:
+      - "scripts/run_policy_retrieval.py"
+      - "scripts/read_run.py"
+      - "synthetic_harness/kiss_oracle.py"
+      - "tests/test_kiss_run.py"
+      - "runs/.gitkeep"
+      - "data/policy_platform/kiss_row_uhc_27447.json"
+    verify:
+      - "python scripts/run_policy_retrieval.py --row data/policy_platform/kiss_row_uhc_27447.json --out runs/run_0001 (exits 0, network fetch actually performed)"
+      - "test -f runs/run_0001.jsonl && test -f runs/run_0001.meta.json"
+      - "python -c \"import json; [json.loads(l) for l in open('runs/run_0001.jsonl') if l.strip()]; print('jsonl ok')\""
+      - "python -c \"import json; m=json.load(open('runs/run_0001.meta.json')); o=m['oracle']; assert isinstance(o['correct'],bool) and isinstance(o['reachable'],bool) and isinstance(o['reward'],(int,float)); print('oracle', o)\""
+      - "python scripts/read_run.py runs/run_0001 --label-fail-state none --failure-type none --expert-action 'reviewed' && python -c \"import json; m=json.load(open('runs/run_0001.meta.json')); assert m['label']['expert_action']; print('label written', m['label'])\""
+      - "python -m pytest tests/test_kiss_run.py -q"
+    stop_if:
+      - "Google Sheet read or service-account key at /home/clawd/.config/gog/service-account.json unavailable/needs interactive auth: mark blocked, seed follow-up, snapshot the single row's ground truth into data/policy_platform/kiss_row_uhc_27447.json (target_url, doc_id, host, content_verified) as the honest oracle input rather than faking correct=true."
+      - "Chosen target_url stops returning HTTP 200: pick another success row from final_consolidated.csv (gid 1011508420) with url_resolves=Y and content_verified=Y and record which row."
+      - "Need files outside allowed_files, or oracle would require populating the empty registry/criteria (out of scope) — stop and report."
+      - "Any temptation to hardcode oracle.correct or read the answer URL straight into the agent's selection — stop; the candidate set must contain >=1 wrong payer URL so a miss yields correct=false."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      summary: "Built KISS v0 policy-retrieval trajectory env for one row (UHC employer/group Commercial, CPT 27447). Ground truth snapshotted LIVE from the final_consolidated Sheet (doc_id N01) via service-account JWT + Sheets REST. Runner does a real keyword-relevance selection over an honest 2-candidate set (true surgery-knee.pdf vs wrong Medicare-Advantage joint-procedures.pdf distractor), then a REAL HTTP fetch, and computes the oracle by URL comparison. Real run verdict: correct=True, reachable=True, reward=1 (HTTP 200 application/pdf, 402114 bytes, sha256 recorded). Thin reader/labeler writes label without touching oracle. All 6 verify commands pass; 7 pytest tests pass. PM independently re-confirmed oracle discrimination (wrong pick -> correct=false/reward=0; unreachable -> reward=-1). Produced outputs runs/run_0001.jsonl + runs/run_0001.meta.json."
+      changed_files:
+        - scripts/run_policy_retrieval.py
+        - scripts/read_run.py
+        - synthetic_harness/kiss_oracle.py
+        - tests/test_kiss_run.py
+        - runs/.gitkeep
+        - data/policy_platform/kiss_row_uhc_27447.json
+      produced_run:
+        jsonl: runs/run_0001.jsonl
+        meta: runs/run_0001.meta.json
+        oracle_correct: true
+        oracle_reachable: true
+        oracle_reward: 1
+      commands:
+        - cmd: "python scripts/run_policy_retrieval.py --row data/policy_platform/kiss_row_uhc_27447.json --out runs/run_0001"
+          status: pass
+        - cmd: "test -f runs/run_0001.jsonl && test -f runs/run_0001.meta.json"
+          status: pass
+        - cmd: "python -c 'json.loads each jsonl line' -> jsonl ok"
+          status: pass
+        - cmd: "python -c 'assert oracle types' -> correct=True reachable=True reward=1"
+          status: pass
+        - cmd: "python scripts/read_run.py runs/run_0001 --label-fail-state none --failure-type none --expert-action reviewed -> label written"
+          status: pass
+        - cmd: "python -m pytest tests/test_kiss_run.py -q -> 7 passed"
+          status: pass
+        - cmd: "PM independent oracle check: WRONG correct=False/reward=0; RIGHT correct=True/reward=1; UNREACHABLE reward=-1"
+          status: pass
+      honesty_notes: "build_candidates strips correctness labels and sorts by URL (true answer not trivially first); score_candidate ranks by keyword overlap using generic payer URL-taxonomy (comm-medical-drug for Commercial vs medadv-mp for Medicare Advantage), not answer knowledge. Flipping row context to Medicare Advantage makes the ranker pick the distractor and the oracle returns correct=False/reward=0. oracle.correct derived by host+path comparison, never literal True."
+      environment_notes: "Env is externally-managed (PEP 668); Worker created a venv at /home/clawd/.kiss-venv (pytest+requests) and a PATH wrapper /home/clawd/.local/bin/python -> python3 so verify commands run as written. Environment setup only; no repo source edits beyond allowed_files. runs/ and the snapshot json are gitignored but exist on disk."
+      blocked_reason: null
+      note_needed: false
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: medium
+    objective: "Audit whether a real stored trajectory now exists for one row with an honest automatic oracle and a working thin reader/labeler, and that scope stayed KISS."
+    inputs:
+      - "All done task receipts"
+      - "Last verification"
+      - "Current dirty diff"
+      - "The produced runs/run_XXXX.jsonl + meta.json"
+    constraints:
+      - "Do not implement."
+      - "Reject completion if the trajectory is hardcoded/faked or the oracle is human-declared rather than computed."
+      - "Reject completion if required Worker work is still queued or active."
+      - "This tranche is intentionally bounded: do NOT demand fleet/batch/UI to call it complete."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      summary: "Verified by real reads + re-runs. run_0001.jsonl (6 coherent steps) + meta.json parse and hold row/oracle/label/ground_truth. Oracle computed via URL host+path compare (kiss_oracle.py:74), never literal True: wrong URL->correct=False/reward=0, right->True/1. Agent can genuinely miss: flipping LOB to Medicare Advantage makes the keyword ranker pick the distractor (3.0>2.0), oracle returns correct=False. Live re-run to /tmp performed a real fetch (402114 bytes, sha256 match, 200 application/pdf), proving reproducibility. Reader labels meta.label without touching oracle. 7 pytest tests pass and assert both directions. Scope KISS: only 4 source files + runs/, no DB/UI/fleet. No queued/active Worker work remains. VERDICT: COMPLETE."
+      checks:
+        - name: "both files exist and parse"
+          pass: true
+          evidence: "runs/run_0001.jsonl 6 valid JSON lines; run_0001.meta.json valid with row/payer/plan/cpt/target/oracle/label"
+        - name: "trajectory is real/reproducible"
+          pass: true
+          evidence: "re-run to /tmp/audit_run live fetch 200 application/pdf 402114 bytes sha256 ce887339... identical"
+        - name: "oracle computed not hardcoded"
+          pass: true
+          evidence: "kiss_oracle.py:74 correct=urls_match(selected,gt); wrong->correct=False/reward=0"
+        - name: "agent could pick wrong"
+          pass: true
+          evidence: "flip LOB to MedAdv -> ranker selects medadv-mp distractor (3.0>2.0) -> oracle correct=False"
+        - name: "ground truth real & external"
+          pass: true
+          evidence: "kiss_row_uhc_27447.json provenance final_consolidated Sheet doc_id N01; distractor real MedAdv N03"
+        - name: "reader/labeler respects boundary"
+          pass: true
+          evidence: "read_run label write leaves oracle unchanged correct=True/reward=1"
+        - name: "tests assert discrimination"
+          pass: true
+          evidence: "pytest -q -> 7 passed (true, wrong, unreachable, non-pdf, sha-flip)"
+        - name: "scope stayed KISS"
+          pass: true
+          evidence: "git status: only docs/goals, runs/, scripts/*.py, kiss_oracle.py, test; no DB/UI/fleet"
+      missing_evidence: []
+      next_task: "null"
+      note_needed: false
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: pass
+    task: T999
+    commands:
+      - "python scripts/run_policy_retrieval.py --row data/policy_platform/kiss_row_uhc_27447.json --out runs/run_0001 (real fetch, exit 0)"
+      - "re-run to /tmp/audit_run — live fetch 200 application/pdf 402114 bytes sha256 ce887339... identical (reproducible)"
+      - "oracle discrimination: wrong URL -> correct=False/reward=0; right -> correct=True/reward=1; unreachable -> reward=-1"
+      - "read_run.py label write leaves meta.oracle unchanged"
+      - "python -m pytest tests/test_kiss_run.py -q -> 7 passed"

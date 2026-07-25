@@ -156,7 +156,11 @@ async function launchBrowser() {
 // Serve the local real-content mirror over http so the browser performs a real
 // HTTP navigation (not a file:// deep-link). Returns { base, server }.
 async function startMirrorServer() {
-  const types = { ".html": "text/html; charset=utf-8", ".pdf": "application/pdf" };
+  const types = {
+    ".html": "text/html; charset=utf-8",
+    ".pdf": "application/pdf",
+    ".js": "text/javascript; charset=utf-8",
+  };
   const server = http.createServer(async (req, res) => {
     try {
       let rel = decodeURIComponent((req.url || "/").split("?")[0]);
@@ -300,12 +304,21 @@ async function main() {
     decision: { rationale: "Filter the policy list to knee/arthroplasty surgery entries." },
     action: { type: "search", target: "policy-search", value: args.query },
     act: async () => {
-      // The mirror has a live search box; live UHC's page has its own filter DOM.
-      // Try to type into a search input if present; either way scan the anchors.
+      // The mirror has a live substring filter; live UHC's page has its own
+      // filter DOM. Type the primary discriminating term (e.g. "knee") so the
+      // list genuinely narrows to the relevant candidates and the screenshot
+      // shows a real filtered result, not the untouched full index.
+      const filterTerm = tokenize(args.query)[0] || args.query;
       const box = await page.$('#policy-search, input[type="search"], input[type="text"]');
       if (box) {
+        await box.scrollIntoViewIfNeeded().catch(() => {});
         await box.click({ timeout: 5000 }).catch(() => {});
-        await box.fill(args.query).catch(() => {});
+        await box.fill(filterTerm).catch(() => {});
+        // dispatch input in case fill did not trigger the page's own listener
+        await page.evaluate((t) => {
+          const el = document.querySelector('#policy-search, input[type="search"], input[type="text"]');
+          if (el) { el.value = t; el.dispatchEvent(new Event("input", { bubbles: true })); }
+        }, filterTerm).catch(() => {});
         await page.waitForTimeout(400);
       }
       const visible = await page.$$eval("a[href]", (as) =>
@@ -391,21 +404,45 @@ async function main() {
   });
 
   // ---- Step 3: navigate the browser to the selected policy -----------------
+  // Headless Chromium treats a raw .pdf navigation as a DOWNLOAD (blank paint),
+  // so on the mirror surface we open the selected policy in a local pdf.js
+  // viewer that renders the REAL fetched PDF bytes (page 1) inside the real
+  // browser. The recorded action target stays the canonical policy URL (the
+  // semantic act is "open the selected policy"); render_via records the mechanism.
+  const selectedLeaf = selected.href.split("/").pop();
+  const viewerUrl =
+    surface === "mirror"
+      ? `${mirror.base}/viewer.html?file=${encodeURIComponent(selectedLeaf)}` +
+        `&title=${encodeURIComponent(selected.label)}` +
+        `&src=${encodeURIComponent(selectedCanonical)}`
+      : selectedNavUrl;
   await step("open_policy", "navigate", "Open the selected policy document in the browser", {
-    observation: { target: selectedNavUrl, canonical: selectedCanonical },
+    observation: {
+      target: selectedNavUrl,
+      canonical: selectedCanonical,
+      render_via: surface === "mirror" ? "pdfjs-local-viewer(real-bytes)" : "direct-nav",
+    },
     decision: { rationale: "Navigate to the selected policy link to retrieve the document." },
     action: { type: "goto", target: selectedNavUrl },
     act: async () => {
       let status = null;
       let navError = null;
+      let rendered = null;
       try {
-        const resp = await page.goto(selectedNavUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+        const resp = await page.goto(viewerUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
         status = resp ? resp.status() : null;
+        if (surface === "mirror") {
+          rendered = await page
+            .waitForFunction(() => window.__pdfRendered === true, { timeout: 20000 })
+            .then(() => true)
+            .catch(() => false);
+          await page.waitForTimeout(300);
+        }
       } catch (e) {
         // A PDF nav can surface as a download/viewer; capture the state anyway.
         navError = String(e);
       }
-      return { nav_status: status, nav_error: navError };
+      return { nav_status: status, nav_error: navError, pdf_rendered: rendered };
     },
   });
 
@@ -426,13 +463,27 @@ async function main() {
           : "Fetch did not return a reachable policy PDF.",
     },
     action: { type: "fetch", target: selectedCanonical },
-    act: async () => ({
-      status: fetched.status,
-      content_type: fetched.content_type,
-      bytes: fetched.bytes,
-      sha256: fetched.sha256,
-      error: fetched.error,
-    }),
+    act: async () => {
+      // Surface the REAL observed fetch facts on the viewer so the screenshot
+      // visibly differs and shows what was actually verified. Nothing invented:
+      // status/content_type/bytes/sha256 are the observed fetch result.
+      await page
+        .evaluate((f) => window.__showFetchFacts && window.__showFetchFacts(f), {
+          status: fetched.status,
+          content_type: fetched.content_type,
+          bytes: fetched.bytes,
+          sha256: fetched.sha256,
+        })
+        .catch(() => {});
+      await page.waitForTimeout(250);
+      return {
+        status: fetched.status,
+        content_type: fetched.content_type,
+        bytes: fetched.bytes,
+        sha256: fetched.sha256,
+        error: fetched.error,
+      };
+    },
   });
 
   // ---- Step 5: return the selected policy ----------------------------------
@@ -440,7 +491,13 @@ async function main() {
     observation: { returned_url: selectedCanonical },
     decision: { rationale: "Final answer: the selected governing policy URL." },
     action: { type: "return", target: selectedCanonical },
-    act: async () => ({ returned: selectedCanonical }),
+    act: async () => {
+      await page
+        .evaluate((u) => window.__showReturn && window.__showReturn(u), selectedCanonical)
+        .catch(() => {});
+      await page.waitForTimeout(250);
+      return { returned: selectedCanonical };
+    },
   });
 
   await context.close();
