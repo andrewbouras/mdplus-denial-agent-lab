@@ -169,3 +169,79 @@ a { color: var(--teal-deep); }
 }
 .backlink:hover { background: rgba(43, 38, 34, 1); }
 @media print { .backlink { display: none; } }
+
+/* ---- denial-letter upload (shared by both flows) ----
+ * The single most important input: patients often get PARTIAL denials and the
+ * LETTER is the only reliable record of what was actually denied. So the upload
+ * target is the big, hard-to-miss primary element; paste is secondary; and the
+ * "can't find it" path is a small, de-emphasized link — near-mandatory by weight. */
+.letter-up {
+  display: block; width: 100%; text-align: center;
+  border: 3px dashed var(--teal); border-radius: var(--radius);
+  background: var(--teal-tint);
+  padding: 30px 24px; cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, transform .12s ease;
+}
+.letter-up:hover { background: #dbeae2; border-color: var(--teal-deep); }
+.letter-up:active { transform: translateY(1px); }
+.letter-up:focus-within { outline: 4px solid var(--focus); outline-offset: 3px; }
+.letter-up input[type="file"] { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+.letter-up .up-ic { font-size: 40px; line-height: 1; display: block; margin-bottom: 8px; }
+.letter-up .up-head { font-family: var(--serif); font-size: 23px; font-weight: 560; color: var(--ink); display: block; }
+.letter-up .up-sub { font-size: 16px; color: var(--ink-soft); margin: 8px auto 0; max-width: 40ch; }
+.letter-up .up-formats { font-size: 14px; color: var(--ink-soft); margin-top: 12px; opacity: .85; }
+
+/* confirmation state when a file is chosen */
+.letter-up.chosen { border-style: solid; border-color: var(--green); background: var(--green-tint); }
+.letter-up.chosen .up-ic { }
+.letter-up.chosen .up-head { color: #205937; }
+
+/* secondary paste path — quieter than the upload target */
+.letter-paste { margin-top: 16px; }
+.letter-paste > summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--sans); font-size: 16px; font-weight: 640; color: var(--teal-deep);
+  padding: 6px 2px; text-underline-offset: 3px;
+}
+.letter-paste > summary::-webkit-details-marker { display: none; }
+.letter-paste > summary:hover { text-decoration: underline; }
+.letter-paste > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+
+/* ---- optional "tell us your story" free-text + voice-to-text ----
+ * Warm, clearly OPTIONAL open-ended field shared by both flows. The mic is
+ * feature-detected in JS (Web Speech API) and only rendered when supported, so
+ * typing is always the baseline. Uses the existing warm-paper / teal tokens. */
+.story-block { text-align: left; margin-top: 8px; }
+.story-head { font-family: var(--serif); font-size: 23px; font-weight: 560; color: var(--ink); }
+.story-nudge { color: var(--teal-deep); font-weight: 640; }
+
+/* textarea + mic sit together; mic tucks under the field on small screens */
+.story-input { position: relative; margin-top: 6px; }
+.story-input textarea.field { width: 100%; }
+
+.mic-btn {
+  display: inline-flex; align-items: center; gap: 9px; margin-top: 12px;
+  font-family: var(--sans); font-size: 16px; font-weight: 680;
+  color: var(--teal-deep); background: var(--teal-tint);
+  border: 2px solid var(--teal); border-radius: 999px;
+  padding: 11px 20px; min-height: 48px; cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, transform .12s ease;
+}
+.mic-btn:hover { background: #dbeae2; border-color: var(--teal-deep); }
+.mic-btn:active { transform: translateY(1px); }
+.mic-btn:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+.mic-btn .mic-ic { font-size: 20px; line-height: 1; }
+
+/* live "listening…" state — filled teal + gentle pulse */
+.mic-btn.listening { background: var(--teal); border-color: var(--teal); color: #fff; }
+.mic-btn.listening .mic-ic { animation: micpulse 1.1s ease-in-out infinite; }
+@keyframes micpulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(1.14); } }
+
+/* de-emphasized "can't find it" link */
+.letter-skip {
+  display: inline-block; margin-top: 10px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--sans); font-size: 14.5px; font-weight: 500; color: var(--ink-soft);
+  text-decoration: underline; text-underline-offset: 3px; padding: 6px;
+}
+.letter-skip:hover { color: var(--ink); }

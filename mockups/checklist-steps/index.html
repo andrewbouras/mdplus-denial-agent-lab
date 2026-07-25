@@ -82,15 +82,38 @@
 
   <div class="stage"><div id="root"></div></div>
 
-  <a class="backlink" href="../index.html">← All versions</a>
-
   <script src="../assets/data.js"></script>
   <script>
     const D = window.APPEAL;
     const REQ = D.requirements;
     const root = document.getElementById('root');
-    const A = { surgery: '', insurer: '', letter: '', have: {} }; // starts EMPTY
+    // catId/bodyPart added: procedure picker drills category → subtype and the
+    // bodyPart drives which imaging questions appear in the checklist.
+    const A = { catId: '', surgery: '', bodyPart: '', state: '', insurer: '', letter: '', letterFiles: [], letterName: '', story: '', have: {} }; // starts EMPTY
     let started = false;
+
+    // Feature-detect the Web Speech API (Chrome/Edge-ish; Firefox/Safari may
+    // lack it). If missing, the mic is never rendered — typing stays the only,
+    // always-available path, so the control is never broken.
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    // Imaging questions derived from bodyPart (knee → X-ray only; else X-ray+MRI).
+    function imagingFor(bodyPart) {
+      const ids = D.imagingByBodyPart[bodyPart] || D.imagingByBodyPart._default;
+      return ids.map(id => D.imaging[id]);
+    }
+    // Full checklist = flat requirements + bodyPart-derived imaging.
+    function reqList() { return [...REQ, ...imagingFor(A.bodyPart)]; }
+
+    // Prepopulate the conservative-care answers from their clinical default
+    // ("yes" — most patients have tried these). Only sets an id we haven't
+    // touched yet, so a patient un-checking one is never re-checked behind them.
+    function seedReqDefaults() {
+      REQ.forEach(r => { if (r.default === 'yes' && A.have[r.id] === undefined) A.have[r.id] = true; });
+    }
+    // How many conservative-care questions are checked — drives the gentle
+    // 2-of-4 reassurance (reassurance only, never a hard gate).
+    function reqYesCount() { return REQ.filter(r => A.have[r.id]).length; }
 
     function showHero() {
       started = false;
@@ -115,8 +138,9 @@
 
     function loadExample() {
       const ex = D.example;
-      A.surgery = ex.surgery; A.insurer = ex.plan; A.letter = ex.denialLetter;
-      A.have = {}; REQ.forEach(r => A.have[r.id] = true);
+      A.surgery = ex.surgery; A.catId = 'knee'; A.bodyPart = 'knee';
+      A.state = 'California'; A.insurer = ex.plan; A.letter = ex.denialLetter;
+      A.have = {}; reqList().forEach(r => A.have[r.id] = true);
       started = true; drawPage();
     }
 
@@ -130,37 +154,68 @@
 
         <div class="card block" id="b-surg">
           <span class="lbl"><span class="stepnum">1</span>Which surgery did they say no to?</span>
-          <p class="sub">Pick one, or type your own.</p>
-          <div class="chips" id="surg">
-            ${D.surgeries.map(s => `<button class="chipbtn${A.surgery === s ? ' on' : ''}" data-s="${s}">${s}</button>`).join('')}
-          </div>
-          <input class="field" id="sother" placeholder="Or type another surgery" value="${A.surgery && !D.surgeries.includes(A.surgery) ? A.surgery : ''}" />
+          <p class="sub">First pick the part of the body, then choose the exact surgery — or type your own.</p>
+          <div class="chips" id="surg-cat"></div>
+          <div id="surg-sub"></div>
+        </div>
+
+        <div class="card block" id="b-state">
+          <div class="locktag">🔒 Answer step 1 first</div>
+          <span class="lbl"><span class="stepnum">2</span>Which state are you in?</span>
+          <p class="sub">Insurance plans differ by state, so this helps us show the right plans next.</p>
+          <select class="field" id="stsel">
+            <option value="">Choose your state…</option>
+            ${D.states.map(s => `<option value="${s}"${A.state === s ? ' selected' : ''}>${s}</option>`).join('')}
+          </select>
         </div>
 
         <div class="card block" id="b-ins">
-          <div class="locktag">🔒 Answer step 1 first</div>
-          <span class="lbl"><span class="stepnum">2</span>Who's your insurance company?</span>
-          <p class="sub">The name on your insurance card is fine — for example, Aetna or Medicare.</p>
-          <input class="field" id="ins" placeholder="Your insurance's name" value="${A.insurer}" />
+          <div class="locktag">🔒 Answer step 2 first</div>
+          <span class="lbl"><span class="stepnum">3</span>Who's your insurance company?</span>
+          <p class="sub" id="ins-sub">Pick your plan, or type it in if it's not listed.</p>
+          <div class="chips" id="ins-chips"></div>
+          <input class="field" id="ins" placeholder="My plan isn't listed — type it here" value="${A.insurer}" />
         </div>
 
         <div id="b-rest">
           <div class="card block" id="b-letter">
-            <div class="locktag">🔒 Answer step 2 first</div>
-            <span class="lbl"><span class="stepnum">3</span>Have the letter they sent you? (optional)</span>
-            <p class="sub">Paste it and we'll use the right words in your appeal. No letter? Skip it.</p>
-            <textarea class="field" id="lt" placeholder="Paste your denial letter here…">${A.letter}</textarea>
+            <div class="locktag">🔒 Answer step 3 first</div>
+            <span class="lbl"><span class="stepnum">4</span>Start with your denial letter</span>
+            <p class="sub">This is the most important step. Your letter is the only place that says exactly what was turned down — a clear photo or copy helps us the most.</p>
+            <label class="letter-up${A.letterFiles && A.letterFiles.length ? ' chosen' : ''}" id="lt-drop">
+              <input type="file" id="lt-file" accept="image/*,application/pdf" capture="environment" multiple />
+              <span class="up-ic">${A.letterFiles && A.letterFiles.length ? '✓' : '📷'}</span>
+              <span class="up-head" id="lt-head">${A.letterFiles && A.letterFiles.length ? 'Letter attached' : 'Upload or photograph your denial letter'}</span>
+              <p class="up-sub" id="lt-sub">${A.letterFiles && A.letterFiles.length ? A.letterName : 'On your phone you can take a picture of it. On a computer, add a PDF, photo, or screenshot.'}</p>
+              <div class="up-formats">Photo · PDF · Screenshot — whatever you have is fine</div>
+            </label>
+            <details class="letter-paste"${A.letter ? ' open' : ''}>
+              <summary>Or paste the text instead</summary>
+              <textarea class="field" id="lt" placeholder="Paste your denial letter here…">${A.letter}</textarea>
+            </details>
+            <div><button class="letter-skip" id="lt-skip">I can't find my letter right now</button></div>
           </div>
 
           <div class="card block" id="b-list-block">
-            <div class="locktag">🔒 Answer step 2 first</div>
-            <span class="lbl"><span class="stepnum">4</span>Check off anything you've already done</span>
-            <p class="sub">We'll help you get the rest — no rush.</p>
+            <div class="locktag">🔒 Answer step 3 first</div>
+            <span class="lbl"><span class="stepnum">5</span>What have you already tried for the pain?</span>
+            <p class="sub">These are already checked because most people have tried them — just un-check any you haven't. You can change anything.</p>
+            <p class="sub" id="req-reassure" style="color:var(--teal-deep);font-weight:640"></p>
             <div class="progress">
               <div class="bar"><b id="fill"></b></div>
               <div class="lbl" id="plbl"></div>
             </div>
             <main class="list" id="list"></main>
+          </div>
+
+          <div class="card block" id="b-story">
+            <div class="locktag">🔒 Answer step 3 first</div>
+            <span class="lbl"><span class="stepnum">6</span>Anything else you'd like us to know?</span>
+            <p class="sub" id="story-sub"></p>
+            <div class="story-input">
+              <textarea class="field" id="story" placeholder="Tell us your story, in your own words…">${A.story || ''}</textarea>
+              <span id="mic-slot"></span>
+            </div>
           </div>
 
           <div class="trustwrap"><div class="trustbar">🔒 Always free · No email or credit card — ever.</div></div>
@@ -172,31 +227,132 @@
           <div class="center"><button class="restart" id="restart">← Start over</button></div>
         </div>`;
 
-      // surgery chips
-      root.querySelectorAll('[data-s]').forEach(b => b.onclick = () => {
-        A.surgery = A.surgery === b.dataset.s ? '' : b.dataset.s;
-        root.querySelector('#sother').value = '';
-        root.querySelectorAll('[data-s]').forEach(x => x.classList.toggle('on', x.dataset.s === A.surgery));
-        updateLocks();
-      });
-      root.querySelector('#sother').oninput = e => {
-        A.surgery = e.target.value.trim();
-        root.querySelectorAll('[data-s]').forEach(x => x.classList.remove('on'));
+      // PROCEDURE PICKER — category chips, then subtype chips (or free text).
+      renderCategories();
+      renderSubtypes();
+      // STATE select — filters the insurer picker below.
+      root.querySelector('#stsel').onchange = e => {
+        A.state = e.target.value;
+        renderInsurers();
         updateLocks();
       };
-      root.querySelector('#ins').oninput = e => { A.insurer = e.target.value.trim(); updateLocks(); };
+      // INSURER — filtered by state; free-text fallback always present.
+      renderInsurers();
+      root.querySelector('#ins').oninput = e => {
+        A.insurer = e.target.value.trim();
+        root.querySelectorAll('[data-ins]').forEach(x => x.classList.remove('on'));
+        updateLocks();
+      };
       root.querySelector('#lt').oninput = e => { A.letter = e.target.value.trim(); };
+      const ltDrop = root.querySelector('#lt-drop');
+      root.querySelector('#lt-file').onchange = e => {
+        const files = Array.from(e.target.files || []);
+        A.letterFiles = files;
+        A.letterName = files.length === 1 ? files[0].name
+          : (files.length ? files.length + ' files attached' : '');
+        ltDrop.classList.toggle('chosen', !!files.length);
+        root.querySelector('#lt-head').textContent = files.length ? 'Letter attached' : 'Upload or photograph your denial letter';
+        ltDrop.querySelector('.up-ic').textContent = files.length ? '✓' : '📷';
+        root.querySelector('#lt-sub').textContent = files.length ? A.letterName : 'On your phone you can take a picture of it. On a computer, add a PDF, photo, or screenshot.';
+      };
+      root.querySelector('#lt-skip').onclick = () => {
+        A.letter = ''; A.letterFiles = []; A.letterName = '';
+        const t = root.querySelector('#lt'); if (t) t.value = '';
+        ltDrop.classList.remove('chosen');
+        root.querySelector('#lt-head').textContent = 'Upload or photograph your denial letter';
+        ltDrop.querySelector('.up-ic').textContent = '📷';
+        root.querySelector('#lt-sub').textContent = 'On your phone you can take a picture of it. On a computer, add a PDF, photo, or screenshot.';
+        revealBlock(root.querySelector('#b-list-block'));
+      };
 
+      renderList();
+      wireStory();
+      root.querySelector('#restart').onclick = () => { A.catId=''; A.surgery=''; A.bodyPart=''; A.state=''; A.insurer=''; A.letter=''; A.letterFiles=[]; A.letterName=''; A.story=''; A.have={}; showHero(); };
+      updateLocks(false); // set initial lock state without scrolling
+      refresh();
+    }
+
+    // ---- Optional "tell us your story" free-text + voice-to-text -----------
+    // Wire the (always-optional) story textarea + the feature-detected mic.
+    // Typing is always available; the mic only renders when the API exists.
+    function wireStory() {
+      const ta = root.querySelector('#story');
+      if (!ta) return;
+      ta.value = A.story || '';
+      ta.oninput = () => { A.story = ta.value; };
+      const slot = root.querySelector('#mic-slot');
+      if (SpeechRec && slot) {
+        slot.innerHTML = `<button type="button" class="mic-btn" id="mic" aria-pressed="false" aria-label="Dictate your story with your voice">
+            <span class="mic-ic" aria-hidden="true">🎙️</span><span class="mic-lbl">Speak instead</span>
+          </button>`;
+        wireMic(slot.querySelector('#mic'), ta);
+      }
+    }
+
+    // Start/stop voice dictation, appending transcript to the textarea with a
+    // visible "listening…" state. Graceful: any failure falls back to typing.
+    function wireMic(btn, ta) {
+      if (!btn || !ta) return;
+      let rec = null, listening = false;
+      const setIdle = () => {
+        btn.classList.remove('listening'); btn.setAttribute('aria-pressed', 'false');
+        btn.querySelector('.mic-lbl').textContent = 'Speak instead';
+      };
+      const setListening = () => {
+        btn.classList.add('listening'); btn.setAttribute('aria-pressed', 'true');
+        btn.querySelector('.mic-lbl').textContent = 'Listening… tap to stop';
+      };
+      const stop = () => { listening = false; try { rec && rec.stop(); } catch (e) {} setIdle(); };
+      btn.onclick = () => {
+        if (listening) return stop();
+        try {
+          rec = new SpeechRec();
+          rec.lang = (navigator.language || 'en-US');
+          rec.interimResults = false; rec.continuous = true;
+          rec.onresult = e => {
+            let add = '';
+            for (let k = e.resultIndex; k < e.results.length; k++) {
+              if (e.results[k].isFinal) add += e.results[k][0].transcript;
+            }
+            if (add) {
+              const sep = ta.value && !/\s$/.test(ta.value) ? ' ' : '';
+              ta.value = ta.value + sep + add.trim();
+              A.story = ta.value;
+            }
+          };
+          rec.onerror = () => { listening = false; setIdle(); };
+          rec.onend = () => { if (listening) { try { rec.start(); } catch (e) { listening = false; setIdle(); } } };
+          rec.start(); listening = true; setListening();
+        } catch (e) { listening = false; setIdle(); }
+      };
+    }
+
+    // Renders the checklist rows from the bodyPart-aware requirement list.
+    function renderList() {
       const list = root.querySelector('#list');
-      list.innerHTML = REQ.map(r => `
-        <div class="row card${A.have[r.id] ? ' have' : ''}" data-id="${r.id}" style="box-shadow:none">
-          <div class="check" role="checkbox" aria-checked="${!!A.have[r.id]}" tabindex="0" aria-label="Mark ${r.title} as done">✓</div>
+      if (!list) return;
+      seedReqDefaults(); // conservative-care questions start "yes" (editable).
+      list.innerHTML = reqList().map(r => {
+        const on = !!A.have[r.id];
+        // Light lasting-vs-not nuance, shown only when the item is checked "yes".
+        const fu = (r.followup && on) ? `
+            <div class="followup" data-fu-for="${r.id}">
+              <p class="plain" style="margin-bottom:6px">${r.followup.q}</p>
+              <div class="chips">
+                ${r.followup.options.map(o => `<button type="button" class="chipbtn${A.have[r.id + '_fu'] === o.id ? ' on' : ''}" data-fu="${o.id}" data-lasting="${o.lasting}">${o.label}</button>`).join('')}
+              </div>
+            </div>` : '';
+        return `
+        <div class="row card${on ? ' have' : ''}" data-id="${r.id}" style="box-shadow:none">
+          <div class="check" role="checkbox" aria-checked="${on}" tabindex="0" aria-label="Mark ${r.title} as done">✓</div>
           <div>
             <div class="top"><span class="title">${r.title}</span></div>
             <p class="plain">${r.q}</p>
-            <p class="how"><b>If you don't have it yet:</b> ${r.how}</p>
+            <p class="how"><b>${r.default ? "If you haven't:" : "If you don't have it yet:"}</b> ${r.how}</p>
+            ${fu}
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
 
       list.querySelectorAll('.check').forEach(box => {
         const row = box.closest('.row');
@@ -205,36 +361,121 @@
           A.have[id] = !A.have[id];
           row.classList.toggle('have', A.have[id]);
           box.setAttribute('aria-checked', !!A.have[id]);
+          renderList(); // re-render so the yes-only followup shows/hides in place
           refresh();
         };
         box.onclick = toggle;
         box.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); } };
       });
 
-      root.querySelector('#restart').onclick = () => { A.surgery=''; A.insurer=''; A.letter=''; A.have={}; showHero(); };
-      updateLocks(false); // set initial lock state without scrolling
-      refresh();
+      // Followup (helpful / lasting) choice — only present on checked rows.
+      list.querySelectorAll('[data-fu-for]').forEach(wrap => {
+        const id = wrap.dataset.fuFor;
+        wrap.querySelectorAll('[data-fu]').forEach(b => b.onclick = () => {
+          A.have[id + '_fu'] = A.have[id + '_fu'] === b.dataset.fu ? '' : b.dataset.fu;
+          A.have[id + '_lasting'] = b.dataset.lasting === 'true';
+          wrap.querySelectorAll('[data-fu]').forEach(x => x.classList.toggle('on', x.dataset.fu === A.have[id + '_fu']));
+        });
+      });
     }
 
-    let prevInsUnlocked = false, prevRestUnlocked = false;
+    // ---- Procedure picker (category → subtype) ----------------------------
+    function renderCategories() {
+      const wrap = root.querySelector('#surg-cat');
+      if (!wrap) return;
+      wrap.innerHTML = D.procedureCategories.map(c =>
+        `<button class="chipbtn${A.catId === c.id ? ' on' : ''}" data-cat="${c.id}">${c.label}</button>`
+      ).join('') + `<button class="chipbtn${A.catId === '__other' ? ' on' : ''}" data-cat="__other">My surgery isn't listed</button>`;
+      wrap.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
+        const id = b.dataset.cat;
+        if (A.catId === id) return;
+        A.catId = id; A.surgery = ''; A.have = {};
+        A.bodyPart = id === '__other' ? '' : D.procedureCategories.find(c => c.id === id).bodyPart;
+        renderCategories(); renderSubtypes(); renderList(); refresh(); updateLocks();
+      });
+    }
+
+    function renderSubtypes() {
+      const wrap = root.querySelector('#surg-sub');
+      if (!wrap) return;
+      if (!A.catId) { wrap.innerHTML = ''; return; }
+      if (A.catId === '__other') {
+        wrap.innerHTML = `<input class="field" id="sother" placeholder="Type your surgery" value="${A.surgery || ''}" />`;
+        wrap.querySelector('#sother').oninput = e => { A.surgery = e.target.value.trim(); updateLocks(); };
+        return;
+      }
+      const cat = D.procedureCategories.find(c => c.id === A.catId);
+      wrap.innerHTML = `<div class="chips" id="surg-p">
+          ${cat.procedures.map(p => `<button class="chipbtn${A.surgery === p.label ? ' on' : ''}" data-p="${p.id}">${p.label} <span style="font-size:12px;font-weight:500;color:var(--ink-soft)">CPT ${p.cpt}</span></button>`).join('')}
+        </div>
+        <input class="field" id="sother" placeholder="My procedure isn't listed — type it here" value="${A.surgery && !cat.procedures.some(p=>p.label===A.surgery) ? A.surgery : ''}" />`;
+      wrap.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+        const p = cat.procedures.find(x => x.id === b.dataset.p);
+        A.surgery = A.surgery === p.label ? '' : p.label;
+        A.bodyPart = p.bodyPart;
+        wrap.querySelector('#sother').value = '';
+        wrap.querySelectorAll('[data-p]').forEach(x => x.classList.toggle('on', x.dataset.p === b.dataset.p && A.surgery));
+        updateLocks();
+      });
+      wrap.querySelector('#sother').oninput = e => {
+        A.surgery = e.target.value.trim();
+        A.bodyPart = cat.bodyPart;
+        wrap.querySelectorAll('[data-p]').forEach(x => x.classList.remove('on'));
+        updateLocks();
+      };
+    }
+
+    // ---- Insurer picker (filtered by state) -------------------------------
+    function renderInsurers() {
+      const chips = root.querySelector('#ins-chips');
+      const sub = root.querySelector('#ins-sub');
+      const input = root.querySelector('#ins');
+      if (!chips) return;
+      const curated = D.insurersByState[A.state];
+      const options = curated || D.insurersGeneric;
+      if (sub) sub.textContent = A.state
+        ? (curated ? `Plans we often see in ${A.state}. Pick yours, or type it in if it's not here.`
+                   : `Common plans. Pick yours, or type it in if it's not here.`)
+        : `Pick your state above first, or just type your plan below.`;
+      chips.innerHTML = options.map(name =>
+        `<button class="chipbtn${A.insurer === name ? ' on' : ''}" data-ins="${name}">${name}</button>`
+      ).join('');
+      chips.querySelectorAll('[data-ins]').forEach(b => b.onclick = () => {
+        A.insurer = A.insurer === b.dataset.ins ? '' : b.dataset.ins;
+        if (input) input.value = A.insurer && !options.includes(A.insurer) ? A.insurer : '';
+        chips.querySelectorAll('[data-ins]').forEach(x => x.classList.toggle('on', x.dataset.ins === A.insurer));
+        updateLocks();
+      });
+    }
+
+    let prevStateUnlocked = false, prevInsUnlocked = false, prevRestUnlocked = false;
 
     function updateLocks(animate = true) {
-      const insUnlocked = !!A.surgery;
+      // Gate chain: surgery → state → insurer → rest (letter + checklist).
+      const stateUnlocked = !!A.surgery;
+      const insUnlocked = stateUnlocked && !!A.state;
       const restUnlocked = insUnlocked && !!A.insurer;
+      const stateBlock = root.querySelector('#b-state');
       const ins = root.querySelector('#b-ins');
       const letter = root.querySelector('#b-letter');
       const listBlock = root.querySelector('#b-list-block');
-      root.querySelector('#b-surg').classList.toggle('done', insUnlocked);
+      const storyBlock = root.querySelector('#b-story');
+      root.querySelector('#b-surg').classList.toggle('done', stateUnlocked);
+      stateBlock.classList.toggle('locked', !stateUnlocked);
+      stateBlock.classList.toggle('done', insUnlocked);
       ins.classList.toggle('locked', !insUnlocked);
       ins.classList.toggle('done', restUnlocked);
       letter.classList.toggle('locked', !restUnlocked);
       listBlock.classList.toggle('locked', !restUnlocked);
+      if (storyBlock) storyBlock.classList.toggle('locked', !restUnlocked);
 
       // When answering one step unlocks the next, glide it into view.
       if (animate) {
-        if (insUnlocked && !prevInsUnlocked) revealBlock(ins);
+        if (stateUnlocked && !prevStateUnlocked) revealBlock(stateBlock);
+        else if (insUnlocked && !prevInsUnlocked) revealBlock(ins);
         else if (restUnlocked && !prevRestUnlocked) revealBlock(letter);
       }
+      prevStateUnlocked = stateUnlocked;
       prevInsUnlocked = insUnlocked;
       prevRestUnlocked = restUnlocked;
     }
@@ -247,9 +488,40 @@
     }
 
     function refresh() {
-      const done = REQ.filter(r => A.have[r.id]).length;
-      root.querySelector('#fill').style.width = (done / REQ.length * 100) + '%';
-      root.querySelector('#plbl').textContent = `${done} of ${REQ.length} ready`;
+      const RL = reqList();
+      const done = RL.filter(r => A.have[r.id]).length;
+      const total = RL.length || 1;
+      const fill = root.querySelector('#fill'); if (fill) fill.style.width = (done / total * 100) + '%';
+      const plbl = root.querySelector('#plbl'); if (plbl) plbl.textContent = `${done} of ${RL.length} ready`;
+      // Gentle 2-of-4 reassurance — never blocks progress, just encourages.
+      const rz = root.querySelector('#req-reassure');
+      if (rz) {
+        const yes = reqYesCount();
+        rz.textContent = yes >= 2
+          ? `You've noted ${yes} — most people have tried at least two of these four, and that's usually all that's needed. ✓`
+          : (D.requirementsIntro || '');
+      }
+      // Story prompt: gentle nudge when structured answers are thin, otherwise
+      // plain "optional" copy. Non-blocking either way — the field is optional.
+      const ssub = root.querySelector('#story-sub');
+      if (ssub) {
+        ssub.textContent = structuredThin()
+          ? `We still need a bit more to build a strong appeal — tell us your story in your own words${SpeechRec ? ' (you can speak it)' : ''}. A few sentences about how this has affected your day-to-day life can make a real difference.`
+          : `Optional — but a few sentences in your own words about how this has affected your life can strengthen your appeal.`;
+        ssub.classList.toggle('story-nudge', structuredThin());
+      }
+    }
+
+    // Heuristic for "thin structured input": keys entirely off existing state
+    // (letter attached flag, chosen procedure, conservative-care yes-count).
+    // Non-blocking — only decides which story prompt copy to show.
+    function structuredThin() {
+      const noLetter = !(A.letter && A.letter.trim()) && !(A.letterFiles && A.letterFiles.length);
+      const cat = D.procedureCategories.find(c => c.id === A.catId);
+      const unlistedProcedure = A.catId === '__other'
+        || (cat && A.surgery && !cat.procedures.some(p => p.label === A.surgery));
+      const thinCare = reqYesCount() < 2;
+      return noLetter || unlistedProcedure || thinCare;
     }
 
     showHero();

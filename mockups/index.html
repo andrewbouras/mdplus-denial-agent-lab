@@ -3,6 +3,17 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script>
+  // Auto-route into the actual landing page by device — no lobby for real visitors.
+  // Phones open Version A (guided, one question at a time); wider screens open Version B
+  // (one page, step by step). Append ?menu to reach the side-by-side compare view.
+  (function () {
+    if (location.search.indexOf('menu') === -1) {
+      var isPhone = Math.min(window.innerWidth, window.screen ? window.screen.width : window.innerWidth) <= 768;
+      location.replace(isPhone ? 'map/' : 'checklist-steps/');
+    }
+  })();
+</script>
 <title>OrthoAppeals — compare the versions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,6 +42,14 @@
   .tile.muted .tag { color: var(--amber); }
 
   .note { text-align: center; font-size: 14px; color: var(--ink-soft); margin-top: 40px; }
+
+  .smartstart { text-align: center; margin: 26px auto 2px; }
+  .smartstart .start-btn { display: inline-flex; align-items: center; gap: 10px; font-family: var(--sans); font-size: 20px; font-weight: 680; color: #fff; background: var(--teal-deep); border: 0; border-radius: 999px; padding: 16px 34px; text-decoration: none; box-shadow: var(--shadow); transition: transform .14s ease, box-shadow .2s ease; cursor: pointer; }
+  .smartstart .start-btn:hover { transform: translateY(-2px); }
+  .smartstart .start-sub { font-size: 14.5px; color: var(--ink-soft); margin: 12px auto 0; max-width: 46ch; }
+  .tile .rec { display: none; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #205937; background: var(--green-tint); padding: 3px 10px; border-radius: 999px; margin-left: 10px; vertical-align: 2px; }
+  .tile.rec-on .rec { display: inline-block; }
+  .tile .device { font-size: 13px; font-weight: 640; color: var(--ink-soft); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -45,19 +64,28 @@
       <div class="kick">For the review group</div>
       <h1>Same free tool — two front doors</h1>
       <p>Pick either version below to try it end to end. Each one starts from zero, like a real visitor, and ends with a ready-to-send appeal packet. Always free — no sign-up, no email, no credit card.</p>
+
+      <div class="smartstart">
+        <a class="start-btn" id="startBtn" href="map/">Start my appeal →</a>
+        <p class="start-sub" id="startSub">We’ll open the version made for your device.</p>
+      </div>
     </header>
 
     <section class="group rise">
+      <h2>Or compare the two versions</h2>
+      <p class="gsub">For the review group — try each one to compare directions.</p>
       <div class="grid">
-        <a class="tile card" href="map/">
-          <div class="tag">Version A</div>
+        <a class="tile card" id="tileA" href="map/">
+          <div class="tag">Version A<span class="rec">Recommended for your device</span></div>
           <h3>Guided</h3>
+          <div class="device">Best on a phone</div>
           <p>One question at a time, with a roadmap down the side so you always see every step and how far along you are.</p>
           <span class="go">Open →</span>
         </a>
-        <a class="tile card" href="checklist-steps/">
-          <div class="tag">Version B</div>
+        <a class="tile card" id="tileB" href="checklist-steps/">
+          <div class="tag">Version B<span class="rec">Recommended for your device</span></div>
           <h3>One page, step by step</h3>
+          <div class="device">Best on a computer</div>
           <p>Everything on one scrollable, printable page — but each question opens up only after you answer the one above it, so it never feels like a wall of questions.</p>
           <span class="go">Open →</span>
         </a>
@@ -66,5 +94,27 @@
 
     <p class="note">These are clickable mockups — no data leaves your device, and nothing is sent anywhere.</p>
   </div>
+
+  <script>
+    // Device-aware entry: phone-width visitors get Version A (guided, one question at a
+    // time); wider screens get Version B (one-page). The compare tiles below stay for the
+    // review group; we only mark the one that matches the visitor's device.
+    (function () {
+      var isPhone = Math.min(window.innerWidth, window.screen ? window.screen.width : window.innerWidth) <= 768;
+      var btn = document.getElementById('startBtn');
+      var sub = document.getElementById('startSub');
+      var tileA = document.getElementById('tileA');
+      var tileB = document.getElementById('tileB');
+      if (isPhone) {
+        btn.setAttribute('href', 'map/');
+        sub.textContent = 'On your phone, we’ll open the guided version — one question at a time.';
+        if (tileA) tileA.classList.add('rec-on');
+      } else {
+        btn.setAttribute('href', 'checklist-steps/');
+        sub.textContent = 'On a computer, we’ll open the one-page version you can scroll and print.';
+        if (tileB) tileB.classList.add('rec-on');
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -14,6 +14,8 @@ window.APPEAL = {
   },
 
   // Common starting choices for a brand-new user (they pick or type their own).
+  // Kept for backward-compat / the optional example; the live flows now use
+  // procedureCategories (category → subtype drilldown) below.
   surgeries: [
     "Knee replacement",
     "Hip replacement",
@@ -21,40 +23,208 @@ window.APPEAL = {
     "Another surgery",
   ],
 
-  // GENERIC requirements insurers usually want before a knee replacement.
-  // Shown to a user who arrives with nothing — not tied to any one person.
+  // PROCEDURE PICKER — the patient first picks a body-area category, then a
+  // specific procedure (or "My procedure isn't listed" free text). Grouped into
+  // the 5 categories the clinical team specified. CPT codes are secondary/tiny
+  // in the UI. Taxonomy source: procedure_taxonomy.csv.
+  procedureCategories: [
+    {
+      id: "knee",
+      label: "Knee",
+      bodyPart: "knee",
+      procedures: [
+        { id: "tka", label: "Total knee replacement", cpt: "27447", bodyPart: "knee" },
+        { id: "pka", label: "Partial knee replacement", cpt: "27446", bodyPart: "knee" },
+        { id: "acl", label: "ACL reconstruction", cpt: "29888", bodyPart: "knee" },
+        { id: "knee-scope", label: "Knee arthroscopy / meniscus surgery", cpt: "29881", bodyPart: "knee" },
+      ],
+    },
+    {
+      id: "hip",
+      label: "Hip",
+      bodyPart: "hip",
+      procedures: [
+        { id: "tha", label: "Total hip replacement", cpt: "27130", bodyPart: "hip" },
+        { id: "hip-scope", label: "Hip arthroscopy", cpt: "29914", bodyPart: "hip" },
+      ],
+    },
+    {
+      id: "shoulder",
+      label: "Shoulder",
+      bodyPart: "shoulder",
+      procedures: [
+        { id: "rcr", label: "Rotator cuff repair", cpt: "29827", bodyPart: "shoulder" },
+        { id: "tsa", label: "Total shoulder replacement", cpt: "23472", bodyPart: "shoulder" },
+        { id: "labral", label: "Shoulder labral / instability repair", cpt: "29806", bodyPart: "shoulder" },
+      ],
+    },
+    {
+      id: "footankle",
+      label: "Foot & Ankle",
+      bodyPart: "ankle",
+      procedures: [
+        { id: "tar", label: "Total ankle replacement", cpt: "27702", bodyPart: "ankle" },
+        { id: "bunion", label: "Bunion surgery (hallux valgus)", cpt: "28296", bodyPart: "ankle" },
+      ],
+    },
+    {
+      id: "spine",
+      label: "Spine",
+      bodyPart: "spine",
+      procedures: [
+        { id: "lumbar-fusion", label: "Lower back (lumbar) fusion", cpt: "22612", bodyPart: "spine" },
+        { id: "acdf", label: "Neck (cervical) fusion — ACDF", cpt: "22551", bodyPart: "spine" },
+        { id: "microdisc", label: "Lower back disc surgery / decompression", cpt: "63030", bodyPart: "spine" },
+      ],
+    },
+  ],
+
+  // IMAGING questions are DERIVED from the chosen bodyPart, not hardcoded in the
+  // flat requirements list. Surgeon's rule: knee → ask about X-ray only; every
+  // other body part → ask about X-ray AND advanced imaging (MRI). Copy frames it
+  // as pulling the imaging status "from the doctor's notes".
+  imaging: {
+    xray: {
+      id: "xray",
+      q: "Have you had any X-rays of the joint?",
+      title: "X-ray report",
+      plain: "The written report from your X-rays — not just the images.",
+      why: "Your doctor's notes usually point to an X-ray, and insurers want the written report that describes the wear or damage in the joint — so this is a key piece.",
+      how: "Call the imaging center and ask them to send the written report to your surgeon — they do this all the time.",
+    },
+    mri: {
+      id: "mri",
+      q: "Have you had an MRI or other advanced scan of the joint?",
+      title: "MRI / advanced imaging report",
+      plain: "The written report from an MRI or similar scan — not just the images.",
+      why: "For this body part, insurers often expect a more detailed scan on top of an X-ray. Your doctor's notes usually mention it, and the written report really strengthens your case.",
+      how: "Call the imaging center and ask them to send the written MRI report to your surgeon.",
+    },
+  },
+
+  // Which imaging questions apply to each bodyPart. Knee = X-ray only;
+  // everything else = X-ray + MRI (per the surgeon's rule above).
+  imagingByBodyPart: {
+    knee: ["xray"],
+    hip: ["xray", "mri"],
+    shoulder: ["xray", "mri"],
+    ankle: ["xray", "mri"],
+    spine: ["xray", "mri"],
+    _default: ["xray", "mri"],
+  },
+
+  // US states — asked BEFORE the insurer so we can filter the insurer list.
+  states: [
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+    "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
+    "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+    "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+    "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+    "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
+    "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island",
+    "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+    "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming",
+  ],
+
+  // STATE → INSURER map. IMPORTANT: this is a REPRESENTATIVE / SYNTHETIC mockup
+  // stand-in — curated payer names come from seed_review_39_spec.json where we
+  // have them (e.g. Blue Shield of California, BCBS Michigan, CareFirst BCBS),
+  // filled out with plausible regional plans for demo purposes. It is NOT a
+  // complete or authoritative directory and MUST be replaced by the real
+  // per-state payer dataset before this is anything other than a mockup.
+  insurersByState: {
+    "California": ["Blue Shield of California", "Anthem Blue Cross", "Kaiser Permanente", "Health Net"],
+    "Michigan": ["BCBS Michigan", "Priority Health", "HAP (Health Alliance Plan)"],
+    "North Carolina": ["BCBS North Carolina", "Aetna", "UnitedHealthcare"],
+    "New Jersey": ["Horizon BCBS NJ", "Aetna", "UnitedHealthcare"],
+    "Pennsylvania": ["Independence Blue Cross", "Highmark", "UPMC Health Plan", "Aetna"],
+    "Washington": ["Premera Blue Cross", "Regence BCBS", "Kaiser Permanente"],
+    "Maryland": ["CareFirst BCBS", "Aetna", "UnitedHealthcare"],
+    "District of Columbia": ["CareFirst BCBS", "Aetna", "Kaiser Permanente"],
+    "Virginia": ["CareFirst BCBS", "Anthem", "Aetna", "UnitedHealthcare"],
+    "Iowa": ["Wellmark BCBS", "UnitedHealthcare", "Aetna"],
+  },
+
+  // Generic set shown for any state we don't have curated data for. A free-text
+  // "My plan isn't listed" fallback is ALWAYS offered on top of these.
+  insurersGeneric: [
+    "Aetna", "Anthem Blue Cross Blue Shield", "Cigna", "Humana",
+    "Kaiser Permanente", "Medicare", "Medicaid", "UnitedHealthcare",
+  ],
+
+  // CONSERVATIVE-CARE questions — the four things a patient may have tried
+  // before surgery. Per the surgeon's clinical model, patients typically must
+  // have tried at least 2 OF THESE 4: (1) activity modification, (2) anti-
+  // inflammatories, (3) injections, (4) formal physical therapy.
+  //
+  // We ask by RECENCY ("in the last 6 months"), NOT by dates, session counts,
+  // or months of therapy — those are backend/insurer-threshold logic for later,
+  // never asked here. No doctor or pharmacy record is required to say yes (an
+  // over-the-counter Advil counts). Every answer is PREPOPULATED "yes"
+  // (`default: "yes"`) because most patients have tried these, but the patient
+  // can change any answer — nothing is locked. A "yes" means it goes into the
+  // appeal as "tried it, and it didn't give lasting relief."
+  //
+  // `followup` (when present) is the light lasting-vs-not nuance captured only
+  // when the answer is yes. `reassure` drives the gentle 2-of-4 guidance —
+  // this is reassurance, NOT a hard gate; progress is never blocked on it.
+  //
+  // Copy is body-part-generic ("your joint" / "your pain"), so it reads
+  // correctly for a knee, shoulder, or spine patient. NOTE: imaging (X-ray /
+  // MRI) is NOT in this list — it is derived from bodyPart via `imaging` /
+  // `imagingByBodyPart` above.
+  requirementsIntro:
+    "Most people have tried at least two of these four — that's usually all that's needed. Answer honestly; you can change any answer.",
   requirements: [
     {
-      id: "pt",
-      q: "Did you ever go to physical therapy for your knee?",
-      title: "Physical therapy records",
-      plain: "The notes and attendance dates from your physical therapy visits.",
-      why: "Insurers usually like to see you gave physical therapy a real try first — so this one really helps your case.",
-      how: "Give your physical therapy clinic a call and ask them to send over your visit notes and dates.",
+      id: "activity",
+      q: "Have you changed your activities to avoid the pain — like cutting back on stairs, walking, or sports?",
+      title: "Changing your activities",
+      default: "yes",
+      plain: "You eased off the things that hurt — stairs, walking, standing, sports, or work — to get by.",
+      why: "Cutting back on the activities that hurt is one of the everyday things insurers count as trying to manage it without surgery. Almost everyone does this, so it usually helps your case.",
+      how: "Nothing to request — just tell us in your own words how you've had to change what you do. Your surgeon's notes often mention it too.",
     },
     {
       id: "meds",
-      q: "Did you take any anti-inflammatory medicine for the pain?",
-      title: "Anti-inflammatory medicine (NSAID)",
-      plain: "A note that you took an anti-inflammatory medicine to ease the pain.",
-      why: "Medicine counts as one of the treatments insurers expect you to try first, so it's worth including.",
-      how: "Your doctor's office can confirm this straight from your chart — no hunting required.",
+      q: "In the last 6 months, have you taken an anti-inflammatory — like Advil or ibuprofen (even the over-the-counter kind)?",
+      title: "Anti-inflammatory medicine",
+      default: "yes",
+      plain: "You took something like Advil, Motrin, ibuprofen, Aleve, or a prescription version to ease the pain.",
+      why: "Anti-inflammatory medicine counts as one of the treatments insurers expect you to try first. Over-the-counter is fine — you don't need a prescription or a pharmacy record.",
+      how: "Nothing to request — an over-the-counter pill counts. Just let us know what you took; your doctor's chart may note it too.",
+      followup: {
+        q: "Did it help enough?",
+        options: [
+          { id: "nolast", label: "It helped a little, but the relief didn't last", lasting: false },
+          { id: "helped", label: "It helped and I still take it", lasting: true },
+        ],
+      },
     },
     {
       id: "injection",
-      q: "Did you get any shots (injections) in your knee?",
-      title: "Knee injection record",
-      plain: "A note about any injection you had in the knee, and how it went.",
-      why: "An injection is another treatment insurers like to see you tried — every bit adds to your case.",
-      how: "Your doctor's office can add this from your chart for you.",
+      q: "In the last 6 months, have you had a steroid or cortisone injection in the joint?",
+      title: "Steroid / cortisone injection",
+      default: "yes",
+      plain: "You had a shot in the joint to calm the pain and swelling.",
+      why: "An injection is another treatment insurers like to see you tried. What matters most is whether the relief lasted — a shot that wore off actually strengthens the case for surgery.",
+      how: "Nothing to request right now — just tell us if you had one and how it went. Your doctor's office can confirm it from your chart.",
+      followup: {
+        q: "Did it help?",
+        options: [
+          { id: "nolast", label: "It helped for a while, then the pain came back", lasting: false },
+          { id: "helped", label: "It helped and is still helping", lasting: true },
+        ],
+      },
     },
     {
-      id: "xray",
-      q: "Have you had any X-rays of your knee?",
-      title: "Knee X-ray report",
-      plain: "The written report from your knee X-rays — not just the images.",
-      why: "Insurers want the report that describes the wear in your knee joint, so this is a key piece.",
-      how: "Call the imaging center and ask them to send the written report to your surgeon — they do this all the time.",
+      id: "pt",
+      q: "In the last 6 months, have you done any formal physical therapy for the joint?",
+      title: "Physical therapy",
+      default: "yes",
+      plain: "You went to a physical therapist, or did the exercises they gave you.",
+      why: "Insurers like to see you gave physical therapy a real try. You don't need to count the visits — just letting us know you did it is enough here.",
+      how: "Nothing to hunt down right now — just tell us you went. Later, your PT clinic can send over their notes if the insurer asks.",
     },
   ],
 
@@ -69,9 +239,10 @@ window.APPEAL = {
       "We are unable to approve the requested right total knee arthroplasty at this time. The clinical information submitted does not demonstrate that the member has completed and failed the required course of nonsurgical treatment. The submission also does not include sufficient radiographic documentation of qualifying advanced joint disease. The records did not include physical therapy attendance or progress records, dates and outcomes of other conservative treatment, or the formal knee radiology report.",
     // Her plain-language answers, keyed to the requirement ids (from the source).
     answers: {
-      pt: "Yes — physical therapy at Harbor Rehabilitation, about September to mid-November 2025.",
-      meds: "Yes — I took meloxicam for several months and stopped because it upset my stomach.",
-      injection: "Yes — one knee injection around December 2025 that helped for about two weeks.",
+      activity: "Yes — I stopped taking the stairs and gave up my morning walks because of the pain.",
+      meds: "Yes — I took ibuprofen for the pain, but it only helped a little and the relief didn't last.",
+      injection: "Yes — one cortisone injection that helped for a couple of weeks, then the pain came back.",
+      pt: "Yes — I did physical therapy at Harbor Rehabilitation for a while.",
       xray: "Yes — X-rays at Suncoast Imaging, but I don't have the written report at home.",
     },
   },
