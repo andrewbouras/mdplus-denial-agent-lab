@@ -1,0 +1,347 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "OrthoAppeals policy-retrieval eval + patient-website wireup"
+  slug: "policy-retrieval-eval"
+  kind: existing_plan
+  tranche: "Produce a trustworthy, calibration-graded evaluation of Claude policy retrieval on a corrected benchmark, wire it to the patient website behind a lookup-first path, and reach a demoable state before MD Catalyst on 2026-08-17."
+  status: active
+  oracle:
+    signal: "A reproducible eval run over the corrected benchmark that reports, per row, the model's document claim AND its confidence, scored so that CONFIDENT-BUT-WRONG answers are counted separately and prominently. The headline metric is the count of confident-wrong answers, not raw accuracy."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "Receipt-backed evidence of: (1) a corrected answer key where every surviving row has a firsthand-fetched URL that resolves without login and contains CPT 27447; (2) a cold eval run (model has no access to the key) emitting a scored report with zero or explicitly-enumerated confident-wrong rows; (3) a walkthrough of the patient website producing a retrieval result for at least one case end to end."
+  intake:
+    original_request: "Parse the Akin meeting for next steps, then use goal-prep to make this work."
+    interpreted_outcome: "Turn the agreed post-call plan into an executable board that produces an honest retrieval benchmark and connects the website to the AI, in time for MD Catalyst."
+    input_shape: existing_plan
+    audience: "Patients appealing denied knee-replacement surgery; near-term audience is the MD Catalyst judging panel and Dr. Kassam's team."
+    authority: approved
+    proof_type: metric
+    completion_proof: "Corrected key + cold calibration-scored eval run + website producing a retrieval end to end."
+    likely_misfire: "Reporting a flattering accuracy number computed against a benchmark whose labels are wrong, self-inconsistent, or partly derived from the AI's own prior output; or polishing the eval while never wiring the website; or seeding work that depends on obtaining login-gated payer policies, which is now a proven dead end."
+    blind_spots_considered:
+      - "The current answer key is demonstrably wrong: 6 Medicare Advantage rows all point at one LCD (L36007) that cannot govern 4 different MAC jurisdictions. Grading against it today yields a meaningless number."
+      - "Circularity risk: some existing labels came from the AI's own output. Grading the AI against labels the AI produced proves nothing. Labels must be established independently."
+      - "After cutting 20 login-gated rows, only 13 remain, and several are turning out invalid or mislabeled. The benchmark may shrink to single digits and be too underpowered to support strong claims."
+      - "The MA deferral scoring convention is unsettled and is a human judgment. If it is decided AFTER seeing results, the definition will be chosen to flatter the score."
+      - "Deadline pressure: MD Catalyst is 2026-08-17. Akin returns to rotations 2026-07-27 and his capacity drops sharply."
+      - "Raw accuracy is the wrong ship gate for a patient-facing tool. A confidently wrong policy causes a patient to file an appeal citing criteria that do not apply to their plan."
+    existing_plan_facts:
+      - "Remove login-gated rows from the benchmark. Only cases assessable from an open web search remain. (Proposed by Andrew, endorsed by Dr. Kassam.)"
+      - "Benchmark Claude ALONE first. Defer Claude vs ChatGPT vs Gemini comparison until ground truth exists."
+      - "Architecture: Claude attempts to find the controlling document per row; a SECOND model acts as judge to grade the attempt; output is 'confident + correct' or 'needs human review'."
+      - "SUCCESS CRITERION IS CALIBRATION, NOT RAW ACCURACY. The model must correctly say it found the right document OR that it cannot say so confidently. Confident-but-wrong is the failure mode that matters most."
+      - "Connect the currently-disconnected patient website (mockups/) to the AI retrieval backend. Simulated usage populates a log; the verification framework reads those rows."
+      - "Lookup-first, live-search-fallback: serve known-verified documents from a local library before doing a live search."
+      - "If results are bad, improve via harness + CLAUDE.md + skills (in-context). NOT fine-tuning, NOT training from scratch. Training an open-source model is at most a side proof the dataset has value, and is NOT the product."
+      - "OUT OF SCOPE for this tranche: generating the patient-facing appeal output across the permutation of denial reasons (PT documentation, imaging, etc.). Acknowledged as the biggest eventual value, but explicitly deferred."
+      - "HARD BLOCKER: Akin's campaign to phone payers for login-gated policies FAILED (payers demanded an NPI, treated him as a provider opening a practice, redirected to marketing). Do NOT seed tasks that depend on phoning payers for gated documents."
+      - "Collaboration protocol: Andrew works one step at a time and pushes to GitHub after each step; Akin's agent checks GitHub before starting anything to avoid duplicate work."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  exact_human_approval_can_terminal_wait: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/policy-retrieval-eval/"
+    command: "node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/policy-retrieval-eval"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "Map what already exists toward the retrieval eval and the website wireup, so no existing capability is rebuilt from scratch."
+    inputs:
+      - scripts/run_policy_retrieval.py
+      - scripts/emit_row_trace.py
+      - scripts/read_run.py
+      - scripts/run_denial_simulation_lab.sh
+      - browser_capture/capture_policy_row.mjs
+      - runs/run_0001.jsonl
+      - runs/run_0001.meta.json
+      - data/policy_platform/seed_review_39_spec.json
+      - data/policy_platform/source_registry.json
+      - data/policy_platform/criteria_extractions.json
+      - mockups/
+    constraints:
+      - "Read-only. Do not edit implementation files."
+      - "Report concrete file paths, function names, and data shapes, not generic advice."
+      - "Explicitly answer: does a per-row retrieval runner already exist, and does anything already emit a confidence signal?"
+      - "Identify the exact seam where the website would call a retrieval backend, and note that mockups/ is currently static client-side HTML with no backend."
+    expected_output:
+      - "Repo map for the retrieval path and the website path"
+      - "Data shapes: benchmark spec row schema, run/trace record schema"
+      - "What already exists toward the Claude-attempt + judge-model architecture"
+      - "The concrete website-to-backend seam and what is missing"
+      - "Verification commands that actually run in this repo, and an honest note that there is no gate test suite"
+    receipt: null
+
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Validate the agreed 8-point plan against T001 evidence and the known-broken answer key, then fix the scoring rubric before any run happens."
+    inputs:
+      - "T001 receipt"
+      - "goal.intake.existing_plan_facts"
+      - "goal.intake.blind_spots_considered"
+    constraints:
+      - "Do not implement."
+      - "Do not re-litigate the 8 agreed decisions; validate their feasibility and sequencing only."
+      - "The scoring rubric MUST be fixed in writing before any eval run, so the definition cannot be chosen after seeing results."
+      - "Treat the Medicare Advantage deferral convention as an unresolved HUMAN decision owned by Andrew. Do not invent an answer. Design the rubric so both candidate conventions can be scored without redoing research."
+      - "Assess honestly whether a benchmark of roughly 13 rows, minus invalid ones, can support any claim; if not, say so and specify what additional cases are required."
+    expected_output:
+      - "Decision: plan validated or amended, with reasons"
+      - "Written scoring rubric, including the definition of confident-wrong"
+      - "Ruling on whether benchmark size is sufficient, and what is needed if not"
+      - "Exact Worker objective for T003 with allowed_files, verify, stop_if"
+      - "Any task that must be blocked pending Andrew's MA ruling"
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Produce a corrected, evidence-backed answer key containing only rows that are genuinely valid and publicly retrievable."
+    inputs:
+      - "T002 receipt"
+      - data/policy_platform/seed_review_39_spec.json
+    constraints:
+      - "Finish firsthand verification of the 4 unverified Medicare Advantage rows: bm_0056 BCBS Michigan, bm_0057 BCBS North Carolina, bm_0059 CareFirst, bm_0061 Horizon BCBS NJ."
+      - "For each: determine whether the plan publishes its own MA knee policy or genuinely defers to CMS, and if it defers, which LCD actually applies in that state."
+      - "Fix the blanket L36007 assignment. One LCD cannot govern Michigan, North Carolina, Maryland/NJ/PA, and Washington simultaneously."
+      - "Carry forward the two already-verified findings: bm_0063 Premera is INVALID (exited Medicare Advantage 2025-01-01; its public policy 7.01.550 states it does not apply to Medicare Advantage and cites L36575). bm_0065 UPMC publishes its own MP.PA.133 covering CMS-MA HMO/PPO/DSNP and correctly cites L36007 for Pennsylvania."
+      - "Never invent or pattern-guess a URL. Every surviving row must carry a URL actually fetched, returning HTTP 200 without a login, and containing CPT 27447."
+      - "Where the MA deferral convention is unsettled, record BOTH candidate answers per row so Andrew's later ruling can be applied without redoing research."
+      - "Mark invalid rows as invalid with the reason. Do not silently delete them."
+      - "Drop all login-gated rows from the scored set, per the agreed plan."
+    allowed_files:
+      - data/policy_platform/
+      - docs/goals/policy-retrieval-eval/notes/
+    verify:
+      - "python3 -c \"import json;d=json.load(open('data/policy_platform/seed_review_39_spec.json'));print(len(d['rows']))\""
+      - "Every surviving scored row has a fetched_url, an http_status of 200, a no_login boolean, and evidence that CPT 27447 appears in the document."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A payer's status cannot be determined from public sources after genuine effort; record UNVERIFIED and continue rather than guessing."
+      - "The corrected scored set falls below 8 rows, which materially weakens every downstream claim; escalate to PM."
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Build the eval harness: per row, Claude attempts retrieval and emits an explicit confidence, then a second model judges the attempt, producing a scored report that foregrounds confident-wrong answers."
+    inputs:
+      - "T002 rubric"
+      - "T003 corrected key"
+      - "T001 repo map"
+    constraints:
+      - "The retrieval model must NOT have access to the answer key. Enforce this structurally, not by convention."
+      - "Every attempt must emit an explicit claim plus a confidence, and must be able to answer 'I cannot confidently identify the controlling document'."
+      - "The judge model grades the attempt against the key and outputs 'confident + correct', 'confident + wrong', 'honest abstention', or 'needs human review'."
+      - "Reuse whatever T001 found already exists; do not rebuild a runner that is already present."
+      - "The report must show the confident-wrong count as the headline number, above accuracy."
+    allowed_files:
+      - scripts/
+      - docs/goals/policy-retrieval-eval/notes/
+    verify:
+      - "The harness runs end to end on at least 2 rows and emits a scored report file."
+      - "A deliberately wrong injected answer is classified as confident-wrong by the judge, proving the scorer actually discriminates."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The answer key is not yet corrected (T003 incomplete)."
+      - "Verification fails twice."
+    receipt: null
+
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Run the eval cold over the full corrected key and produce the honest baseline report."
+    inputs:
+      - "T004 harness"
+      - "T003 corrected key"
+    constraints:
+      - "Cold run: the retrieval model sees no answers."
+      - "Report per-row outcomes plus the aggregate, with confident-wrong first."
+      - "State the denominator explicitly and state what was excluded and why."
+      - "Do not tune anything mid-run to improve the number."
+    allowed_files:
+      - runs/
+      - docs/goals/policy-retrieval-eval/notes/
+    verify:
+      - "A run artifact exists under runs/ with per-row results and an aggregate."
+      - "The report names its denominator and its exclusions."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Harness is not verified (T004 incomplete)."
+    receipt: null
+
+  - id: T006
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Assess the baseline against the calibration oracle and rule on whether to wire the website as-is or run the in-context improvement loop first."
+    inputs:
+      - "T005 baseline report"
+      - "T002 rubric"
+    constraints:
+      - "Do not implement."
+      - "Judge against calibration, not raw accuracy. A modest hit rate with honest abstention is shippable; confident-wrong answers are not."
+      - "Be explicit about whether the sample size supports the conclusion."
+    expected_output:
+      - "wire_now | improve_first, with reasons"
+      - "Whether the result is strong enough to present at MD Catalyst, stated honestly"
+      - "Exact next Worker objective"
+    receipt: null
+
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Wire the patient website to the retrieval backend behind a lookup-first path, logging every run so simulated usage feeds the verification framework."
+    inputs:
+      - "T001 website seam"
+      - "T006 ruling"
+    constraints:
+      - "Lookup-first: serve a known-verified document from the local library before attempting a live search."
+      - "Log every run with the inputs, the path taken (lookup or live), the claim, and the confidence."
+      - "The interface must surface honest uncertainty to the user rather than presenting a low-confidence guess as an answer."
+      - "Do not build the appeal-generation output; that is explicitly out of scope for this tranche."
+      - "Never hand the user a localhost URL; expose any running server over the tailnet per the repo and user conventions."
+    allowed_files:
+      - mockups/
+      - scripts/
+      - docs/goals/policy-retrieval-eval/notes/
+    verify:
+      - "A walkthrough of the website produces a retrieval result for at least one case end to end."
+      - "The run is recorded in the log with its path, claim, and confidence."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Wiring would require credentials or infrastructure not available; record the blocker and continue with a simulated backend."
+    receipt: null
+
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "If T006 ruled improve_first, run the in-context improvement loop (routing directory, skills, CLAUDE.md guidance), then re-run the eval and report the honest before-and-after."
+    inputs:
+      - "T005 baseline"
+      - "T006 ruling"
+    constraints:
+      - "In-context only: harness, CLAUDE.md, skills, routing directory. NO fine-tuning and NO training from scratch."
+      - "Seed the routing directory from documented retrievable-but-missed patterns, for example the UPMC open JSON policy-search endpoint."
+      - "Re-run cold against the same key and the same rubric so the comparison is honest."
+      - "Report the delta without cherry-picking rows."
+    allowed_files:
+      - scripts/
+      - data/policy_platform/
+      - docs/goals/policy-retrieval-eval/notes/
+      - CLAUDE.md
+    verify:
+      - "A second scored run exists and is directly comparable to the baseline."
+      - "The before-and-after uses the identical denominator."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "T006 ruled wire_now, making this task unnecessary; mark it not-needed rather than inventing work."
+    receipt: null
+
+  - id: T009
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: medium
+    objective: "Package the two human-dependency asks so they are not silently forgotten: Andrew's MA scoring ruling, and the request to Phil for real denial cases."
+    inputs:
+      - "T002 rubric"
+      - "T003 corrected key"
+    constraints:
+      - "Write the Phil request as a concrete, short ask: recent real denials with state, procedure, and plan; ideally the actual document and his working trace; plus a request that he review the tool."
+      - "State Andrew's MA question in one sentence, with the two candidate conventions and the consequence of each."
+      - "Include an Akin handoff note naming the exact next step he can pick up, consistent with the agreed GitHub-check-first protocol."
+      - "Do not send anything. Prepare the asks only."
+    expected_output:
+      - "Drafted Phil request"
+      - "One-sentence MA ruling question for Andrew"
+      - "Akin handoff note with an exact next step"
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether the tranche outcome is genuinely complete: corrected key, cold calibration-scored run, and a website producing a retrieval end to end."
+    inputs:
+      - "All done task receipts"
+      - "Last verification"
+      - "Current dirty diff"
+    constraints:
+      - "Do not implement."
+      - "Reject completion if required Worker work is still queued or active."
+      - "Reject completion if the reported number rests on labels the AI itself produced."
+      - "Reject completion if the scoring rubric was changed after results were seen."
+      - "Reject stopping only because a slice needs owner input, credentials, or a policy decision."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: unknown
+    task: null
+    commands: []
+  notes:
+    gate_suite: "none. This repo has no test suite. Verification is per-task command execution plus artifact inspection."
+    available_scripts:
+      - scripts/run_policy_retrieval.py
+      - scripts/emit_row_trace.py
+      - scripts/read_run.py
+      - scripts/run_denial_simulation_lab.sh
+      - "browser_capture: npm run capture"
