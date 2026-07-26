@@ -521,3 +521,131 @@ KEY_DEFECT_FOUND promotion.
   instances returned 429 or 403. All discovery was therefore done by
   robots.txt, sitemap.xml and link-following from payer root domains. That is a
   stricter method anyway, because it cannot pattern-guess a URL.
+
+---
+
+# 2026-07-26, T015: bm_0058 promoted to retrievable (Judge ruling T013)
+
+Task T015. Applied by GoalBuddy Worker against
+`data/policy_platform/answer_key_v1.json` under Judge ruling T013 on the same
+board. This entry supersedes the T003 headline table at the top of this file.
+
+## What changed
+
+Row **bm_0058** (Blue Shield of California, Medicare Advantage, California,
+CPT 27447) moves from `unverified` to **`retrievable`**, on
+`attestation_basis: deferral_two_part`, with `ma_deferral_status: attested`.
+
+T003 could not settle the row because the only Blue Shield knee document it
+reached, medical policy BSC7.10, never names a line of business. That finding
+stands and is unchanged. The promotion rests on a different document that T003
+never reached: the Blue Shield provider utilization management page at
+`https://www.blueshieldca.com/en/provider/guidelines-resources/guidelines-procedures/utilization-management`.
+
+That page supplies part one of `deferral_two_part`. Part two is unchanged and
+was never in doubt: LCD **L36575** with companion Billing and Coding Article
+**A57685** (Noridian, jurisdiction J-E, whose contractor table lists
+California, and whose article carries CPT 27447).
+
+**Counted document key: `A57685`.** No other retrievable row uses it, so unique
+documents on the retrievable side move from 6 to 7. The issuer is CMS, which
+was already counted, so unique issuers stay at 4.
+
+## The two PM errors that T013 corrected
+
+**Error 1, the quote started one sentence too late.** The PM submitted a quote
+beginning "The resources are not listed in use order...". That start point
+drops the only clause that names Blue Shield as the user of the criteria, and
+what remains is a general statement about what regulators require. On that
+span the promotion is not supported. The key now records the extended span,
+verbatim:
+
+> Blue Shield and Blue Shield Life use the utilization management criteria
+> found in the following resources to determine medical appropriateness and
+> coverage. The resources are not listed in use order for utilization
+> management and medically necessary decisions. The specific hierarchy for each
+> line of business is determined by regulatory government bodies. For example,
+> Medicare requires use of the Medicare Managed Care Manual and NCD/LCD’s
+> first.
+
+The apostrophe in `NCD/LCD’s` is the typographic right single quote, U+2019,
+not an ASCII apostrophe. Any grep or assertion against this string must use the
+typographic character. A verify command on T015 asserts U+2019 is present.
+
+**Error 2, the recorded hash does not reproduce.** The PM recorded sha256
+`d329984708e4c08ee6fca9216df93f60d5c2116dbc3ce1a1b331729bae409df3` for that
+page. Judge T013 refetched and got
+`e5982dc0c713588bcedfdb345903f14f58494acf56990ff6761ae2f3462ea692`. Worker
+T015 refetched again on 2026-07-26 and got a third value,
+`8ee08c1ee72002a63f8dc4ecfa6b52491bf6de6d381051a2832aafb3e879ec8d`. All three
+fetches returned HTTP 200, needed no login, and carried the identical verbatim
+paragraph above. The page rebuilds its markup on every request, so a raw-HTML
+sha256 is not an identity check for this artifact.
+
+The key therefore records `content_hash_stable: false` on this row, keeps all
+three observed digests in `content_hash_note`, presents none of them as
+authoritative, and pins identity to the verbatim string in `identity_string`
+and `attestation_quote`. T016 sweeps every other recorded payer-page hash for
+the same defect.
+
+## Why the plan type is marked inferred, not explicit
+
+The utilization management page never writes the words "Medicare Advantage".
+T013 therefore added a field `plan_type_named` to every retrievable row. Ten
+rows are `explicit`. bm_0058 alone is `instrument_inferred`, with this basis
+recorded on the row:
+
+> The page never writes Medicare Advantage. Plan type is identified by the
+> Medicare Managed Care Manual, CMS Pub. 100-16, which instructs Medicare
+> Advantage organizations only, and by two D-SNP-only resource entries, D-SNP
+> being a Medicare Advantage product type.
+
+This exists so a reader can report the strong-attestation subset both with and
+without the softer row, and see exactly what the softer row contributes.
+
+## CPT 27447 is not on the Blue Shield page
+
+`fetched.cpt_27447_present` is **false** for bm_0058, and that is truthful. A
+refetch on 2026-07-26 counted zero occurrences of `27447` on the utilization
+management page. The code lives on A57685, which is part two of the basis and
+is recorded in `ma_convention.lcd`. A retrieval answer naming only the Blue
+Shield page must not be graded wrong for that reason alone, exactly as
+`cms_note` already says for LCD pages.
+
+## Rows that did NOT change
+
+bm_0068 (Commercial) and bm_0079 (ACA Marketplace) **stay unverified**. T013
+ruled that four independent negative checks establish the absence of a public
+scope statement, not the presence of a gated one. Reclassifying them as gated
+would be a guess, and it would inflate the honest-abstention denominator with
+rows nobody proved. No row was deleted. No row other than bm_0058 changed,
+except to gain the `plan_type_named` field.
+
+## Superseding counts, replacing the T003 headline table
+
+| Class | T003 count | Now | Spec said |
+|---|---|---|---|
+| retrievable | 10 | **11** | 13 public |
+| gated | 17 | 17 | 20 login-gated |
+| none | 6 | 6 | 6 no public policy |
+| invalid | 1 | 1 | (no such class) |
+| unverified | 5 | **4** | (no such class) |
+| **total** | **39** | **39** | 39 |
+
+Derived figures now recorded in the key's `counts` block: scored rows 34,
+across 11 payers, of which 9 are Medicare Advantage. The retrievable side is 11
+rows resting on 7 unique documents from 4 unique issuers. The strong subset,
+meaning `single_document_full_scope` plus `deferral_two_part`, is 9 rows, 6
+documents and 3 issuers; excluding the one instrument-inferred row it is 8
+rows, 5 documents and 3 issuers. The weak subset, meaning `scope_by_exclusion`,
+stays at 2 rows. Arithmetic: 11 plus 17 plus 6 equals 34 scored; 34 plus 4
+unverified plus 1 invalid equals 39.
+
+## Honesty note on the direction of this change
+
+T013 recorded, and this log repeats, that the promotion flatters the result.
+The 95 percent upper bound on retrieval error improves from 39.3 percent at 6
+documents to 34.8 percent at 7. Two facts limit that. The issuer bound does not
+move at all: 4 issuers, and 3 in the strong subset, which stays the binding
+constraint on the retrieval side. The headline confident-wrong metric only
+changes denominator, 33 to 34, an 8.7 to 8.4 percent bound.

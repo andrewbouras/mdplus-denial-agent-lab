@@ -11,19 +11,28 @@
   "generated_by": "GoalBuddy Worker, task T003",
   "counts": {
     "total_rows": 39,
-    "retrievable": 10,
+    "retrievable": 11,
     "gated": 17,
     "none": 6,
     "invalid": 1,
-    "unverified": 5,
+    "unverified": 4,
     "spec_original": {
       "public": 13,
       "login_gated": 20,
       "no_public_policy": 6
     },
-    "unique_documents_on_retrievable_side": 6,
-    "retrievable_with_strong_attestation": 8,
-    "retrievable_with_weak_attestation": 2
+    "unique_documents_on_retrievable_side": 7,
+    "retrievable_with_strong_attestation": 9,
+    "retrievable_with_weak_attestation": 2,
+    "unique_issuers_on_retrievable_side": 4,
+    "strong_subset_documents": 6,
+    "strong_subset_issuers": 3,
+    "n_scored": 34,
+    "excluded_invalid": 1,
+    "excluded_unverified": 4,
+    "scored_payers": 11,
+    "medicare_advantage_scored_rows": 9,
+    "counts_basis": "Recomputed by Judge T013 from the rows and applied by Worker T015 on 2026-07-26. Arithmetic: 11 retrievable + 17 gated + 6 none = 34 scored; 34 scored + 4 unverified + 1 invalid = 39 total. Strong attestation means single_document_full_scope or deferral_two_part; weak means scope_by_exclusion. Excluding the one instrument_inferred row, bm_0058, the strong subset is 8 rows, 5 documents and 3 issuers."
   },
   "row_class_definitions": {
     "retrievable": "A public document was fetched this session at HTTP 200 without a login, it contains CPT 27447, its sha256 is recorded, and a verbatim quote attests that it governs this payer, plan type and state.",
@@ -182,6 +191,7 @@
       },
       "attestation_quote": "[payer + plan type, https://www.bcbsm.com/medicare/help/using-your-plan/prior-authorization/medicare-advantage-medical-policy-guidelines/] \"At BCBSM and BCN, medical policies follow Medicare Advantage Policy Guidelines to comply with the Centers for Medicare & Medicaid Services (CMS) Policy, National Coverage Determinations (NCDs) and/or Local Coverage Determinations (LCDs).\"  ||  [state + governing document, https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=39911] CMS Medicare Coverage Database, L39911 Contractor Information table: \"Wisconsin Physicians Service Insurance Corporation ... J-08 ... Indiana, Michigan\" (the row's state Michigan appears in this LCD's contractor jurisdiction table; the companion Billing and Coding Article A59811 lists CPT 27447).",
       "attestation_basis": "deferral_two_part",
+      "plan_type_named": "explicit",
       "notes": "BCBSM publishes no public Medicare Advantage knee policy of its own. It states in writing that its medical policies follow CMS NCDs and LCDs, so the controlling document is the Michigan LCD pair.",
       "ma_deferral_status": "defers",
       "ma_convention": {
@@ -243,6 +253,7 @@
       },
       "attestation_quote": "[payer + plan type, https://www.bcbsnc.com/providers/policies-guidelines-codes/medicare/guidelines/medicare-advantage-coverage-determination-hierarchy] \"Blue Cross NC Medicare Advantage Plan staff will perform clinical reviews for prior approval determinations utilizing defined Medicare criteria outlined in National Coverage Determinations (NCD), Local Coverage Determination (LCD), Local Coverage Article (LCA), Medicare Benefit Policy and Medicare Program Integrity manuals. Palmetto GBA: Fiscal Intermediary (FI) Part A (and some Part B services) MAC for Jurisdiction M.\"  ||  [state + governing document, https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=33456] CMS Medicare Coverage Database, L33456 Contractor Information table: \"Palmetto GBA ... J-M ... North Carolina, South Carolina, Virginia, West Virginia\" (the row's state North Carolina appears in this LCD's contractor jurisdiction table; the companion Billing and Coding Article A56777 lists CPT 27447).",
       "attestation_basis": "deferral_two_part",
+      "plan_type_named": "explicit",
       "notes": "Blue Cross NC's own page names both the deferral rule and the MAC, which is unusually strong evidence.",
       "ma_deferral_status": "defers",
       "ma_convention": {
@@ -281,7 +292,7 @@
       "plan_type": "Medicare Advantage",
       "state": "California",
       "cpt": "27447",
-      "row_class": "unverified",
+      "row_class": "retrievable",
       "provenance": {
         "state_basis": "payer_licensee_territory",
         "state_evidence_url": null,
@@ -292,14 +303,28 @@
         "spec_original_target_url": "https://www.blueshieldca.com/content/dam/bsca/en/provider/docs/medical-policies/Knee-Arthroplasty-Adults.pdf",
         "spec_reviewer": "Jocelyn",
         "changed_from_spec": true,
-        "change_reason": "Downgraded from public to unverified. BSC7.10 was fetched at HTTP 200 and does contain CPT 27447, but across all 24 pages it never names a line of business: the strings 'Medicare Advantage', 'Commercial', 'Marketplace' and 'Medi-Cal' do not appear. It therefore cannot supply the required attestation that it governs a Medicare Advantage member. No Blue Shield of California Medicare Advantage deferral statement was found without pattern-guessing a URL, which is forbidden.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "change_reason": "Downgraded from public to unverified. BSC7.10 was fetched at HTTP 200 and does contain CPT 27447, but across all 24 pages it never names a line of business: the strings 'Medicare Advantage', 'Commercial', 'Marketplace' and 'Medi-Cal' do not appear. It therefore cannot supply the required attestation that it governs a Medicare Advantage member. No Blue Shield of California Medicare Advantage deferral statement was found without pattern-guessing a URL, which is forbidden. PROMOTED 2026-07-26 under Judge ruling T013 from unverified to retrievable, basis deferral_two_part. The finding above about BSC7.10 stands unchanged; the promotion rests on a different document, the Blue Shield provider utilization management page, which T003 never reached.",
+        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip. The utilization management page was refetched on 2026-07-26 by Worker T015 at HTTP 200 with a browser user agent and no login, and the verbatim attestation paragraph was confirmed present."
       },
-      "fetched": null,
-      "attestation_quote": null,
-      "attestation_basis": "none_found",
-      "notes": "The Medicare LCD that would apply in California is recorded (L36575, Noridian J-E, which lists California - Entire State) so the research is preserved for Andrew's ruling, but the row is not scored as retrievable.",
-      "ma_deferral_status": "unverified",
+      "fetched": {
+        "url": "https://www.blueshieldca.com/en/provider/guidelines-resources/guidelines-procedures/utilization-management",
+        "http_status": 200,
+        "login_required": false,
+        "cpt_27447_present": false,
+        "cpt_27447_note": "CPT 27447 does not appear anywhere on the Blue Shield utilization management page; a refetch on 2026-07-26 counted zero occurrences. The code is carried by A57685, the CMS Billing and Coding Article companion to L36575 (Noridian J-E, whose contractor table lists California), which is part two of the deferral_two_part basis and is recorded in ma_convention.lcd.",
+        "sha256": "8ee08c1ee72002a63f8dc4ecfa6b52491bf6de6d381051a2832aafb3e879ec8d",
+        "doc_key": "A57685",
+        "fetched_at": "2026-07-26T15:40:00Z",
+        "content_hash_stable": false,
+        "content_hash_note": "NOT AN IDENTITY CHECK. This page rebuilds its markup on every request, so its raw-HTML sha256 does not reproduce. Three digests have been observed at HTTP 200, with no login and with the identical verbatim paragraph: d329984708e4c08ee6fca9216df93f60d5c2116dbc3ce1a1b331729bae409df3 recorded by the PM, e5982dc0c713588bcedfdb345903f14f58494acf56990ff6761ae2f3462ea692 recorded by Judge T013, and 8ee08c1ee72002a63f8dc4ecfa6b52491bf6de6d381051a2832aafb3e879ec8d recorded by Worker T015. No digest is authoritative. Identity rests on identity_string and on the verbatim attestation_quote.",
+        "identity_string": "Blue Shield and Blue Shield Life use the utilization management criteria found in the following resources to determine medical appropriateness and coverage."
+      },
+      "attestation_quote": "Blue Shield and Blue Shield Life use the utilization management criteria found in the following resources to determine medical appropriateness and coverage. The resources are not listed in use order for utilization management and medically necessary decisions. The specific hierarchy for each line of business is determined by regulatory government bodies. For example, Medicare requires use of the Medicare Managed Care Manual and NCD/LCD’s first.",
+      "attestation_basis": "deferral_two_part",
+      "plan_type_named": "instrument_inferred",
+      "instrument_basis": "The page never writes Medicare Advantage. Plan type is identified by the Medicare Managed Care Manual, CMS Pub. 100-16, which instructs Medicare Advantage organizations only, and by two D-SNP-only resource entries, D-SNP being a Medicare Advantage product type.",
+      "notes": "Promoted from unverified to retrievable on 2026-07-26 under Judge ruling T013. Blue Shield of California publishes no public Medicare Advantage knee policy of its own, and BSC7.10 never names a line of business. The provider utilization management page supplies part one of deferral_two_part: it names Blue Shield and Blue Shield Life as the users of the criteria, names the verb of use, and lists the Medicare Managed Care Manual and Medicare NCD/LCD among the resources. Part two is L36575 with companion article A57685 (Noridian J-E, which lists California and carries CPT 27447). The plan type is never written on the page; it is identified by instrument, so plan_type_named is instrument_inferred rather than explicit.",
+      "ma_deferral_status": "attested",
       "ma_convention": {
         "lcd": {
           "lcd_id": "L36575",
@@ -330,6 +355,19 @@
           "states_medicare_deferral": false,
           "contains_cpt_27447": true,
           "attested_for_this_plan_type": false
+        },
+        "utilization_management_page": {
+          "url": "https://www.blueshieldca.com/en/provider/guidelines-resources/guidelines-procedures/utilization-management",
+          "title": "Utilization management (Blue Shield of California provider guidelines and resources)",
+          "http_status": 200,
+          "login_required": false,
+          "sha256": "8ee08c1ee72002a63f8dc4ecfa6b52491bf6de6d381051a2832aafb3e879ec8d",
+          "content_hash_stable": false,
+          "fetched_at": "2026-07-26T15:40:00Z",
+          "quote": "Blue Shield and Blue Shield Life use the utilization management criteria found in the following resources to determine medical appropriateness and coverage. The resources are not listed in use order for utilization management and medically necessary decisions. The specific hierarchy for each line of business is determined by regulatory government bodies. For example, Medicare requires use of the Medicare Managed Care Manual and NCD/LCD’s first.",
+          "states_medicare_deferral": true,
+          "contains_cpt_27447": false,
+          "attested_for_this_plan_type": true
         }
       }
     },
@@ -367,6 +405,7 @@
       },
       "attestation_quote": "[payer + plan type, https://provider.carefirst.com/providers/medical/medical-policy.page] \"Medicare Medical Policy Guidelines For Medicare Advantage plans, the guidelines describe when certain medical services are considered medically necessary and are based on Original Medicare National Coverage Determinations (NCD's) and Local Coverage Determinations (LCD's) when available. Serving Maryland, the District of Columbia, and portions of Virginia, CareFirst BlueCross BlueShield is the shared business name of CareFirst of Maryland, Inc.\"  ||  [state + governing document, https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=36007] CMS Medicare Coverage Database, L36007 Contractor Information table: \"Novitas Solutions, Inc. ... J-L ... Delaware, District of Columbia, Maryland, New Jersey, Pennsylvania\" (the row's state Maryland appears in this LCD's contractor jurisdiction table; the companion Billing and Coding Article A56796 lists CPT 27447).",
       "attestation_basis": "deferral_two_part",
+      "plan_type_named": "explicit",
       "notes": "CareFirst's own Medical Policy Reference Manual link resolves to secure.compliance360.com and returned 'Permission Denied' when fetched, so CareFirst's own knee criteria are access-gated. Its public deferral statement is what makes this row scorable.",
       "ma_deferral_status": "defers",
       "ma_convention": {
@@ -435,6 +474,7 @@
       },
       "attestation_quote": "HIGHMARK MEDICARE ADVANTAGE MEDICAL POLICY - PENNSYLVANIA ... Medical Policy: S-39-008 ... Topic: Lower Extremity Major Joint Replacement (Hip and Knee) ... Procedure Codes 27130 27132 27134 27137 27138 27445 27447 27486 27487 ... The policy position applies to all Medicare Advantage lines of business",
       "attestation_basis": "single_document_full_scope",
+      "plan_type_named": "explicit",
       "notes": "This is the only row where a single fetched document attests payer, plan type, state and CPT together. Highmark also points to CMS: the policy body says 'To view specific LCD and NCD information ... refer to the LINKS section'. The Pennsylvania LCD pair is recorded as the alternate convention.",
       "ma_deferral_status": "publishes_own",
       "ma_convention": {
@@ -499,6 +539,7 @@
       },
       "attestation_quote": "[payer + plan type, https://www.horizonblue.com/providers/products-programs/utilization-management-programs/surgical-and-implantable-device-management-program/medical-policy-criteria-and-guidelines] \"In the processing of claims for services provided to our MA members, we follow Centers for Medicare & Medicaid Services (CMS) guidelines, NCDs and/or LCDs. For those services where no LCD or NCD exists, claims for MA members will be processed based on TurningPoint policy criteria and guidelines.\"  ||  [state + governing document, https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=36007] CMS Medicare Coverage Database, L36007 Contractor Information table: \"Novitas Solutions, Inc. ... J-L ... Delaware, District of Columbia, Maryland, New Jersey, Pennsylvania\" (the row's state New Jersey appears in this LCD's contractor jurisdiction table; the companion Billing and Coding Article A56796 lists CPT 27447).",
       "attestation_basis": "deferral_two_part",
+      "plan_type_named": "explicit",
       "notes": "The deferral statement sits on Horizon's orthopedic utilization-management page, so it is knee-specific rather than generic. Horizon's own knee criteria are genuinely gated: the same page requires an Availity Essentials sign-in, or TurningPoint portal credentials obtained by telephone, or a member ID. All three are credential paths and were not attempted.",
       "ma_deferral_status": "defers",
       "ma_convention": {
@@ -720,6 +761,7 @@
       },
       "attestation_quote": "This policy applies to the following lines of business: (Check those that apply.) ... CMS-MA: PA (X) ... HMO (X) ... PPO (X) ... DSNP (X) ... The check next to a line of business indicates that the policy has applicability to that line of business, and the policy will further explain or define any coverage, exceptions, exclusions, limitations, variations, or special circumstances. || POLICY NUMBER: MP.PA.133 ... Reference State Addendums for: Delaware ( ) Maryland ( ) New Jersey ( ) Ohio ( ) Virginia ( ) West Virginia ( ) Wisconsin ( )",
       "attestation_basis": "single_document_full_scope",
+      "plan_type_named": "explicit",
       "notes": "Line-of-business checkboxes were read from PDF word coordinates, not from flowed text, so the column each (X) belongs to is unambiguous. Verified with PyMuPDF: the CMS-MA checkbox column is at x=269 and carries (X) on the PA, HMO, PPO and DSNP rows.",
       "ma_deferral_status": "publishes_own",
       "ma_convention": {
@@ -968,6 +1010,7 @@
       },
       "attestation_quote": "Scope: Medical policies are systematically developed guidelines that serve as a resource for Company staff when determining coverage for specific medical procedures, drugs or devices. Coverage for medical services is subject to the limits and conditions of the member benefit plan. Members and their providers should consult the member benefit booklet or contact a customer service representative to determine whether there are any benefit limitations applicable to this service or supply. This medical policy does not apply to Medicare Advantage. || The medical policies contained within this website do not apply to Medicare Advantage network members. Please call 888-850-8526 if you have questions or requests to see a Medicare Advantage medical policy for services prior to the end of 2024. || Premera Blue Cross is an independent licensee of the Blue Cross Blue Shield Association serving businesses and residents of Alaska and Washington state, excluding Clark County.",
       "attestation_basis": "scope_by_exclusion",
+      "plan_type_named": "explicit",
       "notes": "FLAGGED FOR JUDGE. This is the weakest attestation basis in the key. It does not meet the strict bar of a quote in which the document says it governs this plan type. It is recorded as retrievable because the document is genuinely Premera's operative non-Medicare knee policy, and marking it unverified would hide a correct answer from the eval. The attestation_basis field lets the scorer report retrievable rows with and without this row."
     },
     {
@@ -1030,6 +1073,7 @@
       },
       "attestation_quote": "This policy applies to the following lines of business: (Check those that apply.) ... COMMERCIAL: HMO ( ) PPO ( ) Fully Insured ( ) Self Funded ( ) Marketplace HMO ( ) Marketplace PPO ( ) Marketplace EPO ( ) Indiv. Off Exchange ( ) All (X) ... The check next to a line of business indicates that the policy has applicability to that line of business. || POLICY NUMBER: MP.PA.133 ... Reference State Addendums for: Delaware ( ) Maryland ( ) New Jersey ( ) Ohio ( ) Virginia ( ) West Virginia ( ) Wisconsin ( )",
       "attestation_basis": "single_document_full_scope",
+      "plan_type_named": "explicit",
       "notes": "Checkbox column read from PDF word coordinates: the COMMERCIAL checkbox column is at x=190 and the final row of that column, 'All', carries (X) at x=188. Individual commercial sub-boxes are unchecked, which is the usual convention when 'All' is used."
     },
     {
@@ -1274,6 +1318,7 @@
       },
       "attestation_quote": "Scope: Medical policies are systematically developed guidelines that serve as a resource for Company staff when determining coverage for specific medical procedures, drugs or devices. Coverage for medical services is subject to the limits and conditions of the member benefit plan. Members and their providers should consult the member benefit booklet or contact a customer service representative to determine whether there are any benefit limitations applicable to this service or supply. This medical policy does not apply to Medicare Advantage. || The medical policies contained within this website do not apply to Medicare Advantage network members. Please call 888-850-8526 if you have questions or requests to see a Medicare Advantage medical policy for services prior to the end of 2024. || Premera Blue Cross is an independent licensee of the Blue Cross Blue Shield Association serving businesses and residents of Alaska and Washington state, excluding Clark County.",
       "attestation_basis": "scope_by_exclusion",
+      "plan_type_named": "explicit",
       "notes": "FLAGGED FOR JUDGE, same caveat as bm_0073. Treated identically to bm_0073 on purpose: the two rows share one document and one basis, so grading them differently would be arbitrary."
     },
     {
@@ -1542,6 +1587,7 @@
       },
       "attestation_quote": "This policy applies to the following lines of business: (Check those that apply.) ... DHS-MA: Health Choices/PH (X) ... CHIP (X) ... COMMUNITY HEALTHCHOICES: CHC/MLTSS (X) ... The check next to a line of business indicates that the policy has applicability to that line of business. || POLICY NUMBER: MP.PA.133 ... Reference State Addendums for: Delaware ( ) Maryland ( ) New Jersey ( ) Ohio ( ) Virginia ( ) West Virginia ( ) Wisconsin ( )",
       "attestation_basis": "single_document_full_scope",
+      "plan_type_named": "explicit",
       "notes": "Checkbox column read from PDF word coordinates: the DHS-MA checkbox column is at x=386 and carries (X) on the Health Choices/PH row."
     }
   ]

@@ -74,7 +74,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/policy-retrieval-eval/"
     command: "node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/policy-retrieval-eval"
 
-active_task: T015
+active_task: T004
 
 tasks:
   - id: T001
@@ -377,7 +377,7 @@ tasks:
   - id: T015
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Apply the T013 ruling to the answer key: promote bm_0058 to retrievable on the extended verbatim quote, add the plan_type_named field to every retrievable row, mark the unstable hash, and update every count block."
     context: "T013 approved the promotion but corrected two PM errors. The attestation quote must start one sentence earlier than the PM recorded, and the page sha256 the PM recorded is not reproducible. Both corrections are mandatory. This task writes data only. The PM holds scoring-rubric-v1.md concurrently for the v1.3 amendment, so this task must never open that file."
@@ -411,7 +411,35 @@ tasks:
       - "Any verify command fails and the fix would require changing a row other than bm_0058."
       - "The class counts do not sum to 39."
       - "You are tempted to delete a row rather than reclassify it."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - data/policy_platform/answer_key_v1.json
+        - docs/goals/policy-retrieval-eval/notes/key-corrections.md
+        - docs/goals/policy-retrieval-eval/notes/pm-bsc-and-carefirst-findings.md
+      commands:
+        - cmd: "V1 json parse"
+          status: pass
+        - cmd: "V2 class counts sum 39"
+          status: pass
+        - cmd: "V3 bm_0058 class, basis, doc_key, hash_stable"
+          status: pass
+        - cmd: "V4 extended quote span plus U+2019"
+          status: pass
+        - cmd: "V5 plan_type_named on all retrievable, exactly one instrument_inferred"
+          status: pass
+        - cmd: "V6 11 retrievable rows over 7 unique doc_keys"
+          status: pass
+        - cmd: "V7 counts block fields"
+          status: pass
+        - cmd: "V8 git diff scope is a subset of allowed_files"
+          status: pass
+        - cmd: "PM independent re-verification of all eight assertions plus a row-level diff against HEAD"
+          status: pass
+      summary: "bm_0058 promoted to retrievable, basis deferral_two_part, on the Judge-corrected extended quote with U+2019 preserved and no ASCII apostrophe. doc_key A57685, cpt_27447_present false with an explanatory note pointing at the billing article, content_hash_stable false. plan_type_named added to all eleven retrievable rows, instrument_inferred on bm_0058 only. Every count updated. All eight verify commands passed on the first attempt with zero fix cycles."
+      pm_verification: "The PM re-ran every assertion independently rather than trusting the receipt. Confirmed: classes 11/17/6/4/1 summing to 39; the quote starts at 'Blue Shield and Blue Shield Life use' and ends 'NCD/LCD s first.' with U+2019 present and zero ASCII apostrophes; 11 retrievable rows over 7 unique doc_keys; plan_type_named 10 explicit and 1 instrument_inferred; all fifteen count fields correct. A row-level diff against HEAD proves exactly one row, bm_0058, changed beyond the added field, row order is preserved, 39 rows remain, and the unverified set is exactly bm_0068, bm_0079, bm_0086, bm_0089. Both markdown notes contain zero em or en dashes."
+      escalation_worth_noting: "The Worker refetched the Blue Shield page rather than copying the Judge value, and got a THIRD distinct sha256: 8ee08c1ee72002a63f8dc4ecfa6b52491bf6de6d381051a2832aafb3e879ec8d, against d329984 from the PM and e5982dc from Judge T013. Three fetches, three digests, identical body text every time. That is conclusive rather than suggestive proof of per-request markup rebuilding. All three digests are enumerated in the key with none presented as authoritative, and identity is pinned to the verbatim sentence. This raises the priority of T016."
+      deviations_accepted: "Six deviations, all reviewed and all kept. Added fetched.identity_string ahead of T016 requirement so that task cannot fail on this row. Added fetched.cpt_27447_note so the false CPT value is not misread as a defect. Added counts.counts_basis showing the arithmetic and the instrument-inferred-excluded subset, which the T013 ruling required to be reportable. Extended rather than overwrote bm_0058 provenance and verification_method, preserving the BSC7.10 record. Added ma_convention.utilization_management_page alongside the existing plan_page. Corrected four additional factual errors in the PM findings note, including a table row that wrongly claimed the page names Medicare Advantage, without rewriting the note."
 
   - id: T016
     type: worker
@@ -444,7 +472,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Build the eval harness: per row, Claude attempts retrieval and emits an explicit confidence, then a second model judges the attempt, producing a scored report that foregrounds confident-wrong answers."
     inputs:
@@ -460,8 +488,9 @@ tasks:
       - "STRUCTURAL KEY ISOLATION. A query-emitter step reads the key and writes runs/<id>/queries.jsonl containing ONLY {row_id, payer, plan_type, state, cpt, procedure_name}. The retrieval step reads only queries.jsonl. The harness asserts, and the artifact records, that no key URL and no key host appears in any retrieval prompt."
       - "Grading is two-stage. Stage A is deterministic code (normalize, fetch, status, login-wall detection, CPT-27447 presence, URL match). Stage B is the model adjudicator, invoked only where Stage A is not decisive. Never delegate a mechanically checkable fact to a model."
       - "Implement rubric v1.3 EXACTLY as written in docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md. Record the rubric sha256 and the key sha256 in every run artifact. Do NOT implement against v1.1 or v1.2; v1.1 carries a four-class model Judge T012 superseded, and v1.2 carries denominators Judge T013 moved."
-      - "FIVE SCORING CLASSES, rubric sections 0, 4.1 and 0.2. RETRIEVABLE, GATED and NONE are scored. INVALID (1 row, bm_0063) and UNVERIFIED (5 rows) are excluded from every headline denominator and are never deleted. Read the canonical denominators from rubric section 0.2, derive the same values from the key at build time, assert they match, and abort on any mismatch so a key edit fails the build loudly instead of drifting silently."
+      - "FIVE SCORING CLASSES, rubric sections 0, 4.1 and 0.2. RETRIEVABLE, GATED and NONE are scored. INVALID (1 row, bm_0063) and UNVERIFIED (4 rows, bm_0068 bm_0079 bm_0086 bm_0089) are excluded from every headline denominator and are never deleted. Read the canonical denominators from rubric section 0.2, derive the same values from the key at build time, assert they match, and abort on any mismatch so a key edit fails the build loudly instead of drifting silently."
       - "UNVERIFIED ROW GRADING, rubric section 4.1. Four exhaustive outcomes: verified public 200 with CPT 27447 that self-attests = KEY_DEFECT_FOUND; 404, 403, login wall, timeout, fabricated host, or no 27447 = WRONG_UNDER_ANY_WORLD_STATE, counted only in the unverified block; resolves with 27447 but cannot attest scope = UNSCOREABLE, our gap not the model's; abstention = UNSCORED, no credit. An unverified row may NEVER be graded WRONG_DOCUMENT on scope grounds, because scope is exactly what we failed to settle."
+      - "PART-ONE ADMISSIBILITY, rubric section 2.2. deferral_two_part rows require P1 actor, P2 verb of use, P3 named CMS instrument and P4 plan type. Every retrievable row carries plan_type_named. bm_0058 alone is instrument_inferred, so the strong-attestation subset is reported BOTH including it (9 rows / 6 documents / 3 issuers) and excluding it (8 rows / 5 documents / 3 issuers). The section 7 ISSUER-BOUND line is mandatory: the document count improved in v1.3 and the issuer count did not."
       - "ATTESTATION ADMISSIBILITY, rubric section 2.1. scope_by_exclusion rows are retrievable only when E1, E2 and E3 all hold, and they remain excluded from the strong-attestation subset printed in section 7."
       - "STATISTICAL DENOMINATOR, rubric sections 0.1 and 0.2. Any rate, percentage or confidence bound on the retrieval side uses UNIQUE DOCUMENTS, never rows. On the safety side it uses rows, with unique payers printed alongside. All bounds use the exact binomial 1 - 0.05^(1/N). The 3/N shorthand is forbidden anywhere in this harness."
       - "CAVEAT PROPAGATION, rubric section 9. Copy known_limitations and open_human_decision byte for byte from the key into every run artifact and every printed report, record key_sha256, and assert the copied text hashes equal the key's blocks. A mismatch fails the build. They go inside the section 7 fenced template, not in a footer or a separate file."

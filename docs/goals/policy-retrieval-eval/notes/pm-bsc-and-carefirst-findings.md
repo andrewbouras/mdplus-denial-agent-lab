@@ -6,8 +6,10 @@ no credential, no payer telephone call.
 Purpose: resolve two of the three human-dependency blockers T003 left open, without
 consuming Andrew's time. Andrew delegated both decisions explicitly.
 
-Status: findings recorded here only. NOT yet applied to `answer_key_v1.json`, because
-the T012 Judge is reading that file and the board allows one writer at a time.
+Status: APPLIED. Judge T013 ruled on these findings on 2026-07-26 and approved the
+bm_0058 promotion, with two corrections to this note that are now made in place below,
+marked "CORRECTED by T013". Worker T015 applied the result to `answer_key_v1.json` the
+same day. The full record is in `notes/key-corrections.md`, entry dated 2026-07-26.
 
 ---
 
@@ -56,14 +58,34 @@ tell us which plan types the policy covers.
 Found on the Blue Shield utilization management page, which T003 did not reach.
 
 - URL: `https://www.blueshieldca.com/en/provider/guidelines-resources/guidelines-procedures/utilization-management`
-- HTTP 200, no login, sha256 `d329984708e4c08ee6fca9216df93f60d5c2116dbc3ce1a1b331729bae409df3`
-- Verbatim: "The resources are not listed in use order for utilization management and
-  medically necessary decisions. The specific hierarchy for each line of business is
-  determined by regulatory government bodies. For example, Medicare requires use of the
-  Medicare Managed Care Manual and NCD/LCD's first."
+- HTTP 200, no login.
+- **Hash, CORRECTED by T013: there is no usable hash for this page.** This note first
+  recorded sha256 `d329984708e4c08ee6fca9216df93f60d5c2116dbc3ce1a1b331729bae409df3`.
+  That digest does not reproduce. Judge T013 refetched and got
+  `e5982dc0c713588bcedfdb345903f14f58494acf56990ff6761ae2f3462ea692`, and Worker T015
+  refetched again and got `8ee08c1ee72002a63f8dc4ecfa6b52491bf6de6d381051a2832aafb3e879ec8d`.
+  All three fetches returned HTTP 200, needed no login, and carried the identical
+  paragraph below. The page rebuilds its markup on every request, so a raw-HTML sha256
+  cannot serve as an identity check here. The key records `content_hash_stable: false`
+  and pins identity to the verbatim string instead.
+- **Quote, CORRECTED by T013: the span below starts one sentence earlier than this note
+  first recorded.** The original start point, "The resources are not listed in use
+  order...", drops the only clause that names Blue Shield as the user of the criteria,
+  and on that shorter span the promotion is not supported. Verbatim, in full:
+  "Blue Shield and Blue Shield Life use the utilization management criteria found in the
+  following resources to determine medical appropriateness and coverage. The resources
+  are not listed in use order for utilization management and medically necessary
+  decisions. The specific hierarchy for each line of business is determined by regulatory
+  government bodies. For example, Medicare requires use of the Medicare Managed Care
+  Manual and NCD/LCD’s first." The apostrophe in `NCD/LCD’s` is U+2019, not ASCII.
 
-That is a payer-attested Medicare deferral for the Medicare Advantage line of business,
-which is exactly the `deferral_two_part` basis T003 defined and used on four other rows.
+On the extended span that is a payer-attested Medicare deferral, which is exactly the
+`deferral_two_part` basis T003 defined and used on four other rows. One further
+correction from T013: the page never writes the words "Medicare Advantage". The plan type
+is identified by instrument, that is by the Medicare Managed Care Manual, CMS Pub. 100-16,
+which instructs Medicare Advantage organizations only, and by two D-SNP-only entries in
+the resource list. The key therefore marks this row `plan_type_named:
+instrument_inferred`, while the other ten retrievable rows are `explicit`.
 
 Independent corroboration from inside BSC7.10 itself, under its own section heading
 "Medicare National Coverage", quoted verbatim: "Medicare does not have a National Coverage
@@ -74,12 +96,15 @@ So bm_0058 is attested by three independent artifacts that agree:
 
 | Part | Source | What it attests |
 |---|---|---|
-| payer + plan type | BSC utilization management page | Medicare Advantage defers to the Medicare Managed Care Manual and NCD/LCD first |
+| payer + plan type | BSC utilization management page | Blue Shield and Blue Shield Life use these criteria, and Medicare requires the Medicare Managed Care Manual and NCD/LCD first. Plan type is inferred from the instrument, not written on the page |
 | governing document | BSC7.10 "Medicare National Coverage" section | No NCD exists; L36575 governs total knee arthroplasty |
 | state + jurisdiction | CMS L36575 Contractor Information table | Noridian J-E, "California - Entire State" |
 
-**Proposed change: bm_0058 moves from `unverified` to `retrievable`, basis
-`deferral_two_part`.** Subject to the T012 Judge, since it changes a denominator.
+**Change APPLIED: bm_0058 moves from `unverified` to `retrievable`, basis
+`deferral_two_part`.** Approved by Judge T013 on the extended quote above, and only on
+that quote. Written into the key by Worker T015. The counted document is **A57685**, the
+CMS Billing and Coding Article companion to L36575, which carries CPT 27447. CPT 27447
+does not appear on the Blue Shield page itself, and the key records that truthfully.
 
 ### The two rows that stay unverified: bm_0068 and bm_0079
 
@@ -102,6 +127,11 @@ listing which policies bind which product lines. Both are plausibly behind the p
 portal, which makes these candidates for reclassification to `gated` rather than
 `unverified`. I did not reclassify them, because "probably behind a login" is a guess and
 `gated` is supposed to mean established.
+
+T013 ruled on this and adopted the reasoning above without change: bm_0068 and bm_0079
+KEEP `unverified`, and must not be reclassified as `gated`. Four independent negative
+checks establish the absence of a public scope statement, not the presence of a gated
+one.
 
 ---
 
@@ -139,17 +169,44 @@ row. The eval asks a state-pinned question and the state is pinned to Maryland.
 
 ---
 
-## 3. Net effect on the class counts, if T012 approves
+## 3. Net effect on the class counts, as applied
 
-| Class | T003 | After bm_0058 |
+T013 approved and T015 applied. These are the counts now in
+`data/policy_platform/answer_key_v1.json`.
+
+| Class | T003 | Now, after bm_0058 |
 |---|---|---|
 | retrievable | 10 | 11 |
 | gated | 17 | 17 |
 | none | 6 | 6 |
 | unverified | 5 | 4 |
 | invalid | 1 | 1 |
+| **total** | **39** | **39** |
 
-The independence caveat does not improve much. The retrievable rows would rest on 7 unique
-documents rather than 6, since bm_0058 introduces L36575 with the Blue Shield utilization
-management page as its deferral attestation. Report both numbers together, per rubric
-section 0.1.
+Derived figures, also recorded in the key:
+
+| Figure | T003 | Now |
+|---|---|---|
+| scored rows | 33 | 34 |
+| scored payers | 11 | 11 |
+| Medicare Advantage scored rows | 8 | 9 |
+| unique documents on the retrievable side | 6 | 7 |
+| unique issuers on the retrievable side | 4 | 4 |
+| strong attestation rows | 8 | 9 |
+| strong subset documents | 5 | 6 |
+| strong subset issuers | 3 | 3 |
+| weak attestation rows | 2 | 2 |
+| excluded, unverified | 5 | 4 |
+| excluded, invalid | 1 | 1 |
+
+Arithmetic: 11 plus 17 plus 6 equals 34 scored; 34 plus 4 unverified plus 1 invalid
+equals 39.
+
+The independence caveat does not improve much. The retrievable rows now rest on 7 unique
+documents rather than 6, since bm_0058 introduces A57685, the companion article to
+L36575, with the Blue Shield utilization management page as its deferral attestation.
+Report both numbers together, per rubric section 0.1. Two limits on the improvement, from
+T013 and repeated here so the report cannot overstate it. The issuer count does not move
+at all, staying at 4 overall and 3 in the strong subset, and that is the binding
+constraint on the retrieval side. Excluding the one instrument-inferred row, the strong
+subset is 8 rows, 5 documents and 3 issuers, which is what T003 already had.
