@@ -9,8 +9,10 @@ report writer, all of which run on the harness side of the isolation boundary.
 from __future__ import annotations
 
 import hashlib
+import html as _html
 import json
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit
@@ -58,6 +60,29 @@ SIGNIN_FORM_RE = re.compile(
     r"|type=[\"']password[\"']|please\s+sign\s+in|log\s?in\s+to\s+continue)",
     re.IGNORECASE,
 )
+
+# Bot-mitigation fingerprints. Kept deliberately separate from the login-wall
+# patterns above. See detect_bot_block for why the two must never merge.
+BOT_BLOCK_MARKERS: tuple[tuple[str, str], ...] = (
+    (r"incapsula\s+incident\s+id", "imperva_incapsula_incident_id"),
+    (r"_incapsula_resource", "imperva_incapsula_resource"),
+    (r"request\s+unsuccessful", "request_unsuccessful_stub"),
+    (r"attention\s+required!\s*\|\s*cloudflare", "cloudflare_attention_required"),
+    (r"cf-browser-verification", "cloudflare_browser_verification"),
+    (r"__cf_chl", "cloudflare_challenge"),
+    (r"just\s+a\s+moment\.\.\.", "cloudflare_just_a_moment"),
+    (r"px-captcha", "perimeterx_captcha"),
+    (r"datadome", "datadome"),
+    (r"errors\.edgesuite\.net", "akamai_edgesuite_error"),
+)
+BOT_BLOCK_RE = re.compile(
+    "|".join(f"(?P<m{i}>{pat})" for i, (pat, _) in enumerate(BOT_BLOCK_MARKERS)),
+    re.IGNORECASE,
+)
+# The generic rule below fires on a thin HTTP 200. A stub that carries no
+# marker we know still gives itself away by being an HTTP 200 with almost no
+# readable text and no sign of the code this benchmark is about.
+THIN_200_TEXT_CHARS = 512
 
 
 def sha256_bytes(b: bytes) -> str:
@@ -148,18 +173,64 @@ def url_host(url: str | None) -> str | None:
     return host or None
 
 
+_STRIP_HTML_MAX_PASSES = 4
+
+
 def strip_html(html: str) -> str:
-    text = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", html)
-    text = re.sub(r"(?s)<[^>]+>", " ", text)
-    text = (
-        text.replace("&nbsp;", " ")
-        .replace("&amp;", "&")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", '"')
-        .replace("&#39;", "'")
-    )
+    """Return the readable text of an HTML document.
+
+    ORDER MATTERS AND WAS WRONG UNTIL T018. The previous implementation stripped
+    tags first and unescaped entities second, so a page that delivers policy
+    prose as escaped markup inside a JSON payload leaked a literal tag into the
+    text the retrieval model reads: `(&lt;abbr&gt;NCD&lt;/abbr&gt;)` came back
+    as `(<abbr>NCD</abbr>)`. Entities are now unescaped BEFORE tags are removed,
+    and the pair is repeated until the text stops changing so doubly escaped
+    markup also resolves. The pass count is capped so a pathological input
+    cannot spin.
+    """
+    text = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", html or "")
+    for _ in range(_STRIP_HTML_MAX_PASSES):
+        before = text
+        text = _html.unescape(text)
+        text = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", text)
+        text = re.sub(r"(?s)<[^>]+>", " ", text)
+        if text == before:
+            break
     return re.sub(r"\s+", " ", text).strip()
+
+
+_PUNCT_RE = re.compile(r"[^\w\s]", re.UNICODE)
+
+
+def normalize_for_match(s: str | None) -> str:
+    """Fold a string to the form used for every identity and attestation check.
+
+    A raw substring test on live payer HTML manufactures phantoms. On the BCBS
+    North Carolina page a recorded 325-character quote tested NOT PRESENT while
+    being present and unchanged, because the page wraps three abbreviations in
+    markup and serves that region as escaped markup inside JSON. This function
+    unescapes entities, removes tags, folds case, folds every punctuation mark
+    and every kind of quote or dash to a space, and collapses whitespace.
+    """
+    if not s:
+        return ""
+    text = strip_html(s)
+    text = unicodedata.normalize("NFKC", text)
+    text = text.casefold()
+    text = _PUNCT_RE.sub(" ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def normalized_contains(haystack: str | None, needle: str | None) -> bool:
+    """True when `needle` appears in `haystack` under normalize_for_match.
+
+    Every identity check the key relies on must run through this, so that the
+    check recorded in the key and the check run by the harness cannot diverge.
+    """
+    n = normalize_for_match(needle)
+    if not n:
+        return False
+    return n in normalize_for_match(haystack)
 
 
 def pdf_text(data: bytes) -> str:
@@ -204,6 +275,62 @@ def detect_login_wall(
     head = (body_text or "")[:20000]
     if SIGNIN_FORM_RE.search(head):
         return True, "signin_form_in_body"
+    return False, None
+
+
+def detect_bot_block(
+    status: int | None,
+    headers: dict[str, Any] | None,
+    body_text: str,
+    byte_len: int | None = None,
+) -> tuple[bool, str | None]:
+    """Detect bot mitigation that answers a non-browser request with HTTP 200.
+
+    THIS IS NOT A LOGIN WALL AND MUST NEVER BE MERGED WITH ONE. A login wall is
+    a true property of the payer: that payer really does put its policy behind
+    credentials, and the row belongs in the gated class. A bot block is an
+    artefact of our own request shape: the document may be fully public and we
+    simply were not allowed to read it. A bot block must therefore NEVER produce
+    a row class, and a blocked fetch must never be scored as model behaviour.
+
+    Why this exists. One recorded payer host, www.horizonblue.com, answers a
+    non-browser request with HTTP 200 and a stub of about 930 bytes whose whole
+    visible text is `Request unsuccessful. Incapsula incident ID: ...`. Run
+    against that stub, detect_login_wall returns (False, None), so before this
+    function the harness could not tell a blocked fetch from a successful one.
+    The direction of that blindness is not neutral: a blocked fetch makes the
+    retrieval model abstain, and abstention is what the headline metric rewards,
+    so we would have scored our own network conditions as model caution.
+
+    `body_text` may be the raw decoded body or already-extracted text. Markers
+    are searched in whatever is passed, because several fingerprints live in
+    script or meta content that text extraction removes.
+    """
+    hdrs = {str(k).lower(): v for k, v in (headers or {}).items()}
+    content_type = str(hdrs.get("content-type") or "").lower()
+    body = body_text or ""
+
+    m = BOT_BLOCK_RE.search(body[:200000])
+    if m and m.lastgroup:
+        idx = int(m.lastgroup[1:])
+        return True, BOT_BLOCK_MARKERS[idx][1]
+
+    server = str(hdrs.get("server") or "").lower()
+    if status == 200 and ("incapsula" in server or "datadome" in server):
+        return True, f"bot_mitigation_server_header:{server}"
+
+    # Generic rule: an HTTP 200 that carries almost no readable text and no sign
+    # of CPT 27447 is not a policy page. PDFs are exempt because a short PDF
+    # text extraction is a parser failure, not a block, and calling it a block
+    # would move the row out of the scored denominator, which is the flattering
+    # direction.
+    if status == 200 and "pdf" not in content_type:
+        stripped = strip_html(body) if "<" in body else re.sub(r"\s+", " ", body).strip()
+        if len(stripped) < THIN_200_TEXT_CHARS and not contains_cpt_27447(stripped):
+            return True, (
+                f"thin_200_response:{len(stripped)}_text_chars"
+                f"_of_{byte_len if byte_len is not None else len(body)}_bytes"
+            )
     return False, None
 
 

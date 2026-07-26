@@ -103,7 +103,7 @@ visual_board:
     url: http://goalbuddy.localhost:41737/policy-retrieval-eval/
     command: node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs
       --goal docs/goals/policy-retrieval-eval
-active_task: T018
+active_task: T019
 tasks:
   - id: T001
     type: scout
@@ -1543,7 +1543,7 @@ tasks:
   - id: T018
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: Harden the fetch path against undetected bot blocks, normalise every identity and attestation
       check, re-probe all 17 gated rows for positive login evidence, and apply the Judge T017 caveat wording.
@@ -1593,10 +1593,11 @@ tasks:
         that string on every gated row so it states what was actually done. On the sixteen rows with no
         URL the honest string names a carried-forward spec label plus whatever the payer-level probe found,
         and it must not claim a per-row firsthand fetch.
-      - 'Add a known_limitations item recording the URL absence itself, independent of what the probe finds:
-        sixteen of seventeen gated rows rest on a carried-forward spec label with no recorded URL, no HTTP
-        status and no login flag, and gated rows supply 17 of the 23 honest-abstention rows. This is true
-        whatever the probe returns, and it must be stated whether or not the probe corroborates the class.'
+      - 'Add a known_limitations item recording the URL absence itself, independent of what the probe
+        finds: sixteen of seventeen gated rows rest on a carried-forward spec label with no recorded URL,
+        no HTTP status and no login flag, and gated rows supply 17 of the 23 honest-abstention rows. This
+        is true whatever the probe returns, and it must be stated whether or not the probe corroborates
+        the class.'
       - Replace known_limitations item 8 with the exact T017 wording and add items 9 and 10. Do not delete
         the record that the alarm was raised.
       - 'Amend the rubric to v1.5: a blocked fetch is a distinct outcome, excluded from the confident-wrong
@@ -1634,6 +1635,130 @@ tasks:
       - denominators.py reports any derived value not equal to its pinned value.
       - The strip_html ordering fix changes the output of any existing selftest.
       - git diff --name-only lists a file outside allowed_files.
+    receipt:
+      result: blocked
+      summary: 'Fetch-path hardening COMPLETE and PM-verified. Gated re-probe reached payer 1 of 7 and
+        fired a stop_if: Independence Blue Cross serves two public pages, Commercial and Medicare Advantage,
+        that list CPT 27447 at HTTP 200 with no credential demanded. Reproduced 3 of 3 by the Worker and
+        re-reproduced independently by the PM. No row_class changed, no answer key edited. The deferred
+        wording work, the verification_method correction, the known_limitations items and the rubric v1.5
+        amendment were all deliberately NOT applied, because their correct wording depends on how a Judge
+        rules on this finding.'
+      changed_files:
+        - scripts/policy_eval/common.py
+        - scripts/policy_eval/webtools.py
+        - tests/test_policy_eval_fetch_guards.py
+        - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md
+      commands:
+        - python3 tests/test_policy_eval_fetch_guards.py -> FETCH-GUARD TESTS PASSED (21 / 21)
+        - python3 scripts/policy_eval/denominators.py -> ALL DENOMINATOR ASSERTIONS PASSED
+        - python3 scripts/policy_eval/selftest_report_gate.py -> GATE SELF-TEST PASSED (11 / 11)
+        - python3 scripts/policy_eval/selftest_discrimination.py -> SELF-TEST PASSED (7 / 7)
+        - python3 scripts/policy_eval/selftest_tool_isolation.py -> TOOL-ISOLATION SELF-TEST PASSED
+        - git diff --name-only -> scripts/policy_eval/common.py, scripts/policy_eval/webtools.py, both
+          in allowed_files
+      hardening_delivered:
+        - 'detect_bot_block(status, headers, body_text, byte_len) added to common.py and kept STRICTLY
+          separate from detect_login_wall. PM re-ran both on the Imperva stub: detect_bot_block returns
+          (True, request_unsuccessful_stub) and detect_login_wall still returns (False, None). The classes
+          do not merge, which is the point: a login wall is a true payer property and belongs in the gated
+          class, a bot block is our own artefact and must never produce a class.'
+        - strip_html ordering fixed. PM confirmed strip_html("(&lt;abbr&gt;NCD&lt;/abbr&gt;)") now returns
+          "( NCD )" with no literal tag leaking into model-visible text.
+        - normalize_for_match() and normalized_contains() added. PM confirmed normalisation folds escaped
+          markup, entities, case and punctuation.
+        - 'webtools.fetch sends full browser headers over a persistent requests.Session and records blocked
+          and blocked_reason on every record. PM live-fetched the Horizon page through it: status 200,
+          blocked False, 495,050 bytes, the real page and not the 931-byte stub.'
+        - 21 new offline guard tests in tests/test_policy_eval_fetch_guards.py, all passing.
+        - All 11 retrievable rows attestation_quote revalidated live under the normalised matcher and
+          all present.
+      worker_found_own_regression: 'The Worker advertised brotli in Accept-Encoding, which is not installed
+        on this host. A payer CDN accepted it and returned 13 KB of still-compressed bytes at HTTP 200.
+        The text decoded to garbage, a recorded quote appeared to vanish, and NOTHING reported an error.
+        This is the same failure family as the Imperva stub: a successful-looking HTTP 200 carrying no
+        readable content, which pushes the model toward abstention and flatters the headline metric. The
+        Worker caught it itself and added _decodable_encodings() plus an undecodable_content_encoding
+        guard. Recorded because the harness nearly acquired a second silent blindness while being hardened
+        against the first.'
+      stop_if_fired: A browser-shaped fetch of gated rows returned pages containing CPT 27447 at HTTP
+        200 with no login evidence.
+      pm_verification: PM re-fetched both URLs independently. Commercial 200 / 112,321 bytes / 3,400 chars
+        of text / 27447 present. Medicare Advantage 200 / 111,963 bytes / 3,349 chars / 27447 present.
+        Neither contains sign in, log in, login, password, register, portal or credential. The finding
+        reproduces.
+      pm_correction_of_the_worker: 'The Worker''s returned summary called these two knee-replacement policy
+        bulletins. Its own note is more careful and is the correct version. They are Attachment B to policy
+        MA00.047t, titled Procedure Codes for Joints, under Musculoskeletal Services. They are CODE LISTS.
+        They carry no medical-necessity criteria: no BMI threshold, no conservative-therapy duration,
+        no imaging requirement.'
+      pm_new_finding_worker_did_not_have: 'The deferral target is publicly reachable. The bulletins mark
+        27447 with an asterisk denoting Level of Care Review by Carelon Medical Benefits Management, and
+        print a link. The PM followed it: https://aimspecialtyhealth.com/resources/clinical-guidelines/musculoskeletal/
+        returns 200 and redirects to https://guidelines.carelonmedicalbenefitsmanagement.com/, public,
+        200, no credential. The specific knee guideline was not isolated because that index renders client-side
+        and the PM did not execute JavaScript.'
+      why_this_is_a_third_pattern: 'The key knows deferral_two_part: the payer states in writing that
+        this plan follows CMS national and local coverage determinations, and the CMS document supplies
+        the criteria and the CPT code. Independence defers instead to a COMMERCIAL VENDOR guideline, on
+        both Commercial and Medicare Advantage. Same logical shape, different part two. The key has no
+        language for this.'
+      blocks:
+        - T005
+      not_applied_pending_ruling:
+        - verification_method correction on all 17 gated rows
+        - known_limitations item 8 replacement and new items
+        - rubric amendment to v1.5
+        - notes/key-corrections.md entry
+        - 'six payers covering 14 gated rows unprobed: Regence, CareFirst, Highmark, Horizon, Wellmark,
+          BCBS Michigan'
+  - id: T019
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: Rule on whether a public payer page that names CPT 27447, requires prior authorisation,
+      and defers the criteria to a commercial vendor guideline can support a retrievable class, and set
+      the standard BEFORE the remaining six gated payers are probed.
+    context: T018 hardened the fetch path successfully, then fired a stop_if on payer 1 of 7. Independence
+      Blue Cross serves two PUBLIC pages, Commercial and Medicare Advantage, listing CPT 27447 at HTTP
+      200 with no credential. Reproduced 3 of 3 by the Worker and again independently by the PM. But the
+      pages are code lists, Attachment B to policy MA00.047t, carrying no medical-necessity criteria.
+      They defer knee review to Carelon Medical Benefits Management, formerly AIM Specialty Health, whose
+      guideline site the PM confirmed is also public at HTTP 200. This is a THIRD attestation pattern
+      the key has no language for. Read notes/gated-reprobe-t018.md IN FULL, including the PM verification
+      section, before ruling.
+    inputs:
+      - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md
+      - T018 receipt in this file
+      - data/policy_platform/answer_key_v1.json rows bm_0062, bm_0072, bm_0083
+      - docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md
+    constraints:
+      - Rule first on the standard, not on the rows. Define whether a vendor deferral can support retrievable,
+        and if so what part two must be. The rows follow from the standard. Deciding rows first and back-filling
+        a standard is the error this board exists to catch.
+      - Apply the incentive check to the direction of your own ruling. Promoting these rows SHRINKS the
+        honest-abstention denominator from 23 and moves rows into the scored retrieval side, which is
+        not automatically the flattering direction and may be the harder one. Say which way your ruling
+        points and why you took it anyway.
+      - Rule on bm_0062 specifically. It is Medicare Advantage. A Medicare Advantage organisation is required
+        to follow CMS coverage determinations first, so deferring knee review to a commercial vendor is
+        in tension with that. Decide whether that tension is a row defect, a payer finding for the product,
+        or both.
+      - Rule on whether the re-probe of the remaining six payers may resume, and under what written standard.
+        Carelon and AIM are used by many Blue licensees, so this pattern plausibly recurs. Do not let
+        six payers be judged against a standard that is still moving.
+      - 'Rule on the deferred wording work: the false Firsthand HTTP fetch string on all 17 gated rows,
+        the known_limitations item 8 replacement, the new limitation about sixteen rows having no recorded
+        URL, and the rubric amendment to v1.5. Supply exact wording where you order a change.'
+      - Read-only. Change no file. Change no row_class. Escalate to the PM if you need a write.
+      - Never emit an em dash or an en dash used as a sentence dash.
+    expected_output:
+      - A ruling on the vendor-deferral standard, stated as a rule that a later Worker can apply mechanically.
+      - A ruling per row on bm_0062, bm_0072, bm_0083.
+      - A denominator impact statement, including the case where nothing moves.
+      - Exact wording for every key or rubric change ordered.
+      - A go or no-go on resuming the six-payer probe.
     receipt: null
 checks:
   dirty_fingerprint: clean at a45d66d before T001; T001 is read-only and wrote nothing

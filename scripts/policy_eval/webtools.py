@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from policy_eval.common import (  # noqa: E402
     contains_cpt_27447,
+    detect_bot_block,
     detect_login_wall,
     extract_text,
     sha256_bytes,
@@ -30,11 +31,82 @@ from policy_eval.common import (  # noqa: E402
 
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 )
+def _decodable_encodings() -> str:
+    """Advertise ONLY the content encodings this interpreter can actually decode.
+
+    NEAR MISS, T018, worth stating plainly because it is the exact failure this
+    whole task exists to remove. The first version of this header set claimed
+    `gzip, deflate, br`. Brotli is not installed here, so one payer CDN switched
+    to a brotli variant and `requests` handed back 13 KB of still-compressed
+    bytes at HTTP 200. Text extraction then produced mojibake, the recorded
+    attestation quote was not found, CPT 27447 was not found, and nothing
+    anywhere reported an error. The retrieval model would have abstained on a
+    page it was never shown, and abstention is what the headline metric rewards.
+    Claiming an encoding we cannot decode is therefore forbidden.
+    """
+    encodings = ["gzip", "deflate"]
+    try:  # pragma: no cover - depends on the installed extras
+        import brotli  # noqa: F401
+
+        encodings.append("br")
+    except ImportError:
+        try:  # pragma: no cover
+            import brotlicffi  # noqa: F401
+
+            encodings.append("br")
+        except ImportError:
+            pass
+    try:  # pragma: no cover
+        import zstandard  # noqa: F401
+
+        encodings.append("zstd")
+    except ImportError:
+        pass
+    return ", ".join(encodings)
+
+
+ACCEPT_ENCODING = _decodable_encodings()
+DECODABLE_ENCODINGS = frozenset(
+    e.strip() for e in ACCEPT_ENCODING.split(",")
+) | {"identity", ""}
+
+# A user agent alone is not enough. One recorded payer host answers a request
+# that carries only a browser user agent with the same HTTP 200 bot stub it
+# gives bare curl, and answers the full header set with the real 53 KB page.
+# These are the headers a real Chrome navigation sends.
+BROWSER_HEADERS = {
+    "User-Agent": USER_AGENT,
+    "Accept": (
+        "text/html,application/xhtml+xml,application/xml;q=0.9,"
+        "image/avif,image/webp,*/*;q=0.8"
+    ),
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": ACCEPT_ENCODING,
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Connection": "keep-alive",
+}
 FETCH_TIMEOUT = 30
 SEARCH_BACKEND = "Brave Search API"
 SEARCH_ENDPOINT = "https://api.search.brave.com/res/v1/web/search"
+
+# A persistent session, so cookies a bot-mitigation edge sets on the first
+# response are carried on the next one, exactly as a browser would carry them.
+_SESSION: requests.Session | None = None
+
+
+def _session() -> requests.Session:
+    global _SESSION
+    if _SESSION is None:
+        s = requests.Session()
+        s.headers.update(BROWSER_HEADERS)
+        _SESSION = s
+    return _SESSION
 
 
 class SearchUnavailable(RuntimeError):
@@ -115,6 +187,12 @@ def fetch(url: str, max_text_chars: int = 20000) -> dict[str, Any]:
     reuse the T004 card permits for HTTP evidence capture), extended with the
     redirect chain, final URL, extracted text, login-wall detection, CPT-27447
     presence and host-resolution evidence that rubric section 6 Stage A needs.
+
+    Every returned record carries `blocked` and `blocked_reason`. `blocked` says
+    that WE were refused, which is an artefact of our request shape and must
+    never become a row class. `login_wall` says the PAYER demands credentials,
+    which is a true property of the payer. The two are computed separately and
+    are never merged.
     """
     blocked = _blocked_reason(url)
     if blocked:
@@ -131,6 +209,8 @@ def fetch(url: str, max_text_chars: int = 20000) -> dict[str, Any]:
             "contains_cpt_27447": False,
             "login_wall": False,
             "login_wall_reason": None,
+            "blocked": False,
+            "blocked_reason": None,
             "host": (urlsplit(url).hostname or "").lower() or None,
             "host_resolves": None,
             "error": f"blocked by harness: {blocked}",
@@ -158,37 +238,61 @@ def fetch(url: str, max_text_chars: int = 20000) -> dict[str, Any]:
             "contains_cpt_27447": False,
             "login_wall": False,
             "login_wall_reason": None,
+            "blocked": False,
+            "blocked_reason": None,
             "host": host,
             "host_resolves": False,
             "error": f"DNS resolution failed for host {host!r}",
         }
 
     try:
-        resp = requests.get(
+        resp = _session().get(
             url,
             timeout=FETCH_TIMEOUT,
-            headers={"User-Agent": USER_AGENT},
+            headers=BROWSER_HEADERS,
             allow_redirects=True,
         )
         body = resp.content
-        text = extract_text(body, resp.headers.get("content-type"))
+        content_type = resp.headers.get("content-type")
+        text = extract_text(body, content_type)
         chain = [h.headers.get("location") or h.url for h in resp.history]
         login, login_reason = detect_login_wall(
             resp.status_code, resp.url, chain, text
         )
+        # The bot-block probe reads the RAW body, not the extracted text,
+        # because several fingerprints live in script or meta content that
+        # text extraction removes.
+        if "pdf" in (content_type or "").lower() or body[:5] == b"%PDF-":
+            probe = text
+        else:
+            probe = body[:200000].decode("utf-8", errors="replace")
+        is_blocked, blocked_reason = detect_bot_block(
+            resp.status_code, dict(resp.headers), probe, len(body)
+        )
+        # Belt and braces for the brotli near miss described above. We never ask
+        # for an encoding we cannot decode, so a body that still arrives in one
+        # is a server ignoring Accept-Encoding. Record it as a blocked fetch,
+        # which is our artefact and never a row class, rather than let unreadable
+        # bytes be scored as a page the model failed to read.
+        enc = (resp.headers.get("content-encoding") or "").lower().strip()
+        if not is_blocked and enc and enc not in DECODABLE_ENCODINGS:
+            is_blocked, blocked_reason = True, f"undecodable_content_encoding:{enc}"
         return {
             "url": url,
             "final_url": resp.url,
             "status": resp.status_code,
             "redirect_chain": chain,
-            "content_type": resp.headers.get("content-type"),
+            "content_type": content_type,
             "bytes": len(body),
             "sha256": sha256_bytes(body),
             "text": text[:max_text_chars],
+            "text_len": len(text),
             "text_truncated": len(text) > max_text_chars,
             "contains_cpt_27447": contains_cpt_27447(text),
             "login_wall": login,
             "login_wall_reason": login_reason,
+            "blocked": is_blocked,
+            "blocked_reason": blocked_reason,
             "host": host,
             "host_resolves": True,
             "error": None,
@@ -207,6 +311,8 @@ def fetch(url: str, max_text_chars: int = 20000) -> dict[str, Any]:
             "contains_cpt_27447": False,
             "login_wall": False,
             "login_wall_reason": None,
+            "blocked": False,
+            "blocked_reason": None,
             "host": host,
             "host_resolves": host_resolves,
             "error": str(exc),
