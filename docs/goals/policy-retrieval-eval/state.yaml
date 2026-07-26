@@ -2071,6 +2071,23 @@ tasks:
         a vendor name on a public payer page as a LEAD, not a conclusion; the row must still pass V1 to
         V5.
       - Never emit an em dash or an en dash used as a sentence dash in any file you touch.
+      - PDF EXTRACTION CAN FAIL SILENTLY AND IT WAS CAUGHT DOING SO TODAY. common.pdf_text catches every
+        Exception and returns an empty string, so a crashed or transient extraction is indistinguishable
+        from a document that genuinely has no text. During PM verification of T020 three payer PDFs returned
+        an empty extract with no error in one run, while the same bytes returned 87,733, 40,084 and 29,034
+        characters on other runs. If you extract a PDF and get zero or implausibly few characters, you
+        MUST re-fetch and re-extract at least twice more, and you MUST call pypdf.PdfReader directly and
+        report the real exception, before recording any absence. Never record 'the document does not contain
+        CPT 27447' from a single empty extract. This would be the sixth false absence on this board and
+        every one so far has pointed the flattering way.
+      - 'ALL 14 GATED ROWS CARRY fetched.url NULL, and 6 of the 14 carry no URL anywhere in the row: bm_0071,
+        bm_0076, bm_0082, bm_0085, bm_0087, bm_0088, bm_0092. Discovery is therefore payer level and starts
+        from the payer''s own public policy index, not from a recorded target. Record the URL absence
+        itself as a benchmark limitation in your note whatever the probe finds, because a class assigned
+        with no recorded URL cannot be audited by anyone downstream.'
+      - 'Guard M excludes Medicaid rows from deferral_vendor_two_part. Three of your 14 are Medicaid:
+        bm_0088, bm_0091, bm_0092. Probe them and record evidence, but do not propose a vendor-deferral
+        promotion for them; say so explicitly rather than leaving it unstated.'
     allowed_files:
       - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t021.md
       - data/policy_platform/answer_key_v1.json
