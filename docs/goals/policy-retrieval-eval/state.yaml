@@ -109,7 +109,7 @@ visual_board:
     url: http://goalbuddy.localhost:41737/policy-retrieval-eval/
     command: node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs
       --goal docs/goals/policy-retrieval-eval
-active_task: T020
+active_task: T021
 tasks:
   - id: T001
     type: scout
@@ -1842,7 +1842,7 @@ tasks:
   - id: T020
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: Apply the Judge T019 ruling in full to the answer key, the rubric and the harness, in one
       package. Copy every wording string verbatim from notes/judge-t019-ruling.md; do not paraphrase.
@@ -1933,11 +1933,102 @@ tasks:
         never the derived side.
       - Any selftest that passed at commit 51efc6c fails after your edit.
       - git diff --name-only lists a file outside allowed_files.
-    receipt: null
+    receipt:
+      result: done
+      summary: 'Applied all Judge T019 rulings. Three row moves: bm_0072 gated to retrievable on the new
+        deferral_vendor_two_part basis, bm_0062 and bm_0083 gated to unverified. Rubric taken to v1.5
+        with section 2.3, Guards M and S, the BLOCKED_FETCH outcome and the mandatory issuer-count disclosure.
+        Denominators now 39 total, 32 scored, retrievable 12 rows / 8 documents / 5 issuers, gated 14,
+        none 6, unverified 6, invalid 1, honest abstention 20. Net effect is HARDER by three effects to
+        one. The Worker also found and fixed a fifth false absence in shared text extraction: the tag
+        pattern <[^>]+> was not tag shaped and a bare < in prose consumed text to the next >, deleting
+        161,782 of 218,280 normalised characters from the Carelon guideline and reporting CPT 27447 absent
+        from a document that lists it with the full total knee arthroplasty descriptor.'
+      changed_files:
+        - data/policy_platform/answer_key_v1.json
+        - docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md
+        - docs/goals/policy-retrieval-eval/notes/key-corrections.md
+        - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md
+        - scripts/policy_eval/common.py
+        - scripts/policy_eval/denominators.py
+        - scripts/policy_eval/grade.py
+        - scripts/policy_eval/report.py
+        - scripts/policy_eval/selftest_report_gate.py
+        - scripts/policy_eval/selftest_discrimination.py
+        - tests/test_policy_eval_fetch_guards.py
+      commands:
+        - cmd: python3 scripts/policy_eval/denominators.py
+          result: ALL DENOMINATOR ASSERTIONS PASSED (19 values; retrievable 12 rows / 8 documents / 5
+            issuers, gated 14, none 6, unverified 6, invalid 1, N_scored 32, strong 10/7/4 and 9/6/4)
+          status: pass
+        - cmd: python3 scripts/policy_eval/selftest_report_gate.py
+          result: GATE SELF-TEST PASSED (13 / 13)
+          status: pass
+        - cmd: python3 scripts/policy_eval/selftest_discrimination.py
+          result: SELF-TEST PASSED (9 / 9); Stage B never invoked
+          status: pass
+        - cmd: python3 scripts/policy_eval/selftest_tool_isolation.py
+          result: TOOL-ISOLATION SELF-TEST PASSED
+          status: pass
+        - cmd: python3 tests/test_policy_eval_fetch_guards.py
+          result: FETCH-GUARD TESTS PASSED (23 / 23)
+          status: pass
+        - cmd: git diff --name-only
+          result: 11 files, all inside allowed_files, nothing outside (PM re-checked)
+          status: pass
+        - cmd: 'PM: old vs new strip_html over all 18 retrievable-row documents, full untruncated text'
+          result: 0 differences; no past verdict moves
+          status: pass
+        - cmd: 'PM: known_limitations opening-text check'
+          result: TRUE caveat 'Five of the eleven retrievable rows' SURVIVES; disproved 'OPEN AND UNRESOLVED'
+            caveat REPLACED
+          status: pass
+        - cmd: 'PM: row_class diff against HEAD'
+          result: exactly 3 moves (bm_0072, bm_0062, bm_0083); all 39 rows preserved
+          status: pass
+        - cmd: 'PM: em dash sweep over 11 changed files'
+          result: clean; only hit is the literal inside report.py's own detector at line 422
+          status: pass
+        - cmd: 'PM: Carelon digest and identity_string, 2 fetches'
+          result: 'b33ae12d...5147a on 2 of 2 at 974145 bytes, matches key; ''Doc ID: MSK02-1125.1'' confirmed'
+          status: pass
+      pm_verification: 'PM re-derived every load-bearing claim rather than trusting the receipt, as with
+        T016 to T019. (1) SCOPE: git diff --name-only lists 11 files, all inside allowed_files, nothing
+        outside. (2) THE KNOWN_LIMITATIONS TRAP was avoided. The TRUE caveat opening ''Five of the eleven
+        retrievable rows'' SURVIVES; the disproved caveat opening ''OPEN AND UNRESOLVED'' is REPLACED.
+        The Worker also hardened a cross-reference from ''see the next item'' to ''see the item beginning
+        RAISED, INVESTIGATED, RESOLVED'', which removes a second ordinal dependency the PM had not asked
+        for. (3) THE STRIP_HTML EQUIVALENCE CLAIM was re-derived and is TRUE, and the PM tested it more
+        broadly than claimed: all 18 URLs behind the 11 pre-existing retrievable rows, on FULL untruncated
+        text rather than the 20,000 character fetch window, normalise byte identically under the old and
+        new patterns. No past verdict moves. The three PDFs among them were checked through pypdf directly
+        because normalize_for_match calls strip_html on ANY input, including PDF text, which is the path
+        by which the bug reached PDFs at all. (4) THE BUG IS REAL AND SEVERE, reproduced independently
+        on the Carelon document: old normalisation kept 56,498 of 218,280 characters and reported CPT
+        27447 ABSENT; new normalisation finds it, in the passage ''27447 Arthroplasty, knee, condyle and
+        plateau; medial AND lateral compartments''. (5) THREE row classes move and exactly three; all
+        39 rows preserved. (6) EM DASH SWEEP across all 11 files is clean; the only hit is the literal
+        inside report.py''s own em-dash detector at line 422, which is pre-existing and load-bearing.
+        (7) IDENTITY: the Carelon digest b33ae12d3a59b1b43ed4864b4a61a4e0a0f3fbcd6d8709344700c6e94165147a
+        reproduced on 2 of 2 PM fetches at 974,145 bytes and matches the key; identity_string ''Doc ID:
+        MSK02-1125.1'' confirmed under normalized_contains. (8) All five verify commands re-run by the
+        PM and all pass. ONE RECEIPT INACCURACY, immaterial: the receipt cited STRONG_BASES without naming
+        its module; it lives in denominators.py and is imported by grade.py, not defined in common.py.'
+      pm_new_finding_for_t022: The queued T022 item about common.pdf_text swallowing every exception is
+        now CONFIRMED IN THE WILD, not merely theoretical. During PM verification the three retrievable-row
+        PDFs returned an empty extract through common.extract_text in one sequential run, while direct
+        pypdf on the same bytes minutes earlier and later returned 87,733 / 40,084 / 29,034 characters.
+        The failure was transient and left NO error anywhere, because pdf_text catches every Exception
+        and returns ''. An empty string is indistinguishable from a document with no text, so a transient
+        extraction failure silently becomes 'this document does not contain CPT 27447', which removes
+        a row from the scored set and enlarges the abstention pool the headline metric rewards. That is
+        the same flattering direction as the other five false absences. T022 must treat this as a live
+        defect with a reproduction, not an open question.
+      commit: 46bfc5c
   - id: T021
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: Probe the six unprobed gated payers covering 14 rows under the settled rubric v1.5 standard,
       and record evidence and a PROPOSED class per row without changing any row_class.
