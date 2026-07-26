@@ -92,6 +92,12 @@ rules:
     prefer_vertical_slices: true
     judge_picks_largest_safe_slice: true
     worker_completes_whole_slice: true
+  unreached_by_method: UNREACHED BY METHOD. Any PM, Worker or Judge that records a reason why a document
+    could not be reached must state the METHOD it tried, verbatim, and must try plain-HTTP link extraction
+    from the raw HTML before recording 'renders client-side', 'requires JavaScript', 'not indexed' or
+    any equivalent. An unreached document is recorded as UNREACHED BY METHOD X, never as unreachable.
+    Ordered by Judge T019 after three incidents on this board consisted of an unproven mechanism attached
+    to an absence, every one of which pointed toward keeping a denominator larger or a row unpromoted.
 agents:
   scout: installed
   worker: installed
@@ -103,7 +109,7 @@ visual_board:
     url: http://goalbuddy.localhost:41737/policy-retrieval-eval/
     command: node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs
       --goal docs/goals/policy-retrieval-eval
-active_task: T019
+active_task: T020
 tasks:
   - id: T001
     type: scout
@@ -1715,7 +1721,7 @@ tasks:
   - id: T019
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: Rule on whether a public payer page that names CPT 27447, requires prior authorisation,
       and defers the criteria to a commercial vendor guideline can support a retrievable class, and set
@@ -1759,6 +1765,263 @@ tasks:
       - A denominator impact statement, including the case where nothing moves.
       - Exact wording for every key or rubric change ordered.
       - A go or no-go on resuming the six-payer probe.
+    receipt:
+      result: done
+      decision: rejected
+      full_outcome_complete: false
+      summary: Ruled that a vendor deferral CAN support a retrievable class, under a new five-condition
+        test 2.3 deferral_vendor_two_part whose fifth condition is a displacement check against the frozen
+        5.1 authority ladder. bm_0072 promotes to retrievable; bm_0062 is displaced by CMS and goes unverified;
+        bm_0083 has no evidence either way and goes unverified. The full ruling is in notes/judge-t019-ruling.md
+        and a Worker must copy its wording verbatim, not paraphrase it.
+      changed_files: []
+      commands:
+        - read-only ruling; the Judge changed no file
+      full_ruling_note: docs/goals/policy-retrieval-eval/notes/judge-t019-ruling.md
+      pm_verified_the_load_bearing_evidence: 'The PM re-walked the Carelon chain through the hardened
+        fetcher and reproduces the Judge exactly: 250,379 then 527,828 then 974,145 bytes, all HTTP 200,
+        no login wall, no bot block, PDF sha256 b33ae12d3a59b1b43ed4864b4a61a4e0a0f3fbcd6d8709344700c6e94165147a.
+        The PDF extracts to 241,279 characters, contains CPT 27447 once with the full total-knee descriptor,
+        and carries three quantified requirements: BMI 40 or greater attempt weight reduction, hemoglobin
+        A1C of 8% or less for diabetes, and tobacco abstinence for at least 6 weeks. The Medicare Advantage
+        yielding clause reproduces character for character. Every Judge claim verifies.'
+      pm_own_error_found_during_that_check: The PM's first search for the diabetes criterion used the
+        literal string HbA1c and returned zero hits, which would have made the Judge look like it overclaimed.
+        The document writes hemoglobin A1C with a space and different capitalisation. The PM's raw string
+        test was wrong and the Judge was right. This is the fourth false absence produced by a raw string
+        test on this board, after bm_0057, bm_0061 and the brotli regression, and it is the strongest
+        argument for the Judge's rule that normalized_contains is used everywhere.
+      pm_audit_accepted: 'The Judge audited the PM and found the same failure mode Judge T017 caught,
+        twice more, both times in the denominator-preserving direction. The PM ACCEPTS finding 1 without
+        qualification and has withdrawn the sentence in place in notes/gated-reprobe-t018.md: it wrote
+        that the Carelon index ''renders client-side'' when it had never tested that, and the claim is
+        false. The PM accepts finding 2 with one qualification recorded rather than argued: the Judge''s
+        own ruling requires a part two the existing vocabulary does not describe, so new vocabulary was
+        genuinely needed; the error was stopping before walking the chain that would have shown what part
+        two had to be. The standing control the Judge ordered is now in the board rules.'
+      critical_off_by_one_the_judge_caught: 'The board repeatedly ordered ''replace known_limitations
+        item 8''. The PM verified the list: at zero-based index 8 sits the FALSE Horizon caveat, and at
+        zero-based index 7 sits the TRUE hash-instability caveat beginning ''Five of the eleven retrievable
+        rows''. A Worker reading ''item 8'' as a one-based ordinal would have deleted a correct caveat
+        and left the disproved one standing, in the report section 9 block that prints byte for byte.
+        T020 therefore identifies caveats by OPENING TEXT only and index-based edits are forbidden.'
+      denominator_impact: 'Rows move: bm_0072 gated to retrievable, bm_0062 and bm_0083 gated to unverified.
+        Before: 39 total, 34 scored, retrievable 11 rows / 7 documents / 4 issuers, strong 9/6/3 and 8/5/3,
+        gated 17, none 6, unverified 4, invalid 1, honest-abstention 23. After: 39 total, 32 scored, retrievable
+        12 rows / 8 documents / 5 issuers, strong 10/7/4 and 9/6/4, gated 14, none 6, unverified 6, invalid
+        1, honest-abstention 20. Arithmetic 12+14+6=32 scored, 32+6+1=39 total. Exact-binomial bounds,
+        never 3/N: safety WORSENS from 8.4% at N=34 to 8.9% at N=32; retrieval documents improve from
+        34.8% at N=7 to 31.2% at N=8; retrieval issuers, the binding constraint, improve from 52.7% at
+        N=4 to 45.1% at N=5.'
+      incentive_direction: 'The Judge stated its direction before justifying it: net HARDER by three effects
+        to one. Harder: the free-abstention pool falls 23 to 20, the headline safety bound we quote at
+        the pitch WORSENS to 8.9%, and the unverified coverage gap grows from 10.3% to 15.4% of rows.
+        The one flattering effect is disclosed rather than netted out: promoting bm_0072 adds a new unique
+        ISSUER, Carelon, moving the binding constraint from 4 to 5, which is the largest single improvement
+        to that bound in this board''s history. The Judge ordered a mandatory v1.5 disclosure paragraph
+        for it. The three rows moved in TWO different directions, which is itself evidence that the standard
+        drove the outcome and not the denominator.'
+      the_case_where_nothing_moves: The Judge ruled explicitly that declining to apply this is NOT the
+        neutral option and must not be called caution. It would keep three rows labelled as sitting behind
+        a login on a payer whose pages were opened eight times across three agents with no credential;
+        keep 17 rows asserting a firsthand HTTP fetch that never happened; keep an honest-abstention denominator
+        of 23; and keep two disproved sentences that report section 9 copies byte for byte into the MD
+        Catalyst report.
+      strongest_product_finding: Ruled the strongest patient-facing finding on this board. The only document
+        Independence publishes for a Medicare Advantage knee case points the reader at a vendor guideline
+        that does not govern the case, because that guideline self-limits to where CMS criteria are not
+        fully established, and for a Pennsylvania knee they ARE established via L36007 and article A56796.
+        Nothing on the payer page tells the reader that Medicare's regional rule controls instead. A patient
+        or an unaided model that follows the payer's own page will cite the wrong criteria in an appeal.
+        That is the confident-but-wrong failure this benchmark exists to measure, observed in the wild,
+        in the payer's own publishing, before any model was run. Carry it into the MD Catalyst pitch as
+        a worked example with both verbatim quotes, and NOT as a claim that Independence is breaking the
+        law. The Judge ruled the delegation lawful under 42 CFR 422.101(b)(6).
+      blocked_tasks:
+        - T005 stays blocked until T020 lands, T021 completes and T022 reviews it
+  - id: T020
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: Apply the Judge T019 ruling in full to the answer key, the rubric and the harness, in one
+      package. Copy every wording string verbatim from notes/judge-t019-ruling.md; do not paraphrase.
+    context: 'Judge T019 ruled that a vendor deferral can support a retrievable class under a new five-condition
+      test. Three rows move: bm_0072 gated to retrievable under basis deferral_vendor_two_part, bm_0062
+      and bm_0083 gated to unverified. The full ruling, including every exact string, is in notes/judge-t019-ruling.md,
+      whose ruling_5_deferred_wording section supplies the text for every edit. The PM independently re-verified
+      the load-bearing evidence and it reproduces exactly. READ THE WHOLE RULING NOTE FIRST, including
+      the PM verification section at the end.'
+    inputs:
+      - docs/goals/policy-retrieval-eval/notes/judge-t019-ruling.md
+      - T019 receipt in this file
+      - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md
+    constraints:
+      - IDENTIFY EVERY known_limitations ITEM BY ITS OPENING TEXT, NEVER BY INDEX. This is a stop_if for
+        a reason. The FALSE caveat to replace opens 'OPEN AND UNRESOLVED. On bm_0061 the Horizon attestation
+        page'. The TRUE caveat that must SURVIVE opens 'Five of the eleven retrievable rows'. Board text
+        elsewhere says 'item 8'; that text is ambiguous and is superseded. A one-based reading of 'item
+        8' destroys a correct caveat and leaves the disproved one printing into the report.
+      - 'Apply exactly three row_class changes and no others: bm_0072 gated to retrievable, bm_0062 gated
+        to unverified, bm_0083 gated to unverified. Use the counted document, doc_key, sha256 and both
+        edition URLs the ruling supplies for bm_0072.'
+      - Record identity_string for bm_0072 as a verbatim span YOU fetch and confirm yourself through normalized_contains.
+        The Judge deliberately did not pin one, because pinning a string it had not verified character
+        by character is the error this board punishes. Do not copy a span you did not fetch.
+      - 'Write rubric v1.5: new section 2.3 with V1 to V5 and Guards M and S verbatim, the BLOCKED_FETCH
+        outcome excluded from the confident-wrong denominator and printed on its own line in the section
+        7 headline block, the reissued section 0.2 canonical table, the mandatory disclosure paragraph
+        about the issuer count moving from 4 to 5, and an amendment-log row. Restate the needs_human_review
+        threshold basis as 20% of 32; do not leave text saying ''pinned to 34''.'
+      - Replace the false 'Firsthand HTTP fetch on 2026-07-26 with a browser user agent' string on every
+        remaining gated row and write the three per-row strings the ruling supplies. No gated row may
+        still claim a firsthand fetch that did not happen.
+      - Add STRONG_BASES entry deferral_vendor_two_part in denominators.py, update RUBRIC_VERSION consumers,
+        and teach grade.py and report.py the BLOCKED_FETCH outcome.
+      - Correct the same disproved sentences where they also appear inside bm_0061.ma_convention.plan_page.content_hash_note.
+        Do not delete the record that the T016 alarm was raised.
+      - Do NOT reclassify any of the 14 remaining gated rows. That is T021 and it needs evidence first.
+        Do NOT start T005.
+      - Never emit an em dash or an en dash used as a sentence dash in any file you touch.
+    allowed_files:
+      - data/policy_platform/answer_key_v1.json
+      - docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md
+      - docs/goals/policy-retrieval-eval/notes/key-corrections.md
+      - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md
+      - scripts/policy_eval/common.py
+      - scripts/policy_eval/denominators.py
+      - scripts/policy_eval/grade.py
+      - scripts/policy_eval/report.py
+      - scripts/policy_eval/selftest_report_gate.py
+      - scripts/policy_eval/selftest_discrimination.py
+      - tests/test_policy_eval_fetch_guards.py
+    verify:
+      - python3 -c "import json;json.load(open('data/policy_platform/answer_key_v1.json'))"
+      - python3 scripts/policy_eval/denominators.py
+      - python3 scripts/policy_eval/selftest_report_gate.py
+      - python3 scripts/policy_eval/selftest_discrimination.py
+      - python3 scripts/policy_eval/selftest_tool_isolation.py
+      - python3 tests/test_policy_eval_fetch_guards.py
+      - python3 -c "import json;k=json.load(open('data/policy_platform/answer_key_v1.json'));c={};[c.__setitem__(r['row_class'],c.get(r['row_class'],0)+1)
+        for r in k['rows']];assert c=={'retrievable':12,'gated':14,'none':6,'unverified':6,'invalid':1},c;print(c)"
+      - python3 -c "import json;k=json.load(open('data/policy_platform/answer_key_v1.json'));bad=[r['id']
+        for r in k['rows'] if r['row_class']=='gated' and 'Firsthand HTTP fetch' in r['provenance']['verification_method']];assert
+        bad==[],bad;print('no false firsthand claims')"
+      - python3 -c "import json;s=json.dumps(json.load(open('data/policy_platform/answer_key_v1.json')));assert
+        'Five of the eleven retrievable rows' in s,'TRUE hash caveat was destroyed';print('true caveat
+        survives')"
+      - python3 -c "import sys;sys.path.insert(0,'scripts');from policy_eval.denominators import STRONG_BASES;assert
+        'deferral_vendor_two_part' in STRONG_BASES;print(STRONG_BASES)"
+      - 'python3 -c "import re;t=open(''docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md'').read();assert
+        re.search(r''^.rubric_version: 1.5.'',t,re.M);assert ''2.3'' in t and ''BLOCKED_FETCH'' in t;assert
+        chr(8212) not in t;print(''rubric v1.5 ok'')"'
+      - git diff --name-only
+    stop_if:
+      - The known_limitations item opening 'Five of the eleven retrievable rows' is missing after your
+        edit. That caveat is TRUE. Its loss means an index-based edit was made instead of a text-based
+        one.
+      - The record that the T016 alarm was raised is absent from both known_limitations and bm_0061 content_hash_note.
+      - Any row_class other than bm_0062, bm_0072 and bm_0083 would change. Halt and escalate to a Judge.
+      - A live fetch of the Carelon Joint Surgery PDF returns anything other than HTTP 200 with sha256
+        b33ae12d3a59b1b43ed4864b4a61a4e0a0f3fbcd6d8709344700c6e94165147a, or it no longer contains CPT
+        27447 under normalized_contains. Halt and escalate; do NOT silently update the digest.
+      - A live fetch of either Independence bulletin returns a login wall, 401, 403, a redirect to a sign-in
+        path, or detect_bot_block True. Halt and escalate; the promotion rests on those pages being public.
+      - Any of the 11 existing retrievable rows fails its attestation_quote under the normalised matcher.
+        Halt; do not edit the quote.
+      - denominators.py reports a value not equal to its pinned value. Fix the pinned rubric 0.2 table,
+        never the derived side.
+      - Any selftest that passed at commit 51efc6c fails after your edit.
+      - git diff --name-only lists a file outside allowed_files.
+    receipt: null
+  - id: T021
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: Probe the six unprobed gated payers covering 14 rows under the settled rubric v1.5 standard,
+      and record evidence and a PROPOSED class per row without changing any row_class.
+    context: Judge T019 ruled GO, but only after T020 writes the standard into rubric v1.5, so six payers
+      are not judged against a moving standard. The six are Regence BCBS, CareFirst BCBS, Highmark, Horizon
+      BCBS NJ, Wellmark BCBS and BCBS Michigan. One payer of one probed so far had ALL THREE of its rows
+      overturned, so treat the gated label as unproven, not as a prior. The written standard is in notes/judge-t019-ruling.md
+      under ruling_4_resume_the_probe.
+    inputs:
+      - docs/goals/policy-retrieval-eval/notes/judge-t019-ruling.md
+      - docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md at v1.5
+      - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md
+    constraints:
+      - Apply rubric 2.3 V1 to V5 plus Guard M and Guard S verbatim, per row. Record a verdict on EACH
+        condition separately, never as a single yes or no.
+      - Record evidence and a PROPOSED class only. Change NO row_class. A Judge applies. A Worker may
+        not reclassify.
+      - 'gated survives ONLY on positive wall evidence, and the wall must be on the CRITERIA document
+        or its index, not on a provider portal that merely sits nearby. Positive means one of: a redirect
+        to a path matching /login, /signin, /idp or /auth; a sign-in form in the body; HTTP 401 or 403;
+        or verbatim portal-credential language quoted in full.'
+      - A row with no positive wall evidence and no admissible chain is unverified, NOT gated. Absence
+        of a finding is not a login wall.
+      - detect_bot_block True NEVER produces a class. Retry under at least two request shapes before recording
+        anything.
+      - Use normalize_for_match and normalized_contains everywhere. Never conclude absence from a raw
+        substring test.
+      - Never record that an index is unwalkable without first extracting href values from the raw HTML
+        and following them by plain HTTP. Record UNREACHED BY METHOD X with the method stated, never unreachable.
+        This is a board rule now.
+      - Copy URLs verbatim including odd tails. The Independence page prints an href literally ending
+        /musculoskeletal/html and that exact form returns 200.
+      - Record every URL tried including dead ends, with HTTP status, byte count, tag-stripped character
+        count, blocked verdict and login_wall verdict.
+      - Run probe scripts from the repository root, never from /tmp; a stray /tmp module shadows the standard
+        library and silently empties PDF extraction.
+      - Start with bm_0071. Its recorded gating evidence is an Imperva bot block on a programmatic POST,
+        which Judge T017 already ruled is our own request shape and not a payer property.
+      - Expect recurrence. Carelon, AIM, eviCore and TurningPoint are used by many Blue licensees. Treat
+        a vendor name on a public payer page as a LEAD, not a conclusion; the row must still pass V1 to
+        V5.
+      - Never emit an em dash or an en dash used as a sentence dash in any file you touch.
+    allowed_files:
+      - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t021.md
+      - data/policy_platform/answer_key_v1.json
+    verify:
+      - python3 -c "import json;json.load(open('data/policy_platform/answer_key_v1.json'))"
+      - python3 scripts/policy_eval/denominators.py
+      - python3 tests/test_policy_eval_fetch_guards.py
+      - git diff --name-only
+    stop_if:
+      - Any row_class would change. You may only append evidence and a proposed class.
+      - denominators.py reports any value not equal to its pinned value.
+      - git diff --name-only lists a file outside allowed_files.
+    receipt: null
+  - id: T022
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: Review the T021 six-payer probe, rule per row, and decide whether T005 unblocks.
+    context: T005, the cold run, has been blocked since T017 because gated rows earn full abstention credit
+      on labels never verified. After T020 and T021 that debt should be settled or explicitly bounded.
+      Rule on the 14 rows, apply the incentive check to your own direction, and audit both the Worker
+      and the PM.
+    inputs:
+      - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t021.md
+      - T021 receipt in this file
+      - docs/goals/policy-retrieval-eval/notes/judge-t019-ruling.md
+    constraints:
+      - Read-only. Change no file. Change no row_class; order changes and a Worker applies.
+      - State which direction your ruling points BEFORE justifying it.
+      - 'Also rule on the two items Judge T019 queued and did not decide: the four non-contiguous UPMC
+        MP.PA.133 attestation spans, meaning whether the matcher may treat a table-transcribed or ellipsis-elided
+        quote as an element-wise match while still detecting a real page change; and pdf_text swallowing
+        every exception and returning an empty string, which makes a broken extraction indistinguishable
+        from a document with no text and points in the flattering direction.'
+      - Decide explicitly whether T005 unblocks, and if not, name the exact remaining evidence gap.
+      - Never emit an em dash or an en dash used as a sentence dash in any file you touch.
+    expected_output:
+      - A ruling per row on the 14 probed rows.
+      - A denominator impact statement including the case where nothing moves.
+      - A ruling on the UPMC matcher question and on pdf_text.
+      - A go or no-go on unblocking T005, with the gap named if no.
     receipt: null
 checks:
   dirty_fingerprint: clean at a45d66d before T001; T001 is read-only and wrote nothing

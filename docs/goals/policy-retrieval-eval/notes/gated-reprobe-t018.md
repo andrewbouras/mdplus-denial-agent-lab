@@ -119,8 +119,26 @@ asterisk. The PM followed the link printed on the page,
 which returns HTTP 200 and redirects to
 `https://guidelines.carelonmedicalbenefitsmanagement.com/`. That host is public and
 serves at HTTP 200 with no credential. The specific musculoskeletal knee guideline
-document was not isolated, because the index renders client-side and the PM did not
-execute JavaScript.
+document was not isolated. **CORRECTED by Judge T019.** The PM originally continued
+"because the index renders client-side and the PM did not execute JavaScript". The
+first half of that sentence is a fact about what the PM did. The second half is a
+mechanism the PM never tested, and it is FALSE. Judge T019 reached the criteria
+document in three plain HTTP hops with no JavaScript, by extracting href values from
+the raw HTML, and the PM has since reproduced all three hops through the hardened
+harness fetcher: `/current-musculoskeletal-guidelines/` at 200 and 250,379 bytes,
+then `/joint-surgery-2025-11-15/` at 200 and 527,828 bytes, then
+`/wp-content/uploads/2025/11/PDF-Joint-Surgery-2025-11-15.pdf` at 200 and 974,145
+bytes, sha256 beginning b33ae12d3a59b1b4, containing CPT 27447 and quantified
+criteria. The honest record is UNREACHED BY METHOD, not unreachable: the PM tried a
+crude tag-strip of the index page and stopped there.
+
+The direction of that error matters and is recorded rather than quietly fixed.
+Leaving part two unisolated is what turned a completable evidence chain into an
+apparently novel and unresolvable pattern, and that framing kept all three
+Independence rows in the gated class where abstention earns full credit. This is the
+second time on this board that the PM has attached an untested mechanism to an
+absence, after Judge T017 caught the first. Twice is a pattern, so a standing control
+now sits in the board rules rather than in a note that can be forgotten.
 
 So the shape of this row is a third attestation pattern, and it is not the one the
 key has language for. The key currently knows `deferral_two_part`, meaning the payer
