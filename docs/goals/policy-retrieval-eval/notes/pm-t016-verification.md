@@ -47,8 +47,25 @@ text. So this page is not per-request unstable, and its part-one attestation is 
 missing.
 
 The PM did not retain T016's bytes either, so the PM cannot prove what T016 received.
-The PM can prove what the page returns now, repeatedly, and can prove a mechanism that
-produces exactly the absence T016 saw. That mechanism is finding 2.
+The PM can prove what the page returns now, repeatedly.
+
+**CORRECTED by Judge T017.** This note originally continued: "and can prove a mechanism
+that produces exactly the absence T016 saw. That mechanism is finding 2." That claim is
+FALSE and the PM withdraws it. The Imperva stub in finding 2 is 927 to 931 bytes. T016's
+nineteen absences were full pages of 492,010, 492,143 and 492,144 bytes that simply
+lacked the paragraph. A 931-byte stub cannot produce a 492,000-byte response. Judge T017
+further proved that the shipped harness fetcher is not blocked on this host at all, 8 of
+8 fetches returning the full page.
+
+So findings 1 and 2 are two separate discoveries, and the PM wrongly welded them into a
+single story. The direction of that error matters and is recorded rather than quietly
+fixed: attaching a tidy cause to the escalation is what closed the escalation, and the
+escalation closing is what kept bm_0061 in the retrievable class and the denominators
+larger. Judge T017 ruled the verdict correct anyway, on the reproduction count alone, at
+31 of 31 across two agents and two independent HTTP stacks. The cause of the nineteen
+absences is NOT established and must not be claimed. bm_0061 becomes a standing re-check
+instead: any run whose normalised matcher fails to find that quote must halt and
+escalate, and must never regrade or reclass the row on its own.
 
 ## Finding 2, MATERIAL: this payer blocks non-browser fetches with HTTP 200
 
@@ -81,10 +98,24 @@ measuring what it claims to measure, and the direction of the error is not neutr
 blocking produces more abstention, and abstention is the behaviour our headline metric
 rewards. We would be flattering ourselves with our own rate limiter.
 
-Second-order consequence that a Judge must scope. Rows classed `gated` were classed that
-way from firsthand fetches. If any of those fetches were bot-blocked rather than genuinely
-login-walled, the class is wrong. `gated` is 17 of 34 scored rows, so this is not a minor
-edge.
+Second-order consequence that a Judge must scope. Rows classed `gated` should have been
+classed that way from firsthand fetches. If any of those fetches were bot-blocked rather
+than genuinely login-walled, the class is wrong. `gated` is 17 of 34 scored rows, so this
+is not a minor edge.
+
+**CORRECTED and made worse by Judge T017.** The PM assumed the gated rows rested on
+firsthand fetches. They do not. All 17 gated rows carry `fetched.http_status: null`,
+`fetched.login_required: null` and no `fetched.url`. Nine record only "Carried forward
+from spec." Only two name a firsthand observation, and one of those, bm_0071, cites
+Horizon's search being blocked by Imperva bot protection on a programmatic POST, which is
+our own request shape being refused and is not evidence of a login wall.
+
+The PM independently confirmed something the Judge did not state and which is worse than
+either finding. All 17 of those rows nonetheless carry the string "Firsthand HTTP fetch
+on 2026-07-26 with a browser user agent" in `provenance.verification_method`. The key
+therefore asserts a verification it does not evidence, on exactly the rows that earn full
+credit for abstention. This is the single largest block of unearned credit in the
+benchmark and it points in the flattering direction.
 
 Scope check across every recorded payer host, bare fetch against browser fetch, run by
 the PM:

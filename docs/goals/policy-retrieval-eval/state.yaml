@@ -103,7 +103,7 @@ visual_board:
     url: http://goalbuddy.localhost:41737/policy-retrieval-eval/
     command: node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs
       --goal docs/goals/policy-retrieval-eval
-active_task: T017
+active_task: T018
 tasks:
   - id: T001
     type: scout
@@ -1427,7 +1427,7 @@ tasks:
   - id: T017
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: Rule on the bm_0061 escalation that the PM overturned, on the false caveat now in the key,
       and on how far the HTTP-200 bot-block defect reaches before the cold run.
@@ -1473,6 +1473,152 @@ tasks:
         T005'
       - 'ruling_identity_normalisation: required or not, and which rows need re-validation'
       - 'denominator_impact: every count and bound that moves, or an explicit statement that none do'
+    receipt:
+      result: done
+      decision: rejected
+      full_outcome_complete: false
+      summary: 'bm_0061 KEEPS retrievable and deferral_two_part on 31 of 31 reproductions across two agents
+        and two independent HTTP stacks. The PM verdict is evidence-led but its causal story was denominator-led
+        and false, and is withdrawn. Two larger defects confirmed: the 17 gated rows carry no firsthand
+        fetch evidence at all, and the shipped strip_html unescapes entities after stripping tags, which
+        leaks literal markup into model-visible text. T005 stays blocked.'
+      ruling_bm_0061: 'KEEP. Judge reproduced the Horizon page 25 times itself: 3 curl browser-shaped,
+        14 curl no-cache spaced over 90 minutes, and 8 through the shipped policy_eval.webtools.fetch.
+        All 200, all 494917 decompressed bytes, all digest 39f425cf34e622ea7f0335a87dd4736c94107655ff7e808b5ab302fd1c749322,
+        recorded 296-character quote present 25 of 25. Combined with the PM this is 31 of 31 against T016
+        19 absences in one 17-minute window with no bytes retained. content_hash_stable stays false, which
+        was always correct.'
+      ruling_pm_incentive_audit: EVIDENCE-LED ON THE VERDICT, DENOMINATOR-LED ON THE EXPLANATION. The
+        PM wrote that the Imperva finding is a mechanism producing exactly the absence T016 saw. It is
+        not. The stub is 927 to 931 bytes; T016 absences were full 492010 to 492144 byte pages. The Judge
+        further proved the shipped fetcher is not blocked on that host, 8 of 8. The PM attached a tidy
+        cause to an escalation, and the attachment is what closed the escalation, which is what kept the
+        denominators larger. The verdict survives on reproduction count alone. The causal claim must never
+        enter the key. PM ACCEPTED this correction and amended notes/pm-t016-verification.md in place
+        rather than rewriting it.
+      ruling_caveat_text: Replace known_limitations item 8 with the T017 wording, which records that the
+        alarm was raised, that the no-substring-retrievable assertion is FALSE, the 31 of 31 reproduction
+        record, and that the cause of the 19 absences is NOT established and not claimed. Add item 9 for
+        the HTTP-200 bot-block harness defect and item 10 for the gated rows having no firsthand evidence.
+        Do not delete the record of the alarm.
+      ruling_gated_reprobe: 'REQUIRED BEFORE T005, and the premise the PM gave the Judge was false. All
+        17 gated rows have fetched.http_status null, fetched.login_required null and no fetched.url. Nine
+        say only Carried forward from spec. bm_0071 cites Imperva bot protection on a programmatic POST
+        as its gating evidence, which is our own request shape and not a login wall. Gated rows are graded
+        CORRECT_ABSTENTION at full credit and supply 17 of the 23 honest-abstention rows, so an always-abstain
+        policy collects that credit on labels never verified. Re-probe requires POSITIVE per-row evidence
+        of the wall: HTTP status, byte count, tag-stripped text length, and one of a redirect to a login
+        path, a sign-in form, a 401 or 403, or verbatim portal-credential language. A row with none of
+        those escalates to a Judge; a Worker may not reclassify.'
+      pm_verified_and_found_worse: PM independently confirmed the Judge finding and found one thing the
+        Judge did not state. All 17 gated rows nonetheless carry the string Firsthand HTTP fetch on 2026-07-26
+        with a browser user agent in provenance.verification_method. The key asserts a verification it
+        does not evidence, on precisely the rows that earn full credit for abstention.
+      ruling_harness_hardening: 'REQUIRED AND BLOCKS T005, but not because we are currently blocked. The
+        harness has no instrument to notice a block, block behaviour is rate dependent, and a cold run
+        issues far more requests than any probe. Three changes: add detect_bot_block to common.py kept
+        distinct from detect_login_wall, because a login wall is a true payer property and a bot block
+        is an artefact of ours that must never produce a class; send full browser headers and a persistent
+        Session in webtools.fetch and record blocked plus blocked_reason in every run artifact; amend
+        the rubric NOW, before any run, so a blocked row is excluded from the confident-wrong denominator
+        and printed on its own headline line.'
+      ruling_identity_normalisation: 'REQUIRED, and worse than the PM found. PM verified the Judge claim
+        directly: strip_html strips tags first and unescapes entities second, so JSON-escaped markup survives
+        as a literal tag in the text the retrieval model reads. Confirmed with a minimal case, input Determinations
+        (&lt;abbr&gt;NCD&lt;/abbr&gt;) yields output containing a literal <abbr> tag. This is a live bug
+        in model-visible text, not only in the checker. bm_0061 own quote is absent from raw bytes and
+        present only after unescaping, because the page carries Medicare &amp; Medicaid, so a raw identity
+        test would have manufactured a phantom on the very row a phantom nearly cost us. Re-validate bm_0056,
+        bm_0057, bm_0058, bm_0059, bm_0061, and extend the normalised check to attestation_quote on all
+        11 retrievable rows.'
+      denominator_impact: 'NOTHING MOVES. N_total 39, N_scored 34, retrievable 11 rows / 7 documents /
+        4 issuers, strong 9/6/3 and 8/5/3, gated 17, none 6, unverified 4, invalid 1, scored_payers 11,
+        ma_scored_rows 9, honest-abstention denominator 23. Bounds unchanged: 34.8% at 7 documents, 52.7%
+        at 4 issuers, 23.8% at 11 payers, 39.3% at 6 strong documents, 8.4% at 34 rows. Recorded so nobody
+        recomputes them: had bm_0061 been demoted it would have been 10 rows, 6 documents, N_scored 33,
+        39.3% and 8.7%. Those do NOT apply. CONDITIONAL: if the gated re-probe finds a misclassed row,
+        gated, none and the 23-row denominator all move and that returns to a Judge before T005.'
+      blocked_tasks:
+        - T005
+  - id: T018
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: Harden the fetch path against undetected bot blocks, normalise every identity and attestation
+      check, re-probe all 17 gated rows for positive login evidence, and apply the Judge T017 caveat wording.
+    context: 'Ordered by Judge T017. Four defects, all found before any eval run executed. (1) detect_login_wall
+      cannot see an HTTP-200 bot block, so the harness cannot tell a blocked fetch from a successful one,
+      and a blocked fetch makes the model abstain, which is the behaviour the headline metric rewards.
+      (2) The 17 gated rows carry NO firsthand fetch evidence: http_status null, login_required null,
+      no url, nine saying only Carried forward from spec. They still claim Firsthand HTTP fetch in verification_method.
+      They earn full credit for abstention on labels never verified, and they are 17 of the 23 honest-abstention
+      rows. (3) strip_html strips tags BEFORE unescaping entities, so JSON-escaped markup survives as
+      a literal tag in the text the retrieval model reads. This is a live bug in model-visible text. (4)
+      known_limitations item 8 asserts something now disproved. READ notes/pm-t016-verification.md and
+      the T017 receipt in this file before starting. T005 stays blocked until this lands and a Judge reviews
+      the re-probe result.'
+    inputs:
+      - docs/goals/policy-retrieval-eval/notes/pm-t016-verification.md
+      - T017 receipt in this file
+      - scripts/policy_eval/common.py detect_login_wall L196-207 and strip_html L146-160
+      - scripts/policy_eval/webtools.py fetch L111 and headers L170
+    constraints:
+      - 'Add detect_bot_block(status, headers, body_text, byte_len) to common.py. Keep it DISTINCT from
+        detect_login_wall and never merge their return values: a login wall is a true payer property and
+        belongs in the gated class, a bot block is an artefact of ours and must NEVER produce a class.
+        Match Incapsula incident ID, _Incapsula_Resource, Request unsuccessful, Attention Required! |
+        Cloudflare, cf-browser-verification, __cf_chl, Just a moment..., px-captcha, datadome, errors.edgesuite.net,
+        plus a generic rule of HTTP 200 with tag-stripped text under 512 characters and no CPT 27447.'
+      - 'Fix strip_html ordering: unescape entities BEFORE stripping tags, and iterate until stable so
+        doubly-escaped markup resolves. Add normalize_for_match() that unescapes, strips tags, collapses
+        whitespace, folds case and punctuation.'
+      - webtools.fetch must send full browser headers (Accept, Accept-Language, Accept-Encoding, Upgrade-Insecure-Requests,
+        Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, Sec-Fetch-User) over a persistent requests.Session,
+        and must add blocked and blocked_reason to the returned record and every run artifact.
+      - 'Re-probe all 17 gated rows browser-shaped. Record POSITIVE evidence per row: http_status, byte
+        count, tag-stripped text length, and one of redirect to a login path, a sign-in form, a 401 or
+        403, or verbatim portal-credential language. Write the full log to notes/gated-reprobe-t018.md.'
+      - Where a gated row yields no positive wall evidence, record that plainly and escalate. Do NOT reclassify
+        and do NOT quietly leave verification_method claiming a firsthand fetch that did not happen. Correct
+        that string on every gated row so it states what was actually done.
+      - Replace known_limitations item 8 with the exact T017 wording and add items 9 and 10. Do not delete
+        the record that the alarm was raised.
+      - 'Amend the rubric to v1.5: a blocked fetch is a distinct outcome, excluded from the confident-wrong
+        denominator and printed on its own line in the section 7 headline block. Add an amendment-log
+        row. This is decided BEFORE any run, which is what makes it legitimate.'
+      - Do NOT change any row_class. Do NOT start T005.
+      - Never emit an em dash or an en dash used as a sentence dash in any file you touch.
+    allowed_files:
+      - scripts/policy_eval/common.py
+      - scripts/policy_eval/webtools.py
+      - data/policy_platform/answer_key_v1.json
+      - docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md
+      - docs/goals/policy-retrieval-eval/notes/key-corrections.md
+      - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md
+      - tests/test_policy_eval_fetch_guards.py
+    verify:
+      - python3 -c "import json;json.load(open('data/policy_platform/answer_key_v1.json'))"
+      - python3 scripts/policy_eval/denominators.py
+      - python3 scripts/policy_eval/selftest_report_gate.py
+      - python3 scripts/policy_eval/selftest_discrimination.py
+      - python3 scripts/policy_eval/verify_no_leak.py
+      - 'python3 -c "import sys;sys.path.insert(0,''scripts'');from policy_eval.common import detect_bot_block;print(detect_bot_block(200,{},''Request
+        unsuccessful. Incapsula incident ID: 914000070904437332'',931))"  # must be (True, ...)'
+      - 'python3 -c "import sys;sys.path.insert(0,''scripts'');from policy_eval.common import strip_html;print(''<abbr>''
+        not in strip_html(''(&lt;abbr&gt;NCD&lt;/abbr&gt;)''))"  # must be True'
+      - 'python3 -c "import sys;sys.path.insert(0,''scripts'');from policy_eval.webtools import fetch;r=fetch(''https://www.horizonblue.com/providers/products-programs/utilization-management-programs/surgical-and-implantable-device-management-program/medical-policy-criteria-and-guidelines'');print(r[''status''],r[''blocked''])"  #
+        must be 200 False'
+      - git diff --name-only
+    stop_if:
+      - Any row_class would change. Escalate to a Judge; a Worker may not reclassify.
+      - A browser-shaped fetch of a gated row returns a policy page containing CPT 27447 at HTTP 200 with
+        no login evidence. Record and escalate; do not promote the row.
+      - Any of the 11 retrievable rows attestation_quote fails the normalised matcher on a live fetch.
+        Halt and escalate; do not edit the quote.
+      - denominators.py reports any derived value not equal to its pinned value.
+      - The strip_html ordering fix changes the output of any existing selftest.
+      - git diff --name-only lists a file outside allowed_files.
     receipt: null
 checks:
   dirty_fingerprint: clean at a45d66d before T001; T001 is read-only and wrote nothing
