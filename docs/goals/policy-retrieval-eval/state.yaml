@@ -1576,12 +1576,27 @@ tasks:
       - webtools.fetch must send full browser headers (Accept, Accept-Language, Accept-Encoding, Upgrade-Insecure-Requests,
         Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, Sec-Fetch-User) over a persistent requests.Session,
         and must add blocked and blocked_reason to the returned record and every run artifact.
-      - 'Re-probe all 17 gated rows browser-shaped. Record POSITIVE evidence per row: http_status, byte
-        count, tag-stripped text length, and one of redirect to a login path, a sign-in form, a 401 or
-        403, or verbatim portal-credential language. Write the full log to notes/gated-reprobe-t018.md.'
+      - 'PM CORRECTION, verified before dispatch, and worse than T017 stated. Sixteen of the seventeen
+        gated rows carry NO candidate URL of any kind: fetched is null outright, and spec_original_target_url
+        is null on every row except bm_0074. There is nothing to re-fetch, so a per-row URL probe is not
+        executable. Do the executable thing instead and probe by PAYER. The seventeen rows cover seven
+        payers: Independence Blue Cross, Regence BCBS, CareFirst BCBS, Highmark, Horizon BCBS NJ, Wellmark
+        BCBS, BCBS Michigan. For each payer find the public medical-policy or prior-authorisation entry
+        point, fetch it browser-shaped, and follow public links far enough to establish whether a knee
+        arthroplasty policy for that plan type is publicly reachable. Record every URL tried, including
+        dead ends.'
+      - 'Record POSITIVE evidence per probe: http_status, byte count, tag-stripped text length, bot-block
+        verdict, and one of redirect to a login path, a sign-in form, a 401 or 403, or verbatim portal-credential
+        language. Write the full log to notes/gated-reprobe-t018.md.'
       - Where a gated row yields no positive wall evidence, record that plainly and escalate. Do NOT reclassify
         and do NOT quietly leave verification_method claiming a firsthand fetch that did not happen. Correct
-        that string on every gated row so it states what was actually done.
+        that string on every gated row so it states what was actually done. On the sixteen rows with no
+        URL the honest string names a carried-forward spec label plus whatever the payer-level probe found,
+        and it must not claim a per-row firsthand fetch.
+      - 'Add a known_limitations item recording the URL absence itself, independent of what the probe finds:
+        sixteen of seventeen gated rows rest on a carried-forward spec label with no recorded URL, no HTTP
+        status and no login flag, and gated rows supply 17 of the 23 honest-abstention rows. This is true
+        whatever the probe returns, and it must be stated whether or not the probe corroborates the class.'
       - Replace known_limitations item 8 with the exact T017 wording and add items 9 and 10. Do not delete
         the record that the alarm was raised.
       - 'Amend the rubric to v1.5: a blocked fetch is a distinct outcome, excluded from the confident-wrong
