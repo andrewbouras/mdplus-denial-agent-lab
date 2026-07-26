@@ -2042,6 +2042,13 @@ tasks:
       - docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md at v1.5
       - docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md
     constraints:
+      - WRITE THE NOTE INCREMENTALLY, ONE PAYER AT A TIME. The first T021 Worker attempt ran 102 tool
+        calls over 26 minutes, then died on an expired authentication token having written NOTHING to
+        disk, and every probe result was lost. Create docs/goals/policy-retrieval-eval/notes/gated-reprobe-t021.md
+        as your FIRST action, with a heading and a status line saying the probe is in progress. Then append
+        that payer's full evidence table to the file as soon as you finish each payer, before you start
+        the next one. Six payers means at least six writes. Probing evidence that exists only in your
+        context is evidence that does not exist.
       - Apply rubric 2.3 V1 to V5 plus Guard M and Guard S verbatim, per row. Record a verdict on EACH
         condition separately, never as a single yes or no.
       - Record evidence and a PROPOSED class only. Change NO row_class. A Judge applies. A Worker may
@@ -2101,6 +2108,10 @@ tasks:
       - denominators.py reports any value not equal to its pinned value.
       - git diff --name-only lists a file outside allowed_files.
     receipt: null
+    attempts: 1
+    attempt_1_outcome: Worker died on an expired OAuth token after 102 tool calls and roughly 26 minutes.
+      No file was written and no evidence survived. Not a task defect; an infrastructure failure plus
+      a durability gap now closed by the incremental-write constraint.
   - id: T022
     type: judge
     assignee: Judge
