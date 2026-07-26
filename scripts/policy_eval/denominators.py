@@ -2,10 +2,10 @@
 """Canonical denominators: read them from rubric 0.2, derive them from the key,
 assert they agree, abort loudly on any mismatch.
 
-Rubric v1.3 section 0.2: "The harness reads these from here and derives them
-from answer_key_v1.json at build time. It asserts the derived values equal the
-pinned values and aborts on any mismatch, so a key edit fails the build loudly
-instead of drifting silently."
+Rubric section 0.2, unchanged in wording since v1.3: "The harness reads these
+from here and derives them from answer_key_v1.json at build time. It asserts
+the derived values equal the pinned values and aborts on any mismatch, so a key
+edit fails the build loudly instead of drifting silently."
 
 Nothing anywhere else in this harness may hardcode a denominator. Every module
 calls `denominators()`.
@@ -33,7 +33,15 @@ from policy_eval.common import (  # noqa: E402
 
 SCORED_CLASSES = ("retrievable", "gated", "none")
 EXCLUDED_CLASSES = ("invalid", "unverified")
-STRONG_BASES = ("single_document_full_scope", "deferral_two_part")
+# Rubric v1.5 section 2.3 adds the third strong basis. A row on
+# `deferral_vendor_two_part` has passed V1 to V5 plus Guard M and Guard S, so
+# its counted document (part two, the vendor criteria document) carries the
+# same evidentiary weight as a single full-scope document.
+STRONG_BASES = (
+    "single_document_full_scope",
+    "deferral_two_part",
+    "deferral_vendor_two_part",
+)
 
 # Names that carry a triple value "rows / documents / issuers" in the table.
 TRIPLE_KEYS = {
@@ -188,6 +196,14 @@ def derive(key: dict[str, Any]) -> dict[str, Any]:
     derived["needs_human_review_not_reportable_at"] = -(
         -derived["N_scored"] * 20 // 100
     )  # ceil(0.20 * N_scored)
+    # Rubric v1.5: BLOCKED_FETCH is OUR artefact, not a property of the payer,
+    # so it is excluded from both the numerator and the denominator of the
+    # headline. It gets the same ceiling rule as needs_human_review: once a
+    # fifth of the scored rows are pages we were refused, the headline is a
+    # statement about our request shape and is not reportable.
+    derived["blocked_fetch_not_reportable_at"] = -(
+        -derived["N_scored"] * 20 // 100
+    )  # ceil(0.20 * N_scored)
 
     derived["_detail"] = {
         "retrievable_row_ids": [r["id"] for r in retrievable],
@@ -329,6 +345,7 @@ def main() -> int:
         "strong_issuers_excl_instrument",
         "ma_scored_rows",
         "needs_human_review_not_reportable_at",
+        "blocked_fetch_not_reportable_at",
     ]
     print(f"key      = {KEY_PATH}")
     print(f"rubric   = {RUBRIC_PATH} (v{RUBRIC_VERSION})")

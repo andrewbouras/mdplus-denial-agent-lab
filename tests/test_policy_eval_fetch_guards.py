@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Guards for the fetch path, added by T018 on the Judge T017 ruling.
+"""Guards for the fetch path, added by T018 on the Judge T017 ruling and
+extended by T020.
 
-Three defects motivate this file, and all three pushed the benchmark in the
+Four defects motivate this file, and all four pushed the benchmark in the
 flattering direction, which is why they are fixed before the first eval run
 rather than after it.
 
@@ -15,6 +16,10 @@ rather than after it.
    inside a JSON payload survived as a literal tag in the text the retrieval
    model reads.
 3. A raw substring identity test manufactures phantoms on live payer HTML.
+4. `strip_html` stripped `<[^>]*>`, which is not tag shaped. A bare "<" in
+   ordinary prose, for example "joint space < 2 mm" in a payer PDF, deleted
+   every character up to the next ">". On the Carelon joint surgery guideline
+   that silently removed the passage carrying CPT 27447. Found by T020.
 
 These tests are offline and deterministic. They make no network request. Run
 them with pytest, or directly with `python3 tests/test_policy_eval_fetch_guards.py`,
@@ -158,6 +163,37 @@ def test_ordinary_entities_still_unescape() -> None:
 def test_script_and_style_content_is_removed() -> None:
     html = "<style>.a{color:red}</style><script>var x=1;</script><p>Policy</p>"
     assert strip_html(html) == "Policy"
+
+
+def test_a_bare_angle_bracket_does_not_eat_the_document() -> None:
+    """The sixth false absence on this board, found live during T020.
+
+    The tag pattern used to be `<[^>]*>`, which is not tag shaped: it matches a
+    bare `<` followed by anything up to the next `>`. Payer PDFs are full of
+    ordinary prose like "less than 5 mm" rendered as "< 5 mm", and PDF text
+    extraction emits those characters literally. One stray `<` therefore
+    deleted every character up to the next `>`, which on the Carelon joint
+    surgery guideline swallowed the passage containing CPT 27447.
+
+    The failure was SILENT. No error, no exception, a plausible looking body of
+    text, and an attestation quote reported as absent from a document that
+    plainly contains it. An absent quote pushes a row toward abstention, and
+    abstention earns full credit under the headline metric, so this defect
+    flatters us. That is why it is pinned by a test.
+    """
+    text = strip_html("Perform if the defect is < 5 mm and CPT 27447 applies.")
+    assert "27447" in text
+    assert "5 mm" in text
+    # A real tag on the same line must still be removed.
+    assert strip_html("<p>gap < 5 mm</p>") == "gap < 5 mm"
+
+
+def test_a_bare_less_than_inside_pdf_text_keeps_the_cpt_code() -> None:
+    """The same defect at the level the harness actually consumes it."""
+    from policy_eval.common import contains_cpt_27447
+
+    body = "Criteria: joint space < 2 mm. Codes covered: 27447, 27446."
+    assert contains_cpt_27447(strip_html(body)) is True
 
 
 # --------------------------------------------------------------------------

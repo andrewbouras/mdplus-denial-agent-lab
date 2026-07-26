@@ -1,6 +1,6 @@
 {
   "key_version": "v1",
-  "rubric_version": "v1",
+  "rubric_version": "1.5",
   "rubric_path": "docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md",
   "corrections_log": "docs/goals/policy-retrieval-eval/notes/key-corrections.md",
   "cpt": "27447",
@@ -11,28 +11,28 @@
   "generated_by": "GoalBuddy Worker, task T003",
   "counts": {
     "total_rows": 39,
-    "retrievable": 11,
-    "gated": 17,
+    "retrievable": 12,
+    "gated": 14,
     "none": 6,
     "invalid": 1,
-    "unverified": 4,
+    "unverified": 6,
     "spec_original": {
       "public": 13,
       "login_gated": 20,
       "no_public_policy": 6
     },
-    "unique_documents_on_retrievable_side": 7,
-    "retrievable_with_strong_attestation": 9,
+    "unique_documents_on_retrievable_side": 8,
+    "retrievable_with_strong_attestation": 10,
     "retrievable_with_weak_attestation": 2,
-    "unique_issuers_on_retrievable_side": 4,
-    "strong_subset_documents": 6,
-    "strong_subset_issuers": 3,
-    "n_scored": 34,
+    "unique_issuers_on_retrievable_side": 5,
+    "strong_subset_documents": 7,
+    "strong_subset_issuers": 4,
+    "n_scored": 32,
     "excluded_invalid": 1,
-    "excluded_unverified": 4,
+    "excluded_unverified": 6,
     "scored_payers": 11,
-    "medicare_advantage_scored_rows": 9,
-    "counts_basis": "Recomputed by Judge T013 from the rows and applied by Worker T015 on 2026-07-26. Arithmetic: 11 retrievable + 17 gated + 6 none = 34 scored; 34 scored + 4 unverified + 1 invalid = 39 total. Strong attestation means single_document_full_scope or deferral_two_part; weak means scope_by_exclusion. Excluding the one instrument_inferred row, bm_0058, the strong subset is 8 rows, 5 documents and 3 issuers."
+    "medicare_advantage_scored_rows": 8,
+    "counts_basis": "Recomputed by Worker T020 from the rows on 2026-07-26 after the Judge T019 ruling, which moved bm_0072 from gated to retrievable and bm_0062 and bm_0083 from gated to unverified. Arithmetic: 12 retrievable + 14 gated + 6 none = 32 scored; 32 scored + 6 unverified + 1 invalid = 39 total. Strong attestation means single_document_full_scope, deferral_two_part or deferral_vendor_two_part; weak means scope_by_exclusion. Excluding the one instrument_inferred row, bm_0058, the strong subset is 9 rows, 6 documents and 4 issuers. The previous figures, recomputed by Judge T013 and applied by Worker T015, were 11 / 17 / 6 / 4 / 1 with n_scored 34, 7 documents and 4 issuers."
   },
   "row_class_definitions": {
     "retrievable": "A public document was fetched this session at HTTP 200 without a login, it contains CPT 27447, its sha256 is recorded, and a verbatim quote attests that it governs this payer, plan type and state.",
@@ -48,7 +48,8 @@
     "negative_attestation": "The document states in writing that it does not govern this row, which is what makes the row invalid.",
     "ambiguous": "The document contains conflicting scope markings for this plan type.",
     "none_found": "No document attesting applicability was found.",
-    "not_applicable": "Row is gated or none; no attestation is expected."
+    "not_applicable": "Row is gated or none; no attestation is expected.",
+    "deferral_vendor_two_part": "Part one is a page on the payer's own registrable domain that names the payer, names this row's plan type in the payer's own words, attests the row's state, contains CPT 27447 under normalized_contains, and states with a verb of use that this code requires prior authorisation or utilisation management by a NAMED external reviewer. Part two is a public criteria document published by that named reviewer, containing CPT 27447 and at least one quantified or explicitly conditional coverage requirement, reachable from a link printed on part one by plain HTTP with no JavaScript and no credential, carrying no contrary marking, and not displaced by a higher rung of the rubric section 5.1 authority ladder. Part two is the counted document. Never establishes a Medicaid row. Rubric section 2.3, conditions V1 to V5 with Guards M and S. Strong."
   },
   "cms_note": "CPT 27447 does NOT appear on any CMS LCD page. CMS places procedure codes in a separate companion Billing and Coding Article. All four LCDs used here were confirmed to contain zero occurrences of 27447, and all four companion articles were confirmed to contain it. Both URLs are recorded on every Medicare Advantage row, and cpt_27447_present is measured against the companion article. A retrieval answer naming only the LCD must not be graded wrong for this reason alone.",
   "lcd_jurisdiction_map": {
@@ -146,15 +147,20 @@
     }
   },
   "known_limitations": [
-    "The retrievable side collapses to 7 unique documents across 11 rows, so these are not independent draws.",
-    "Two retrievable rows (bm_0073, bm_0084) rest on scope_by_exclusion, the weakest basis. Report the retrievable count both with and without them.",
-    "Four rows are unverified (bm_0068, bm_0079, bm_0086, bm_0089) and one is invalid (bm_0063). bm_0058 was promoted from unverified to retrievable by Judge T013 under rubric section 2.2, on a document T003 never reached, so it is no longer carried in this list. Four of the spec's thirteen public rows did not survive as retrievable: bm_0063 (invalid), and bm_0068, bm_0079 and bm_0089 (unverified). The fourth unverified row, bm_0086, was login_gated in the spec and never a public row, so the earlier count of six public non-survivors was one too high even before the bm_0058 promotion. Every number in this item is derivable from the rows: count row_class against provenance.spec_original_retrievability.",
+    "The retrievable side collapses to 8 unique documents across 12 rows, so these are not independent draws. It was 7 documents across 11 rows until the v1.5 promotion of bm_0072.",
+    "Two retrievable rows (bm_0073, bm_0084) rest on scope_by_exclusion, the weakest basis. Report the retrievable count both with and without them. Of the twelve retrievable rows at v1.5, ten rest on a strong basis and these two do not.",
+    "Six rows are unverified (bm_0062, bm_0068, bm_0079, bm_0083, bm_0086, bm_0089) and one is invalid (bm_0063). bm_0062 and bm_0083 were moved here from gated by Judge T019 on 2026-07-26, because their login_gated labels rested on no fetch at all and the pages behind them are public; that is an honest widening of the coverage gap, from 4 of 39 rows to 6 of 39, and it is a limitation of the benchmark, not of the model. bm_0058 was promoted from unverified to retrievable by Judge T013 under rubric section 2.2, on a document T003 never reached, so it is no longer carried in this list. Four of the spec's thirteen public rows did not survive as retrievable: bm_0063 (invalid), and bm_0068, bm_0079 and bm_0089 (unverified). The unverified row bm_0086 was login_gated in the spec and never a public row, so the earlier count of six public non-survivors was one too high even before the bm_0058 promotion; bm_0062 and bm_0083 were likewise login_gated in the spec and were never public rows. Every number in this item is derivable from the rows: count row_class against provenance.spec_original_retrievability.",
     "State pins for Regence (Oregon) and Wellmark (Iowa) are deliberate choices, not document attestations. Neither changes a governing LCD.",
     "The CareFirst pin to Maryland IS load-bearing: Maryland and DC are Novitas J-L (L36007) but Virginia is Palmetto J-M (L33456). If Andrew pins CareFirst to Virginia, bm_0059's LCD changes.",
     "ma_deferral_status uses a fourth value, 'unverified', on rows where no payer document attests deferral. The task specified three values; the fourth was added rather than assert a status without evidence.",
-    "One retrievable row, bm_0058, has plan_type_named 'instrument_inferred' rather than 'explicit'. The Blue Shield of California utilization management page never writes 'Medicare Advantage'. Its plan type is identified only by the instrument it names, the Medicare Managed Care Manual (CMS Pub. 100-16), which binds Medicare Advantage organizations only. The strong-attestation subset must therefore be reported both ways: 9 rows / 6 documents / 3 issuers including bm_0058, and 8 rows / 5 documents / 3 issuers excluding it.",
-    "Five of the eleven retrievable rows (bm_0056, bm_0057, bm_0058, bm_0059, bm_0061) rest on a page whose recorded content hash does not reproduce, so on those rows the sha256 is not an identity check. Task T016 refetched every recorded hash on 2026-07-26. The three CMS Medicare Coverage Database article pages (A59811, A56777, A56796) return a fresh per-request ASP.NET anti-forgery token, so every fetch yields a different raw sha256; on each page, eight fetches whose digest was recorded produced eight distinct values. The Blue Shield of California utilization management page has produced three distinct digests across three sessions. The BCBSM and CareFirst attestation pages recorded in ma_convention.plan_page are unstable for the same kind of reason, a build timestamp in an HTML comment and a monitoring-agent parameter; they belong to rows already counted here, so the row count stays five. On all of those pages the change is confined to a non-semantic token, the verbatim attestation text and CPT 27447 were re-confirmed present, and no document content changed. Identity on these rows rests on identity_string, on content_hash_normalized where recorded, and on the verbatim attestation_quote, never on the raw digest. The Horizon page recorded on bm_0061 is a separate and more serious case; see the next item.",
-    "OPEN AND UNRESOLVED. On bm_0061 the Horizon attestation page (ma_convention.plan_page) served two different content variants during the T016 sweep on 2026-07-26. Two responses at about 16:45 UTC carried the recorded verbatim quote, which is part one of that row's deferral_two_part basis. Nineteen responses over the following twenty minutes did not carry it at all, including under a cookie-bearing session, under no-cache request headers and across three URL spellings, all at HTTP 200 with no login wall. T016 did not retain the earlier bytes, so it cannot distinguish a page edit from edge-node content variants. Until a Judge rules, treat bm_0061's part-one attestation as observed once and not reliably re-retrievable. T016 did not change the row_class, because a Worker may not."
+    "One retrievable row, bm_0058, has plan_type_named 'instrument_inferred' rather than 'explicit'. The Blue Shield of California utilization management page never writes 'Medicare Advantage'. Its plan type is identified only by the instrument it names, the Medicare Managed Care Manual (CMS Pub. 100-16), which binds Medicare Advantage organizations only. The strong-attestation subset must therefore be reported both ways: at v1.5, 10 rows / 7 documents / 4 issuers including bm_0058, and 9 rows / 6 documents / 4 issuers excluding it. Before the v1.5 promotion of bm_0072 those figures were 9 / 6 / 3 and 8 / 5 / 3.",
+    "Five of the eleven retrievable rows (bm_0056, bm_0057, bm_0058, bm_0059, bm_0061) rest on a page whose recorded content hash does not reproduce, so on those rows the sha256 is not an identity check. Task T016 refetched every recorded hash on 2026-07-26. The three CMS Medicare Coverage Database article pages (A59811, A56777, A56796) return a fresh per-request ASP.NET anti-forgery token, so every fetch yields a different raw sha256; on each page, eight fetches whose digest was recorded produced eight distinct values. The Blue Shield of California utilization management page has produced three distinct digests across three sessions. The BCBSM and CareFirst attestation pages recorded in ma_convention.plan_page are unstable for the same kind of reason, a build timestamp in an HTML comment and a monitoring-agent parameter; they belong to rows already counted here, so the row count stays five. On all of those pages the change is confined to a non-semantic token, the verbatim attestation text and CPT 27447 were re-confirmed present, and no document content changed. Identity on these rows rests on identity_string, on content_hash_normalized where recorded, and on the verbatim attestation_quote, never on the raw digest. The Horizon page recorded on bm_0061 is a separate and more serious case; see the item beginning 'RAISED, INVESTIGATED, RESOLVED'. COUNT NOTE, v1.5: the retrievable side now holds twelve rows, not eleven. The five rows named at the head of this item are unchanged and are still the only ones whose recorded content hash does not reproduce. The twelfth row, bm_0072, is the one row in this key whose counted document digest DOES reproduce.",
+    "RAISED, INVESTIGATED, RESOLVED, AND THE ORIGINAL ASSERTION WAS FALSE. Worker T016 reported on 2026-07-26 that the Horizon attestation page on bm_0061 served the recorded 296-character quote on two fetches and then failed to serve it on nineteen further fetches over the following twenty minutes, and it wrote here that no substring of the quote was presently retrievable on demand. The alarm was correctly raised, correctly escalated, and T016 correctly refused to change the row class. The assertion itself is FALSE. The PM reproduced the page 6 of 6 and Judge T017 reproduced it 25 more times, 3 by browser-shaped curl, 14 by no-cache curl spaced over 90 minutes and 8 through the shipped fetcher, for 31 of 31 fetches at HTTP 200, all 494,917 decompressed bytes, all carrying content digest 39f425cf34e622ea7f0335a87dd4736c94107655ff7e808b5ab302fd1c749322, with the 296-character quote present verbatim in tag-stripped text every time. Worker T018 fetched it once more under the normalised matcher and found it present. The cause of the nineteen absences in that single seventeen-minute window is NOT established and is NOT claimed. The PM originally attributed them to an Imperva HTTP-200 bot stub; Judge T017 disproved that, because the stub is 927 to 931 bytes and T016's absences were full pages of 492,010 to 492,144 bytes, and the PM withdrew the claim in place. bm_0061 keeps row_class retrievable and attestation_basis deferral_two_part. It carries a standing control instead: any run whose normalised matcher fails to find that quote must halt and escalate, and must never regrade or reclass the row on its own. content_hash_stable stays false, which was always correct.",
+    "THE GATED CLASS RESTS LARGELY ON A CARRIED-FORWARD LABEL, NOT ON EVIDENCE. Of the fourteen rows still classed gated, thirteen carry no recorded URL of any kind, no HTTP status and no login flag, and fetched is null on all fourteen. Their label comes from the seed_review_39 spec and a reviewer's note, not from a firsthand fetch. Until 2026-07-26 every one of them nonetheless carried the string 'Firsthand HTTP fetch on 2026-07-26 with a browser user agent' in provenance.verification_method; that string was false and has been removed. Positive wall evidence, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, is recorded for NONE of the fourteen. One of them, bm_0071, previously cited an Imperva bot block on a programmatic POST as its gating evidence, which is an artefact of our own request shape and not a payer property. Gated rows are graded CORRECT_ABSTENTION at full credit and supply 14 of the 20 honest-abstention rows, so an always-abstain policy still collects most of that credit on labels never verified. Before the Judge T019 ruling the position was worse and is recorded so the finding is not erased: sixteen of seventeen gated rows had no URL, and gated rows supplied 17 of the 23 honest-abstention rows. The payer-level re-probe reached one payer of seven and overturned that payer's label on all three of its rows, which should RAISE rather than lower the prior on the remaining six. Six payers covering fourteen rows remain unprobed: Regence BCBS, CareFirst BCBS, Highmark, Horizon BCBS NJ, Wellmark BCBS and BCBS Michigan. This item stands whatever that probe returns.",
+    "THE HARNESS COULD NOT SEE AN HTTP-200 BOT BLOCK, AND NOW CAN. Until 2026-07-26 detect_login_wall returned (False, None) on a 931-byte Imperva 'Request unsuccessful' stub served at HTTP 200, so the harness could not tell a refused fetch from a successful one. A refused fetch yields no readable text, which pushes the model toward abstention, which is the behaviour the headline metric rewards. Worker T018 added detect_bot_block, kept strictly separate from detect_login_wall because a login wall is a true payer property and a bot block is an artefact of ours that must never produce a row class; gave the fetcher full browser headers over a persistent session; and recorded blocked and blocked_reason on every fetch. While doing so it created and caught a second instance of the same family: advertising brotli in Accept-Encoding, which this interpreter cannot decode, made one payer CDN return 13,025 bytes of still-compressed data at HTTP 200 that decoded to unreadable text, with no error reported anywhere. Rubric v1.5 makes a blocked fetch a distinct outcome, BLOCKED_FETCH, excluded from the confident-wrong numerator and denominator and printed on its own headline line. One weakness in the same family is recorded and NOT yet fixed: pdf_text returns an empty string on any exception with no reason recorded, so a broken PDF extraction is indistinguishable from a document containing no text, and that points in the flattering direction.",
+    "ONE RETRIEVABLE ROW RESTS ON A COMMERCIAL VENDOR GUIDELINE, NOT ON A PAYER OR CMS DOCUMENT. bm_0072 is admitted under rubric section 2.3, deferral_vendor_two_part. Part one is a public Independence Blue Cross Commercial bulletin that carries CPT 27447 and names Carelon Medical Benefits Management as the reviewer. Part two is the Carelon Clinical Appropriateness Guidelines, Joint Surgery, edition 2025-11-15, which is the counted document and the only Carelon document in the benchmark. Three limits travel with it. First, the Carelon guideline states verbatim: 'If requested by a health plan, Carelon will review requests based on health plan medical policy/guidelines in lieu of the Carelon Guidelines.' The Independence bulletin is silent on whether it substitutes its own policy. Silence is not contrary evidence under rubric 2.1 Guard 2, but the substitution clause is real and is recorded rather than smoothed away. Second, Carelon lists TWO Joint Surgery editions as current, 2024-11-17 updated 2025-01-01 and 2025-11-15, and the Independence bulletin does not say which edition it has adopted, so naming the 2024 edition grades CORRECT_STALE under section 2 Tier 3 rather than wrong. Third, this promotion moves the unique-issuer count from 4 to 5, and section 0.1 names the issuer count as the BINDING constraint on the retrieval side. That is a larger flattering move than the v1.3 promotion of bm_0058, which moved no issuer at all, and it must be disclosed on the same line as any retrieval number.",
+    "A MEDICARE ADVANTAGE PLAN ROUTES KNEE REVIEW TO A COMMERCIAL VENDOR, AND THE VENDOR YIELDS BACK TO MEDICARE. On its public Medicare Advantage bulletin, Attachment B to policy MA00.047t, Independence Blue Cross marks CPT 27447 as requiring Level of Care Review by Carelon Medical Benefits Management, exactly as it does on the Commercial line. The Carelon guideline itself resolves the apparent conflict with Medicare law, stating verbatim: 'Applicable federal and state coverage mandates take precedence over these clinical guidelines, and in the case of reviews for Medicare Advantage Plans, the Guidelines are only applied where there are not fully established CMS criteria.' Under rubric section 5.1 there is no National Coverage Determination for total knee arthroplasty, so rung 2 fires and Pennsylvania's in-jurisdiction document, L36007 with companion Billing and Coding Article A56796, is fully established and controls. So there is no legal defect and none is alleged. There is a patient-facing defect, and it is a product finding rather than a benchmark defect: the only document Independence publishes for a Medicare Advantage knee case points the reader at a vendor guideline that does not govern the case, and nothing on that page tells the reader that Medicare's own regional rule controls instead. A patient, or an unaided model, that follows the payer's own page will cite the wrong criteria. bm_0062 is therefore unverified rather than retrievable, because no public Independence Medicare Advantage page has been found that satisfies rubric section 2.2 P1 to P4 by naming CMS NCDs or LCDs.",
+    "A FIFTH FALSE ABSENCE, FOUND AND FIXED BY WORKER T020, AND IT POINTED THE FLATTERING WAY. The text normaliser removed HTML tags with the pattern that matches any run from a bare '<' to the next '>', whatever lay between. The Carelon Joint Surgery guideline is a PDF whose extracted text carries ten '<' and eight '>' characters inside imaging tables, for example 'Alpha angle < 55 degrees Normal'. That pattern therefore deleted 167,471 of the document's 241,279 extracted characters, including the region holding CPT 27447 and its total knee arthroplasty descriptor. normalized_contains reported 27447 ABSENT from a document that plainly contains it, with no error raised anywhere. The pattern now requires a tag-shaped opening and forbids a further '<' inside the tag. Worker T020 proved the change alters nothing already recorded: every document behind the eleven previously retrievable rows normalises to a byte-identical string before and after, and every attestation verdict is unchanged. This is the fifth false absence recorded on this board, after the escaped-markup case on the BCBS North Carolina page, the entity-order case in T018, the HTTP-200 bot stub and the brotli case, and like all four it pointed toward abstention, which is the behaviour the headline metric rewards. The general lesson is recorded rather than the instance: a matcher that can silently delete three quarters of a document is a benchmark defect even when no row moves because of it."
   ],
   "open_human_decision": {
     "owner": "Andrew Bouras",
@@ -602,7 +608,7 @@
           "http_status": 200,
           "sha256": "611a162f5520deace245ece1a639c148a54437f3508fd986584185cba59b1c7c",
           "content_hash_stable": false,
-          "content_hash_note": "NOT AN IDENTITY CHECK, AND THIS PAGE NEEDS A JUDGE. T016 refetched it 23 times on 2026-07-26 at HTTP 200 with no login. The raw sha256 never reproduced the recorded value. Two full digests observed are 693f157514968470f05a1ba8062ca29aa75b227cea4b27e6ec23c9d0fcf24b24 and 173c66e2415bf819127f502f126a942fb5001c9c3f6efe38e6c0731580c30982; later probes logged digests truncated to twelve characters, among them 27c6e9c339da, 2ea326ee0c77 and 8bdcb85be7e5. Part of that variation is an Imperva cache-busting parameter in an _Incapsula_Resource script tag, which is harmless. The part that is not harmless is that the page served two different content variants. At about 16:45 UTC two responses of 495051 and 495050 bytes carried the verbatim quote below, confirmed in tag-stripped text. From about 16:48 to about 17:05 UTC, nineteen further responses of 492010, 492143 and 492144 bytes did not carry it at all: the string 'MA members' had zero occurrences in every one. A cookie-bearing session, no-cache request headers and three URL spellings all returned the shorter variant. The earlier bytes were not retained, so T016 cannot say whether Horizon edited the page or whether the site serves content variants from different edge nodes. No identity_string is recorded here, because no substring of the quote is presently retrievable on demand. This does not change row_class, which a Worker may not do. It is escalated for a Judge, because part one of this row's deferral_two_part basis rests on that quote.",
+          "content_hash_note": "NOT AN IDENTITY CHECK. RULED ON BY JUDGE T017. T016 refetched it 23 times on 2026-07-26 at HTTP 200 with no login. The raw sha256 never reproduced the recorded value. Two full digests observed are 693f157514968470f05a1ba8062ca29aa75b227cea4b27e6ec23c9d0fcf24b24 and 173c66e2415bf819127f502f126a942fb5001c9c3f6efe38e6c0731580c30982; later probes logged digests truncated to twelve characters, among them 27c6e9c339da, 2ea326ee0c77 and 8bdcb85be7e5. Part of that variation is an Imperva cache-busting parameter in an _Incapsula_Resource script tag, which is harmless. The part that is not harmless is that the page served two different content variants. At about 16:45 UTC two responses of 495051 and 495050 bytes carried the verbatim quote below, confirmed in tag-stripped text. From about 16:48 to about 17:05 UTC, nineteen further responses of 492010, 492143 and 492144 bytes did not carry it at all: the string 'MA members' had zero occurrences in every one. A cookie-bearing session, no-cache request headers and three URL spellings all returned the shorter variant. The earlier bytes were not retained, so T016 cannot say whether Horizon edited the page or whether the site serves content variants from different edge nodes. Judge T017 ruled on this page. The quote reproduced 31 of 31 across two agents and two independent HTTP stacks, and Worker T018 reproduced it once more under the normalised matcher. The earlier statement here, that no substring of the quote was presently retrievable on demand, is FALSE and is withdrawn. The identity check for this page is the verbatim 296-character quote recorded in the quote field, tested through normalize_for_match and never through a raw substring test. The cause of the nineteen absences T016 observed is not established and is not claimed. Standing control: any run whose normalised matcher fails to find this quote must halt and escalate, and must never regrade or reclass the row on its own.",
           "fetched_at": "2026-07-26T14:40:00Z",
           "quote": "In the processing of claims for services provided to our MA members, we follow Centers for Medicare & Medicaid Services (CMS) guidelines, NCDs and/or LCDs. For those services where no LCD or NCD exists, claims for MA members will be processed based on TurningPoint policy criteria and guidelines.",
           "states_medicare_deferral": true,
@@ -616,7 +622,7 @@
       "plan_type": "Medicare Advantage",
       "state": "Pennsylvania",
       "cpt": "27447",
-      "row_class": "gated",
+      "row_class": "unverified",
       "provenance": {
         "state_basis": "payer_licensee_territory",
         "state_evidence_url": null,
@@ -626,14 +632,14 @@
         "spec_original_retrievability": "login_gated",
         "spec_original_target_url": null,
         "spec_reviewer": "Akin",
-        "changed_from_spec": false,
-        "change_reason": "No class change. Pennsylvania LCD pair recorded so the row is scorable under the lcd_strict convention without further research.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "changed_from_spec": true,
+        "change_reason": "Judge T019 moved this row from gated to unverified. The spec's login_gated label is disproved by a public Medicare Advantage bulletin at HTTP 200 with no credential, and no admissible attestation basis has been established either, because the vendor criteria document is displaced under section 2.3 V5.",
+        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with browser-shaped headers, no login, no credential, no payer telephone call. Reproduced 3 of 3 by Worker T018, re-reproduced by the PM and by Judge T019 at 2 of 2. The Independence Blue Cross Medicare Advantage Medical Policy Bulletin, Attachment B to policy MA00.047t, is public at HTTP 200 with no credential and carries CPT 27447, so the earlier note 'no public Medicare Advantage knee policy was reachable' was FALSE. The bulletin defers review to Carelon Medical Benefits Management. Judge T019 fetched the Carelon Joint Surgery guideline, edition 2025-11-15, at HTTP 200 with no credential, 3 of 3 byte-identical, and it states verbatim: 'Applicable federal and state coverage mandates take precedence over these clinical guidelines, and in the case of reviews for Medicare Advantage Plans, the Guidelines are only applied where there are not fully established CMS criteria.' Under rubric section 5.1 rung 2 the in-jurisdiction document for Pennsylvania is L36007 with companion Billing and Coding Article A56796, which is fully established, so the Carelon guideline is DISPLACED for this row and fails the section 2.3 V5 check. No Independence Medicare Advantage page satisfying rubric section 2.2 P1 to P4 has been fetched, so part one of a deferral_two_part basis is not in evidence. The label is unverified: not gated, and not retrievable."
       },
       "fetched": null,
       "attestation_quote": null,
       "attestation_basis": "none_found",
-      "notes": "Independence Blue Cross publishes no portal URL in the spec and no public Medicare Advantage knee policy was reachable. Marked gated as in the spec.",
+      "notes": "Independence Blue Cross publishes a PUBLIC Medicare Advantage medical policy bulletin, Attachment B to MA00.047t, that lists CPT 27447 and requires Level of Care Review by Carelon Medical Benefits Management. The prior note claiming no public Medicare Advantage knee policy was reachable is withdrawn as false. The Carelon guideline is displaced for Medicare Advantage by its own terms where CMS criteria are fully established, which they are for CPT 27447 in Pennsylvania under L36007 and A56796. Unverified pending a public Independence Medicare Advantage page that names CMS NCDs or LCDs under rubric 2.2.",
       "ma_deferral_status": "unverified",
       "ma_convention": {
         "lcd": {
@@ -654,7 +660,21 @@
           "cpt_27447_on_lcd_page": false,
           "cpt_27447_on_billing_article": true
         },
-        "plan_page": null
+        "plan_page": {
+          "url": "https://medpolicy.ibx.com/ibc/ma/Pages/Policy/ea4c1763-0b64-4d01-b0ca-65c58f0f6ecc.aspx",
+          "title": "Musculoskeletal Services (Independence), Medical Policy Bulletin Medicare Advantage, Attachment B to MA00.047t, Joint Surgery Procedure Codes",
+          "http_status": 200,
+          "sha256": "61f901eb2cd3bacd1d4a0f3e341edaaffdb432ccb47e638213e73e4c089809c8",
+          "content_hash_stable": false,
+          "content_hash_note": "NOT AN IDENTITY CHECK. Worker T020 fetched this page twice on 2026-07-26, HTTP 200 both times at 111,962 bytes with 3,349 characters of extracted text, and the raw sha256 differed because the page carries a per-request SharePoint form digest. The recorded value above is the FIRST of the two and must not be treated as reproducible. Identity rests on the verbatim quote below.",
+          "fetched_at": "2026-07-26T20:10:00Z",
+          "login_wall": false,
+          "bot_blocked": false,
+          "quote": "Medical Policy Bulletin Medicare Advantage ... Knee Replacement 27446 * 27447 * 27486 27487 27488 27437 * 27438 * 27440 * 27441 * 27442 * 27443 * J7330 S2112 ... Codes followed by an asterisk (*) denotes services that require additional Level of Care Review by Carelon Medical Benefits Management",
+          "states_medicare_deferral": false,
+          "contains_cpt_27447": true,
+          "why_this_page_does_not_establish_the_row": "It names Carelon, not CMS. Rubric section 2.2 part one requires the payer to state in writing that this plan type follows CMS NCDs and LCDs, and this page does not. The transitive step from Carelon to CMS is asserted by the VENDOR about itself, not by the payer, and it is conditional on its face. Under section 2.3 V5 the vendor document is displaced for this row by L36007 and its companion Billing and Coding Article A56796."
+        }
       }
     },
     {
@@ -733,7 +753,7 @@
         "spec_reviewer": "Jocelyn",
         "changed_from_spec": false,
         "change_reason": "No class change. Oregon LCD pair recorded. All four Regence states (OR, WA, ID, UT) sit inside Noridian J-F, so the state pin does not change the LCD.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -928,7 +948,7 @@
         "spec_reviewer": "Anish",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -957,7 +977,7 @@
         "spec_reviewer": "Jocelyn",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -982,7 +1002,7 @@
         "spec_reviewer": "Akin",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -995,7 +1015,7 @@
       "plan_type": "Commercial",
       "state": "Pennsylvania",
       "cpt": "27447",
-      "row_class": "gated",
+      "row_class": "retrievable",
       "provenance": {
         "state_basis": "payer_licensee_territory",
         "state_evidence_url": null,
@@ -1005,14 +1025,75 @@
         "spec_original_retrievability": "login_gated",
         "spec_original_target_url": null,
         "spec_reviewer": "Anish",
-        "changed_from_spec": false,
-        "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "changed_from_spec": true,
+        "change_reason": "Judge T019 admitted this row as retrievable under new rubric section 2.3, deferral_vendor_two_part. The spec's login_gated label rested on no fetch at all. Both the payer bulletin and the vendor criteria document are public at HTTP 200 with no credential.",
+        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with browser-shaped headers, no login, no credential, no payer telephone call. Reproduced 3 of 3 by Worker T018, re-reproduced independently by the PM, and re-reproduced by Judge T019 at 2 of 2 on the payer page and 3 of 3 byte-identical on the criteria document. Part one is the Independence Blue Cross Commercial Medical Policy Bulletin, Attachment B to policy 00.01.66t, Procedure Codes for Joint Surgery, which carries CPT 27447 and names Carelon Medical Benefits Management as the reviewer. Part two is the Carelon Clinical Appropriateness Guidelines, Joint Surgery, edition 2025-11-15, reached from the link printed on part one in four plain HTTP hops with no JavaScript, no credential and no cookie beyond an ordinary session. Admitted under rubric section 2.3, deferral_vendor_two_part, by Judge T019. The row's earlier gated label and its note 'No portal URL in spec; nothing public found' were both false and are corrected here."
       },
-      "fetched": null,
-      "attestation_quote": null,
-      "attestation_basis": "not_applicable",
-      "notes": "No portal URL in spec; nothing public found."
+      "fetched": {
+        "url": "https://guidelines.carelonmedicalbenefitsmanagement.com/wp-content/uploads/2025/11/PDF-Joint-Surgery-2025-11-15.pdf",
+        "http_status": 200,
+        "login_required": false,
+        "cpt_27447_present": true,
+        "sha256": "b33ae12d3a59b1b43ed4864b4a61a4e0a0f3fbcd6d8709344700c6e94165147a",
+        "doc_key": "CARELON_Joint-Surgery-2025-11-15",
+        "fetched_at": "2026-07-26T20:10:00Z",
+        "content_hash_stable": true,
+        "content_hash_note": "Reproduced 3 of 3 by Judge T019 on 2026-07-26, byte-identical at 974,145 bytes, same sha256 every time, application/pdf. This is the ONLY counted document in this key whose raw digest reproduces, so it is the one row where sha256 is a genuine identity check. Worker T020 re-fetched it on 2026-07-26 and reproduced the same 974,145 bytes and the same digest, content-type application/pdf, 241,279 characters of extracted text.",
+        "identity_string": "Doc ID: MSK02-1125.1",
+        "identity_note": "Chosen and confirmed by Worker T020 from its own fetch, through normalize_for_match and never through a raw substring test. The span occurs exactly once in the 241,279 characters extracted from the counted document, and it is ABSENT from the alternate current edition recorded below, which Worker T020 also fetched, so it pins the edition rather than the document family. The document-family span 'Clinical Appropriateness Guidelines Musculoskeletal Appropriate Use Criteria: Joint Surgery' is present on BOTH editions and is therefore recorded here as context, not as the identity check. The header region also prints 'Status: Revised', 'Effective Date: 11/15/2025' and 'Last Review Date: 04/21/2025'.",
+        "alternate_current_edition_url": "https://guidelines.carelonmedicalbenefitsmanagement.com/wp-content/uploads/2024/12/PDF-Joint-Surgery-2024-11-17-UC0125.pdf",
+        "alternate_current_edition_note": "Carelon lists TWO Joint Surgery editions as current, 2024-11-17 updated 2025-01-01 and 2025-11-15, and the Independence bulletin does not say which edition it has adopted. Worker T020 fetched the 2024 edition on 2026-07-26: HTTP 200, 949,858 bytes, sha256 begins f53d2d6ff7668d1a, CPT 27447 present. Naming the 2024 edition grades CORRECT_STALE under section 2 Tier 3, NOT wrong."
+      },
+      "attestation_quote": "[V1 part one, payer binding, payer + plan type + state + CPT 27447 + named vendor, https://medpolicy.ibx.com/ibc/Commercial/Pages/Policy/17d2df53-e600-440f-8ddd-0ad805614b91.aspx] \"Medical Policy Bulletin Commercial\"  ...  \"Independence Blue Cross\"  ...  \"serving the health insurance needs of Philadelphia and southeastern Pennsylvania\"  ...  \"Joint Surgery Procedure Codes That Require Preservice Utilization Management and Level of Care Review Through Carelon Medical Benefits Management\"  ...  \"Knee Replacement 27446 * 27447 * 27486 27487 27488 27437 * 27438 * 27440 * 27441 * 27442 * 27443 * J7330 S2112\"  ...  \"Codes followed by an asterisk (*) denotes services that require additional Level of Care Review by Carelon Medical Benefits Management\"  ||  [V2 part two, the counted criteria document, https://guidelines.carelonmedicalbenefitsmanagement.com/wp-content/uploads/2025/11/PDF-Joint-Surgery-2025-11-15.pdf] \"Clinical Appropriateness Guidelines Musculoskeletal Appropriate Use Criteria: Joint Surgery\"  ...  \"Doc ID: MSK02-1125.1\"  ...  \"27447 Arthroplasty, knee, condyle and plateau; medial AND lateral compartments with or without patella resurfacing (total knee arthroplasty)\"  ...  \"BMI equal to or greater than 40 attempt weight reduction prior to surgery\"  ...  \"A1C of 8% or less prior to any joint replacement surgery\"  ...  \"abstinence from tobacco and nicotine products for at least 6 weeks prior to surgery\"",
+      "attestation_basis": "deferral_vendor_two_part",
+      "notes": "Admitted retrievable by Judge T019 under rubric section 2.3. The prior note 'No portal URL in spec; nothing public found' is withdrawn as false.",
+      "plan_type_named": "explicit",
+      "vendor_convention": {
+        "vendor": "Carelon Medical Benefits Management, formerly AIM Specialty Health",
+        "payer_page": {
+          "url": "https://medpolicy.ibx.com/ibc/Commercial/Pages/Policy/17d2df53-e600-440f-8ddd-0ad805614b91.aspx",
+          "title": "Musculoskeletal Services (Independence), Medical Policy Bulletin Commercial, Attachment B to 00.01.66t, Joint Surgery Procedure Codes",
+          "http_status": 200,
+          "sha256": "8e691efb0c8c90266bf129007b77c52323ef1cbfbc6bd066b9c847b17672bc40",
+          "content_hash_stable": false,
+          "content_hash_note": "NOT AN IDENTITY CHECK. Worker T020 fetched this page twice on 2026-07-26, HTTP 200 both times at 112,322 and 112,321 bytes with 3,400 characters of extracted text, and the raw sha256 differed between the two responses because the page carries a per-request SharePoint form digest. The recorded value above is the FIRST of those two digests and must not be treated as reproducible. Identity for this page rests on the verbatim quote fields below, tested through normalize_for_match.",
+          "fetched_at": "2026-07-26T20:10:00Z",
+          "login_wall": false,
+          "bot_blocked": false,
+          "contains_cpt_27447": true,
+          "V1a_payer_named_quote": "Independence Blue Cross",
+          "V1b_plan_type_named_quote": "Medical Policy Bulletin Commercial",
+          "V1c_state_basis": "positive page text AND payer_licensee_territory. The page prints 'serving the health insurance needs of Philadelphia and southeastern Pennsylvania', and the row is independently pinned to Pennsylvania by state_basis payer_licensee_territory. Both are recorded, as V1c requires.",
+          "V1d_cpt_quote": "Knee Replacement 27446 * 27447 * 27486 27487 27488 27437 * 27438 * 27440 * 27441 * 27442 * 27443 * J7330 S2112",
+          "V1e_verb_of_use_and_named_reviewer_quote": "Joint Surgery Procedure Codes That Require Preservice Utilization Management and Level of Care Review Through Carelon Medical Benefits Management ... Codes followed by an asterisk (*) denotes services that require additional Level of Care Review by Carelon Medical Benefits Management"
+        },
+        "V2_criteria_document": {
+          "url": "https://guidelines.carelonmedicalbenefitsmanagement.com/wp-content/uploads/2025/11/PDF-Joint-Surgery-2025-11-15.pdf",
+          "publisher": "Carelon Medical Benefits Management, Inc.",
+          "sha256": "b33ae12d3a59b1b43ed4864b4a61a4e0a0f3fbcd6d8709344700c6e94165147a",
+          "reproduced": "3 of 3 by Judge T019 and 3 of 3 across Worker T020's own fetches, byte-identical at 974,145 bytes every time.",
+          "contains_cpt_27447": true,
+          "quantified_criteria_examples": [
+            "BMI equal to or greater than 40 attempt weight reduction prior to surgery",
+            "A1C of 8% or less prior to any joint replacement surgery",
+            "abstinence from tobacco and nicotine products for at least 6 weeks prior to surgery"
+          ],
+          "criteria_term_frequencies": "BMI 62 occurrences, conservative 128, physical therapy 52, tobacco 14, all counted by Worker T020 in the extracted text."
+        },
+        "V3_hop_chain": [
+          "Part one prints the href https://aimspecialtyhealth.com/resources/clinical-guidelines/musculoskeletal/html, with a trailing /html that is NOT an extraction artefact. Worker T020 read it out of the raw HTML of part one.",
+          "hop 1 GET https://aimspecialtyhealth.com/resources/clinical-guidelines/musculoskeletal/html -> HTTP 200, 389,502 bytes, redirects to https://guidelines.carelonmedicalbenefitsmanagement.com/",
+          "hop 2 GET https://guidelines.carelonmedicalbenefitsmanagement.com/current-musculoskeletal-guidelines/ -> HTTP 200, 250,379 bytes; the joint-surgery links are printed in the HTML",
+          "hop 3 GET https://guidelines.carelonmedicalbenefitsmanagement.com/joint-surgery-2025-11-15/ -> HTTP 200, 527,832 bytes; the PDF link is printed in the HTML",
+          "hop 4 GET https://guidelines.carelonmedicalbenefitsmanagement.com/wp-content/uploads/2025/11/PDF-Joint-Surgery-2025-11-15.pdf -> HTTP 200, 974,145 bytes, application/pdf",
+          "Walked by Judge T019 and re-walked independently by Worker T020 with plain requests and href extraction. No JavaScript, no credential, no site search endpoint, no cookie beyond an ordinary session. Byte counts on hops 1 and 3 vary by a few bytes between agents because those pages carry per-request nonces; the criteria PDF does not vary."
+        ],
+        "V4_no_contrary_marking": "The criteria document carries no statement excluding Commercial business, the payer, or Pennsylvania. Checked by Worker T020 in the full 241,279 characters of extracted text.",
+        "V5_displacement_check": "PASSES for this row. The only yielding clause in the criteria document is Medicare Advantage specific: 'Applicable federal and state coverage mandates take precedence over these clinical guidelines, and in the case of reviews for Medicare Advantage Plans, the Guidelines are only applied where there are not fully established CMS criteria.' This row's plan_type is Commercial, so nothing on the section 5.1 ladder displaces the vendor document here. The same sentence DOES displace it on bm_0062, which is why that row is unverified.",
+        "guard_M_medicaid": "Does not bite. This row's plan_type is Commercial, not Medicaid.",
+        "guard_S_substitution_clause_verbatim": "If requested by a health plan, Carelon will review requests based on health plan medical policy/guidelines in lieu of the Carelon Guidelines.",
+        "guard_S_note": "Recorded verbatim as Guard S requires, in this row and in known_limitations. The Independence bulletin is silent on whether it substitutes its own policy. Silence is not contrary evidence under rubric 2.1 Guard 2, but the substitution clause is real and is recorded rather than smoothed away."
+      }
     },
     {
       "id": "bm_0073",
@@ -1072,7 +1153,7 @@
         "spec_reviewer": "Akin",
         "changed_from_spec": false,
         "change_reason": "No change. Spec's portal_url carried forward.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md. This row is the single gated row carrying a spec_original_target_url. That URL was not fetched in T018 and no HTTP status was recorded for it."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -1133,7 +1214,7 @@
         "spec_reviewer": "Jocelyn",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -1236,7 +1317,7 @@
         "spec_reviewer": "Akin",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -1265,7 +1346,7 @@
         "spec_reviewer": "Anish",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -1290,7 +1371,7 @@
         "spec_reviewer": "Jocelyn",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -1303,7 +1384,7 @@
       "plan_type": "ACA Marketplace",
       "state": "Pennsylvania",
       "cpt": "27447",
-      "row_class": "gated",
+      "row_class": "unverified",
       "provenance": {
         "state_basis": "payer_licensee_territory",
         "state_evidence_url": null,
@@ -1313,14 +1394,14 @@
         "spec_original_retrievability": "login_gated",
         "spec_original_target_url": null,
         "spec_reviewer": "Akin",
-        "changed_from_spec": false,
-        "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "changed_from_spec": true,
+        "change_reason": "Judge T019 moved this row from gated to unverified. No positive login-wall evidence exists, and no fetched page states whether the public Commercial policy set governs ACA Marketplace members. Absence of evidence in both directions.",
+        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with browser-shaped headers, no login, no credential, no payer telephone call. The Independence Blue Cross medical policy portal is public at HTTP 200 with no credential and publishes three policy sets, Commercial, Medicare Advantage and MA PPO Host. It publishes no ACA Marketplace set, and no fetched page states whether the Commercial set governs Marketplace members. No positive login-wall evidence exists for this row, so the gated label is unsupported. The Commercial bulletin does not qualify under rubric section 2.1, because it states no line-of-business exclusion at all and therefore fails both E1 and E2. This is an absence of evidence in both directions and the label is unverified."
       },
       "fetched": null,
       "attestation_quote": null,
       "attestation_basis": "not_applicable",
-      "notes": "Carried forward from spec."
+      "notes": "Independence publishes Commercial, Medicare Advantage and MA PPO Host policy sets and no ACA Marketplace set, and nothing fetched states whether the Commercial set governs Marketplace members. No login-wall evidence exists. Recorded as an absence in both directions."
     },
     {
       "id": "bm_0084",
@@ -1380,7 +1461,7 @@
         "spec_reviewer": "Jocelyn",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -1432,7 +1513,7 @@
         "spec_reviewer": "Anish",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -1457,7 +1538,7 @@
         "spec_reviewer": "Jocelyn",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -1536,7 +1617,7 @@
         "spec_reviewer": "Jocelyn",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,
@@ -1561,7 +1642,7 @@
         "spec_reviewer": "Akin",
         "changed_from_spec": false,
         "change_reason": "No change.",
-        "verification_method": "Firsthand HTTP fetch on 2026-07-26 with a browser user agent, no login, no credential, no payer telephone call. CMS jurisdiction facts read from the Contractor Information table rendered on the fetched LCD and article pages, cross-checked against the official CMS bulk export current_lcd.zip."
+        "verification_method": "NO FIRSTHAND PER-ROW FETCH. This row's gated label is carried forward from the seed_review_39 spec and from the reviewer's note. No URL, no HTTP status and no login flag were ever recorded for it, and fetched is null. The string that previously stood here, claiming a firsthand HTTP fetch on 2026-07-26 with a browser user agent, was FALSE and is removed under the ruling of Judge T019. The payer-level re-probe ordered by Judge T017 reached Independence Blue Cross only, and this payer was not probed. Positive evidence of a login wall, meaning a redirect to a login path, a sign-in form, an HTTP 401 or 403, or verbatim portal-credential language, has NOT been recorded for this row. See docs/goals/policy-retrieval-eval/notes/gated-reprobe-t018.md."
       },
       "fetched": null,
       "attestation_quote": null,

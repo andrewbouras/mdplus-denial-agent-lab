@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine Stage A and Stage B into rubric v1.3 outcomes, and aggregate.
+"""Combine Stage A and Stage B into rubric v1.5 outcomes, and aggregate.
 
 The confidence threshold is applied HERE, in deterministic code, after the
 adjudicator has decided correctness without ever seeing the confidence value.
@@ -19,6 +19,7 @@ import datetime as dt
 import sys
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -35,7 +36,11 @@ from policy_eval.common import (  # noqa: E402
     write_json,
     write_jsonl,
 )
-from policy_eval.denominators import denominators, issuer_of  # noqa: E402
+from policy_eval.denominators import (  # noqa: E402
+    STRONG_BASES,
+    denominators,
+    issuer_of,
+)
 from policy_eval.stage_a import (  # noqa: E402
     CONVENTIONS,
     acceptance_urls,
@@ -46,6 +51,98 @@ from policy_eval.stage_a import (  # noqa: E402
 WRONG_GRADES = {"WRONG_DOCUMENT", "UNRESOLVABLE", "MALFORMED"}
 CORRECT_GRADES = {"CORRECT", "CORRECT_STALE"}
 HIGH_CONFIDENCE = 80  # rubric section 1: frozen, may not move after any run
+BLOCKED_FETCH = "BLOCKED_FETCH"  # rubric v1.5 section 3.1
+
+
+def _default_fetcher(url: str | None) -> dict[str, Any]:
+    return webtools.fetch(url)
+
+
+# Marks the one fetcher whose request shape we are allowed to vary. An injected
+# fetcher (a self-test stub) is called twice and never reshaped, because
+# reshaping a stub would prove nothing.
+_default_fetcher.policy_eval_default_fetcher = True  # type: ignore[attr-defined]
+
+
+def _fetch_second_shape(url: str) -> dict[str, Any]:
+    """Refetch under a MATERIALLY different request shape.
+
+    Rubric 3.1 requires `blocked == True` under at least two request shapes
+    before a row may be called BLOCKED_FETCH, because a single refusal is far
+    more often a transient edge decision than a real wall. The two shapes are:
+
+      1. `browser_navigation`: the shared warm session, `Sec-Fetch-Site: none`,
+         no Referer. This is what `webtools.fetch` sends by default and it is
+         what a fresh address-bar navigation looks like.
+      2. `browser_same_origin_referer`: a FRESH cookie jar, plus a Referer of
+         the document's own origin and `Sec-Fetch-Site: same-origin`. This is
+         what an in-site link click looks like.
+
+    Those are the two cases bot-mitigation edges actually separate, so a host
+    that refuses both is refusing us, not merely refusing one fingerprint.
+
+    `webtools.py` is not ours to edit under this task, so the reshape is done by
+    swapping its two module-level knobs around the call and restoring them in a
+    `finally`. Nothing here weakens the isolation guard in `_blocked_reason`:
+    the call still goes through `webtools.fetch`.
+    """
+    parts = urlsplit(url or "")
+    origin = f"{parts.scheme}://{parts.netloc}/" if parts.netloc else None
+    saved_headers = webtools.BROWSER_HEADERS
+    saved_session = webtools._SESSION
+    headers = dict(saved_headers)
+    headers["Sec-Fetch-Site"] = "same-origin"
+    if origin:
+        headers["Referer"] = origin
+    webtools.BROWSER_HEADERS = headers
+    webtools._SESSION = None  # a fresh cookie jar, not the warm one
+    try:
+        return webtools.fetch(url)
+    finally:
+        webtools.BROWSER_HEADERS = saved_headers
+        webtools._SESSION = saved_session
+
+
+def _record_attempt(shape: str, got: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "request_shape": shape,
+        "status": got.get("status"),
+        "final_url": got.get("final_url"),
+        "bytes": got.get("bytes"),
+        "sha256": got.get("sha256"),
+        "blocked": bool(got.get("blocked")),
+        "blocked_reason": got.get("blocked_reason"),
+        "login_wall": bool(got.get("login_wall")),
+        "error": got.get("error"),
+    }
+
+
+def blocked_fetch_probe(
+    url: str | None, fetcher: Callable
+) -> tuple[bool, list[dict[str, Any]]]:
+    """Return (blocked_under_every_shape, the recorded attempts).
+
+    `.get("blocked")` and never `["blocked"]`: the discrimination self-test
+    injects a stub fetcher whose records predate this field, and a KeyError
+    there would turn a hermetic test into a false alarm. A record that carries
+    no `blocked` key is treated as NOT blocked, which is the conservative
+    direction: it keeps the row in the confident-wrong denominator.
+    """
+    if not url:
+        return False, []
+    attempts = [_record_attempt("browser_navigation", fetcher(url))]
+    if not attempts[0]["blocked"]:
+        # One readable response is enough. Rubric 3.1: "If the host serves the
+        # document to ANY request shape we can make, the row is not blocked."
+        return False, attempts
+    if getattr(fetcher, "policy_eval_default_fetcher", False):
+        second = _fetch_second_shape(url)
+        shape = "browser_same_origin_referer"
+    else:
+        second = fetcher(url)
+        shape = "injected_fetcher_second_attempt"
+    attempts.append(_record_attempt(shape, second))
+    return all(a["blocked"] for a in attempts), attempts
 
 
 def _doc_side(row: dict[str, Any], url: str | None) -> str:
@@ -73,7 +170,7 @@ def grade_row(
     adjudicator: Callable | None = None,
     adjudicator_model: str = stage_b_mod.DEFAULT_ADJUDICATOR,
 ) -> dict[str, Any]:
-    fetcher = fetcher or (lambda u: webtools.fetch(u))
+    fetcher = fetcher or _default_fetcher
     searcher = searcher or (lambda q, n=5: webtools.search(q, n))
 
     per_convention: dict[str, dict[str, Any]] = {}
@@ -83,9 +180,31 @@ def grade_row(
         )
 
     primary = per_convention["dual_accept"]
+    identified = claim.get("claim_type") == "document_identified" or claim.get(
+        "malformed"
+    )
+
+    # Rubric v1.5 section 3.1, and it runs BEFORE Stage B on purpose. A blocked
+    # fetch yields no readable text, so asking an adjudicator to rule on that
+    # emptiness would launder our own refusal into a model judgement.
+    #
+    # BLOCKED_FETCH may only displace a grade that DEPENDED on reading the
+    # claimed document, which is exactly the case where Stage A is not decisive.
+    # A Stage A decision needs no document text: an exact URL match, a
+    # jurisdiction mismatch, an unresolvable host, a 404. Those verdicts stand.
+    # Letting a refusal overwrite them would move rows out of the denominator in
+    # the flattering direction and would be precisely the laundering that
+    # section 3.1 exists to prevent.
+    blocked_fetch = False
+    blocked_attempts: list[dict[str, Any]] = []
+    if identified and not primary["decisive"] and claim.get("document_url"):
+        blocked_fetch, blocked_attempts = blocked_fetch_probe(
+            claim.get("document_url"), fetcher
+        )
+
     stage_b_result: dict[str, Any] | None = None
 
-    if not primary["decisive"]:
+    if not primary["decisive"] and not blocked_fetch:
         doc_text = ""
         got = fetcher(claim.get("document_url"))
         doc_text = got.get("text") or ""
@@ -127,9 +246,13 @@ def grade_row(
     facts = primary.get("facts", {})
     conf = claim.get("confidence")
     conf_int = conf if isinstance(conf, int) else -1
-    identified = claim.get("claim_type") == "document_identified" or claim.get(
-        "malformed"
-    )
+
+    if blocked_fetch:
+        headline = BLOCKED_FETCH
+        grades = {
+            conv: (g if g == "NOT_APPLICABLE" else BLOCKED_FETCH)
+            for conv, g in grades.items()
+        }
 
     needs_human = headline == "NEEDS_HUMAN_REVIEW"
     if headline == "KEY_DEFECT_FOUND" and row["row_class"] in ("gated", "none"):
@@ -176,6 +299,8 @@ def grade_row(
         "confident_fabricated": confident_fabricated,
         "wrong_but_hedged": wrong_but_hedged,
         "needs_human_review": needs_human,
+        "blocked_fetch": blocked_fetch,
+        "blocked_fetch_attempts": blocked_attempts,
         "abstain_reason_correct": facts.get("abstain_reason_correct"),
         "out_of_jurisdiction_named": facts.get("in_jurisdiction") is False,
         "uniform_election": facts.get("uniform_election"),
@@ -199,9 +324,14 @@ def aggregate(graded: list[dict[str, Any]], den: dict[str, Any]) -> dict[str, An
     retr = [g for g in scored if g["row_class"] == "retrievable"]
 
     h = sum(1 for g in scored if g["needs_human_review"])
+    # Rubric v1.5 section 3.1: a blocked fetch leaves BOTH the numerator and the
+    # denominator of the headline. It is never CORRECT and never an abstention,
+    # so it needs no exclusion anywhere else; those lines already test for
+    # grades it cannot hold.
+    blocked = [g for g in scored if g.get("blocked_fetch")]
+    b = len(blocked)
     correct = [g for g in retr if g["grade"] in CORRECT_GRADES]
-    strong_bases = ("single_document_full_scope", "deferral_two_part")
-    strong_correct = [g for g in correct if g["attestation_basis"] in strong_bases]
+    strong_correct = [g for g in correct if g["attestation_basis"] in STRONG_BASES]
     strong_excl = [
         g for g in strong_correct if g.get("plan_type_named") != "instrument_inferred"
     ]
@@ -246,7 +376,7 @@ def aggregate(graded: list[dict[str, Any]], den: dict[str, Any]) -> dict[str, An
 
     return {
         "confident_wrong": sum(1 for g in scored if g["confident_wrong"]),
-        "confident_wrong_denominator": den["N_scored"] - h,
+        "confident_wrong_denominator": den["N_scored"] - h - b,
         "confident_fabricated": sum(1 for g in scored if g["confident_fabricated"]),
         "wrong_but_hedged": sum(1 for g in scored if g["wrong_but_hedged"]),
         "correct_retrieval_rows": len(correct),
@@ -268,6 +398,8 @@ def aggregate(graded: list[dict[str, Any]], den: dict[str, Any]) -> dict[str, An
         "needs_human_review_row_ids": [
             g["row_id"] for g in scored if g["needs_human_review"]
         ],
+        "blocked_fetch": b,
+        "blocked_fetch_row_ids": [g["row_id"] for g in blocked],
         "correct_stale_row_ids": [
             g["row_id"] for g in scored if g["grade"] == "CORRECT_STALE"
         ],
@@ -309,7 +441,13 @@ def aggregate(graded: list[dict[str, Any]], den: dict[str, Any]) -> dict[str, An
                 if g["grade"] in CORRECT_GRADES
             ),
         },
-        "reportable": h < den["needs_human_review_not_reportable_at"],
+        # Both ceilings bind. Rubric section 6: the two buckets are counted
+        # separately and both are printed, so a run cannot hide a failure by
+        # splitting it across them.
+        "reportable": (
+            h < den["needs_human_review_not_reportable_at"]
+            and b < den["blocked_fetch_not_reportable_at"]
+        ),
         "rows_graded": len(graded),
     }
 

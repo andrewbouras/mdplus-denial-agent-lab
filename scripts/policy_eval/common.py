@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared primitives for the policy-retrieval eval harness (rubric v1.4).
+"""Shared primitives for the policy-retrieval eval harness (rubric v1.5).
 
 Nothing in this module reads the answer key on behalf of the retrieval model.
 The key loader here is used only by the query emitter, the graders and the
@@ -187,13 +187,31 @@ def strip_html(html: str) -> str:
     and the pair is repeated until the text stops changing so doubly escaped
     markup also resolves. The pass count is capped so a pathological input
     cannot spin.
+
+    THE TAG PATTERN MUST BE TAG SHAPED, T020. The removal pattern used to be
+    `<[^>]+>`, which matches any run from a bare `<` to the next `>` no matter
+    what lies between. The Carelon Joint Surgery guideline is a PDF whose
+    extracted text carries ten `<` and eight `>` characters in its imaging
+    tables, for example `Alpha angle < 55° Normal` and `< 32° Insignificant 39°
+    - 42° Borderline >`. The old pattern therefore deleted 167,471 of the
+    241,279 extracted characters, including the region at offset 154,826 that
+    holds CPT 27447 and its total knee arthroplasty descriptor. Every match run
+    through normalize_for_match then reported that document as NOT containing
+    27447 while it plainly does, with no error anywhere. That is the fifth false
+    absence on this board and, like the other four, it points the flattering
+    way: a row whose attestation cannot be confirmed leaves the scored set and
+    enlarges the abstention pool that the headline metric rewards. The pattern
+    now requires a real tag opening and forbids a further `<` inside the tag,
+    so a stray angle bracket in prose can only ever consume prose up to the next
+    angle bracket, never across one.
     """
     text = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", html or "")
     for _ in range(_STRIP_HTML_MAX_PASSES):
         before = text
         text = _html.unescape(text)
         text = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", text)
-        text = re.sub(r"(?s)<[^>]+>", " ", text)
+        text = re.sub(r"(?s)<!--.*?-->", " ", text)
+        text = re.sub(r"(?s)</?[A-Za-z!?][^<>]*>", " ", text)
         if text == before:
             break
     return re.sub(r"\s+", " ", text).strip()

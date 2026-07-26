@@ -376,3 +376,55 @@ four spans as an integrity failure.
    sit in the answer key and the rubric, and this task halted before touching
    either. The harness now records `blocked` on every fetch, so the amendment can
    be applied cleanly by the next task.
+
+---
+
+# 6. Disposition by Worker T020, on the Judge T019 ruling
+
+Every open item in section 5 above now has an answer, or a named owner.
+
+1. **bm_0072 and bm_0062: ruled and applied.** bm_0072 is `retrievable` under
+   the new rubric 2.3 vendor-deferral test, on attestation basis
+   `deferral_vendor_two_part`, with the Carelon joint surgery guideline as the
+   counted document. bm_0062 is `unverified`, because the Independence page that
+   binds the Commercial row does not bind the Medicare Advantage row and no wall
+   was found on the criteria document itself. The honest-abstention denominator
+   moved from 23 to 20 and rubric section 0.2 was reissued.
+2. **bm_0083: ruled and applied.** An evidence-free row is `unverified`, not
+   `gated`. `gated` is a positive claim about the payer and needs positive
+   evidence. bm_0083 is now `unverified`.
+3. **The remaining six payers: open, and owned by T021.** Fourteen gated rows
+   still carry no firsthand evidence. The standard they will be judged against
+   is now written down as rubric 2.3, so they are not being judged against a
+   moving target. T021 records evidence and a PROPOSED class per row and changes
+   no `row_class`.
+4. **The four UPMC spans: still open.** The matcher rule for elided and tabular
+   quotes was not decided in this task and no quote was edited.
+5. **`pdf_text` returning an empty string on any failure: still open, and it
+   bit again.** During this task the same swallowed exception hid an import
+   failure for several minutes and made a readable PDF look empty. The remedy
+   was not in this task's allowed files. It is recorded in `known_limitations`.
+6. **The `verification_method` string: corrected on all 14 remaining gated
+   rows.** T018 was right to refuse to write a conclusion it had not reached.
+   The Judge supplied replacement text that states only what is actually known,
+   which is that the row's label rests on the T003 spec and has no firsthand
+   probe behind it. That text is now on every gated row. No gated row claims a
+   fetch that did not happen.
+7. **The rubric v1.5 amendment and the `known_limitations` rewrite: done.**
+   `BLOCKED_FETCH` is now a distinct outcome in rubric section 3.1. It requires
+   `blocked == True` under at least two recorded request shapes, it leaves both
+   the numerator and the denominator of the headline, it is never CORRECT and
+   never an honest abstention, it prints on its own mandatory line by row_id
+   even when the count is zero, and at 7 or more of 32 scored rows the run is
+   not reportable. The grader, the report writer and both self-tests implement
+   it, and two new self-test cases prove it fires and prove it does NOT fire on
+   a host that serves the document to any request shape we can make.
+
+## One thing T018 could not have known
+
+The harness could not read the Carelon guideline at all. `strip_html` stripped
+`<[^>]*>`, which deletes everything between a bare `<` in ordinary prose and the
+next `>`. The guideline says "joint space < 2 mm", so the passage carrying CPT
+27447 vanished silently. Any re-probe run before that fix would have reported
+false absences on exactly the documents this benchmark cares about. The fix and
+its regression tests are in place; see the T020 section of `key-corrections.md`.

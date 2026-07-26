@@ -33,6 +33,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from policy_eval.common import (  # noqa: E402
+    RUBRIC_VERSION,
     RUNS_DIR,
     format_bound,
     key_sha256,
@@ -100,6 +101,8 @@ def build_report(
     ksha = key_sha256()
     n_scored = d["N_scored"]
     h = r["needs_human_review"]
+    b = r.get("blocked_fetch", 0)
+    blocked_ids = ", ".join(r.get("blocked_fetch_row_ids") or []) or "none"
     invalid_ids = d["_detail"]["excluded_invalid_ids"]
     def _one_line_reason(row: dict[str, Any]) -> str:
         text = (row.get("provenance") or {}).get("change_reason") or row.get(
@@ -123,8 +126,11 @@ def build_report(
 
     lines = []
     lines.append(f"POLICY RETRIEVAL COLD RUN {run_id}")
+    # The rubric version is DERIVED from the rubric file, never retyped here.
+    # It was hardcoded to v1.3 through two rubric revisions and printed a false
+    # version on every report in between.
     lines.append(
-        f"model={model}  rubric=v1.3  rubric_sha256={rubric_sha256()}"
+        f"model={model}  rubric=v{RUBRIC_VERSION}  rubric_sha256={rubric_sha256()}"
     )
     lines.append(
         f"key_sha256={ksha}  "
@@ -132,7 +138,7 @@ def build_report(
     )
     lines.append("")
     lines.append(
-        f"CONFIDENT-BUT-WRONG:  {r['confident_wrong']} / {n_scored - h}   "
+        f"CONFIDENT-BUT-WRONG:  {r['confident_wrong']} / {n_scored - h - b}   "
         f"(fabricated URLs: {r['confident_fabricated']})"
     )
     lines.append(
@@ -168,6 +174,13 @@ def build_report(
     lines.append(
         f"NEEDS HUMAN REVIEW:   {h} / {n_scored}"
         "              (excluded from the lines above)"
+    )
+    # Mandatory even when b is zero. Rubric section 7: "Printing a zero is the
+    # evidence that the check ran."
+    lines.append(
+        f"BLOCKED FETCH:        {b} / {n_scored}"
+        f"              (our artefact, excluded from every line above: "
+        f"{blocked_ids})"
     )
     lines.append("")
     lines.append(
@@ -301,6 +314,62 @@ def check_report(text: str, key: dict[str, Any], den: dict[str, Any]) -> list[st
         fails.append("missing the UNVERIFIED ROWS block")
     if not any(ln.startswith("INDEPENDENCE AND CEILING") for ln in lines):
         fails.append("missing the INDEPENDENCE AND CEILING block")
+
+    # Rubric v1.5 sections 3.1 and 7. The BLOCKED FETCH line is mandatory even
+    # at zero, and it must name the excluded rows, because a count with no
+    # row_ids cannot be audited and a silent omission would let our own
+    # infrastructure quietly shrink the denominator.
+    bf = [ln for ln in lines if ln.startswith("BLOCKED FETCH:")]
+    if not bf:
+        fails.append(
+            "missing the mandatory BLOCKED FETCH line. It is required even when "
+            "the count is zero: printing a zero is the evidence that the check ran"
+        )
+    else:
+        if "excluded from every line above" not in bf[0]:
+            fails.append(
+                "the BLOCKED FETCH line must state that blocked rows are "
+                "excluded from every line above it"
+            )
+        m_bf = re.match(r"BLOCKED FETCH:\s+(\d+) / (\d+)", bf[0])
+        if not m_bf:
+            fails.append("the BLOCKED FETCH line does not carry <b> / <N_scored>")
+        else:
+            if int(m_bf.group(2)) != den["N_scored"]:
+                fails.append(
+                    f"the BLOCKED FETCH line is printed over "
+                    f"{m_bf.group(2)}, but N_scored is {den['N_scored']}"
+                )
+            if int(m_bf.group(1)) >= den["blocked_fetch_not_reportable_at"]:
+                fails.append(
+                    f"BLOCKED FETCH is {m_bf.group(1)}, at or above the "
+                    f"{den['blocked_fetch_not_reportable_at']} row ceiling "
+                    "(20% of N_scored). This run is NOT reportable: the "
+                    "headline would describe our request shape, not the payers"
+                )
+        nhr = [ln for ln in lines if ln.startswith("NEEDS HUMAN REVIEW:")]
+        if nhr and lines.index(bf[0]) - lines.index(nhr[0]) != 1:
+            fails.append(
+                "the BLOCKED FETCH line must sit directly under the NEEDS HUMAN "
+                "REVIEW line, so the two exclusion buckets are read together"
+            )
+
+    # The confident-wrong denominator must equal N_scored minus BOTH exclusion
+    # buckets, read off the printed lines themselves. This is checked from the
+    # text and not from the aggregate, because the failure mode being gated is a
+    # hand-edited report.
+    m_cw = re.search(r"CONFIDENT-BUT-WRONG:\s+\d+ / (\d+)", text)
+    m_h = re.search(r"NEEDS HUMAN REVIEW:\s+(\d+) / (\d+)", text)
+    m_b2 = re.search(r"BLOCKED FETCH:\s+(\d+) / \d+", text)
+    if m_cw and m_h and m_b2:
+        expected = int(m_h.group(2)) - int(m_h.group(1)) - int(m_b2.group(1))
+        if int(m_cw.group(1)) != expected:
+            fails.append(
+                f"the confident-wrong denominator is {m_cw.group(1)}, but "
+                f"N_scored {m_h.group(2)} minus needs-human-review "
+                f"{m_h.group(1)} minus blocked-fetch {m_b2.group(1)} is "
+                f"{expected}"
+            )
 
     # verbatim caveat blocks, hash-matched
     for header, canon in (

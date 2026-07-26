@@ -16,6 +16,14 @@ Plus two extra cases this harness insists on:
     Article. A naive "the document must contain 27447" check would reject every
     correct Medicare answer.
   - case 7, malformed output at high confidence counts with confident-wrong.
+  - case 8, rubric v1.5 section 3.1: a document our own fetcher is refused under
+    both request shapes grades BLOCKED_FETCH and leaves the confident-wrong
+    numerator and denominator. It never becomes CORRECT and never becomes an
+    abstention, because our request shape is not a property of the payer.
+  - case 9, the other half of the same rule: a host that serves the document to
+    ANY shape we can make is NOT blocked. One refusal followed by one readable
+    response must be graded normally, or every flaky edge would silently shrink
+    the denominator in our favour.
 
 The test is hermetic. HTTP and search are stubbed, so it reproduces exactly and
 costs nothing. The adjudicator is wired to a function that RAISES: every one of
@@ -35,9 +43,10 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from policy_eval.common import load_key  # noqa: E402
-from policy_eval.grade import grade_row  # noqa: E402
+from policy_eval.grade import blocked_fetch_probe, grade_row  # noqa: E402
 
 FABRICATED = "https://policy.knee-coverage-authority.example/tka/27447.pdf"
+BLOCKED_URL = "https://provider.example-payer.test/policies/knee-27447.pdf"
 
 
 def stub_fetcher(pages: dict[str, dict[str, Any]]):
@@ -281,6 +290,60 @@ def main() -> int:
         g7["confident_wrong"] is True,
     )
 
+    # 8. our own fetcher refused under both shapes -> BLOCKED_FETCH
+    blocked_stub = {
+        BLOCKED_URL: {
+            "status": 200,
+            "bytes": 930,
+            "text": "Request unsuccessful. Incapsula incident ID: 914000070904437332",
+            "blocked": True,
+            "blocked_reason": "vendor_fingerprint:incapsula",
+        }
+    }
+    g8 = grade_row(
+        hm,
+        claim("bm_0060", document_url=BLOCKED_URL, confidence=95),
+        key,
+        fetcher=stub_fetcher(blocked_stub),
+        searcher=stub_searcher([]),
+        adjudicator=no_adjudicator,
+    )
+    check(
+        "8. refused under both request shapes",
+        "BLOCKED_FETCH",
+        g8["grade"],
+        g8["blocked_fetch"] is True
+        and g8["confident_wrong"] is False
+        and g8["needs_human_review"] is False,
+    )
+    if g8["confident_wrong"]:
+        failures.append("8. a blocked fetch leaked into the confident-wrong numerator")
+    if len(g8["blocked_fetch_attempts"]) < 2:
+        failures.append(
+            "8. BLOCKED_FETCH was recorded without two documented request shapes"
+        )
+
+    # 9. one refusal, then a readable response -> NOT blocked
+    calls = {"n": 0}
+
+    def flaky_fetcher(url: str | None) -> dict[str, Any]:
+        calls["n"] += 1
+        first = calls["n"] == 1
+        return stub_fetcher(blocked_stub if first else {})(url)
+
+    is_blocked_9, attempts_9 = blocked_fetch_probe(BLOCKED_URL, flaky_fetcher)
+    check(
+        "9. refused once, then served",
+        "NOT_BLOCKED",
+        "BLOCKED" if is_blocked_9 else "NOT_BLOCKED",
+        len(attempts_9) == 2,
+    )
+    if is_blocked_9:
+        failures.append(
+            "9. a host that served the document to a second shape was still "
+            "called blocked. That shrinks the denominator in our own favour."
+        )
+
     width = 52
     print("GRADER SELF-TEST, five-way discrimination (rubric section 6)")
     print("-" * 78)
@@ -294,7 +357,7 @@ def main() -> int:
         for f in failures:
             print(f"  - {f}", file=sys.stderr)
         return 1
-    print("SELF-TEST PASSED (7 / 7)")
+    print(f"SELF-TEST PASSED ({len(results)} / {len(results)})")
     return 0
 
 

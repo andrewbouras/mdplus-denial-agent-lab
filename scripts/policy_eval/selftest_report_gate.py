@@ -18,6 +18,9 @@ Forbidden mutations, from rubric section 7 and the T004 card:
   8. truncate the LIMITATIONS block by one entry
   9. quote a bound against the wrong N (the transcription slip Judge T012 caught)
  10. use the forbidden 3/N shorthand
+ 11. remove the BLOCKED FETCH line (rubric v1.5 section 7: mandatory even at zero)
+ 12. print a BLOCKED FETCH count at or above the 20% ceiling and still call the
+     run reportable
 
     python3 scripts/policy_eval/selftest_report_gate.py
 """
@@ -50,6 +53,8 @@ BASE_AGG = {
     "missed_retrievable": 0,
     "key_defects_found": 0,
     "needs_human_review": 0,
+    "blocked_fetch": 0,
+    "blocked_fetch_row_ids": [],
     "unverified_block": {
         "key_defects_found": 0,
         "wrong_under_any_world_state": 0,
@@ -111,8 +116,8 @@ def main() -> int:
     expect_fail(
         "2. unique-document/issuer clause split off the line",
         good.replace(
-            "unique documents and 0 / 4 unique issuers",
-            "unique documents\n                      and 0 / 4 unique issuers",
+            "unique documents and 0 / 5 unique issuers",
+            "unique documents\n                      and 0 / 5 unique issuers",
         ),
     )
     expect_fail("3. ISSUER-BOUND line removed", drop_line(good, "             ISSUER-BOUND"))
@@ -145,8 +150,16 @@ def main() -> int:
         good.replace("52.7% at N=4 issuers", "63.2% at N=4 issuers"),
     )
     expect_fail(
-        "10. forbidden 3/N shorthand for N=34",
-        good.replace("8.4% at N=34 rows", "8.8% at N=34 rows"),
+        "10. forbidden 3/N shorthand for N=32",
+        good.replace("8.9% at N=32 rows", "9.4% at N=32 rows"),
+    )
+    expect_fail(
+        "11. BLOCKED FETCH line removed",
+        drop_line(good, "BLOCKED FETCH:"),
+    )
+    expect_fail(
+        "12. BLOCKED FETCH at the 20% ceiling, still printed as reportable",
+        good.replace("BLOCKED FETCH:        0 / 32", "BLOCKED FETCH:        7 / 32"),
     )
 
     print("REPORT-SHAPE GATE SELF-TEST")

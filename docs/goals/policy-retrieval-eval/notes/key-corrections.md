@@ -860,3 +860,121 @@ No file other than `data/policy_platform/answer_key_v1.json` and this log. The
 rubric was not opened. `python3 scripts/policy_eval/denominators.py` still
 prints ALL DENOMINATOR ASSERTIONS PASSED, with all 18 derived values equal to
 the pinned ones.
+
+---
+
+# 2026-07-26, T020: the Judge T019 ruling applied in full
+
+Three `row_class` values changed and no others.
+
+| row | payer, plan type, state | was | is | why |
+|---|---|---|---|---|
+| bm_0072 | Independence Blue Cross, Commercial, Pennsylvania | gated | retrievable | passes the new rubric 2.3 vendor-deferral test on all five conditions plus both guards |
+| bm_0062 | Independence Blue Cross, Medicare Advantage, Pennsylvania | gated | unverified | the payer page that binds the Commercial row does not bind this one, and no wall was found on the criteria document |
+| bm_0083 | Independence Blue Cross, ACA Marketplace, Pennsylvania | gated | unverified | same finding, same payer, different line of business |
+
+Two of the three moves make the benchmark HARDER to look good on. `unverified`
+rows leave both the numerator and the denominator of every headline line, so a
+model can no longer earn abstention credit on bm_0062 or bm_0083. Only bm_0072
+moves in the direction that adds a retrievable row, and it brings a fifth issuer
+with it, which widens the issuer bound from 52.7% to 45.1% rather than
+narrowing it.
+
+## The counted document for bm_0072, and the identity string I chose myself
+
+The counted document is part two of the deferral: the Carelon Medical Benefits
+Management joint surgery guideline at
+`https://guidelines.carelonmedicalbenefitsmanagement.com/wp-content/uploads/2025/11/PDF-Joint-Surgery-2025-11-15.pdf`,
+doc_key `CARELON_Joint-Surgery-2025-11-15`, sha256
+`b33ae12d3a59b1b43ed4864b4a61a4e0a0f3fbcd6d8709344700c6e94165147a`, 974145
+bytes, HTTP 200, `application/pdf`, 241279 characters of extracted text.
+
+Judge T019 deliberately pinned no `identity_string`, because pinning a span it
+had not read character by character is the exact error this board punishes. I
+fetched the document myself and chose `Doc ID: MSK02-1125.1`. It is confirmed
+present by `normalized_contains`, it names both the document and its edition,
+and it is printed in the document's own header rather than in body prose, so it
+survives a re-issue of the surrounding text. The digest reproduced across two
+separate fetches, so `content_hash_stable` is recorded true, which is unusual on
+this board and is stated rather than assumed.
+
+Part one of the deferral, the Independence payer page that names Carelon and
+carries CPT 27447 and the plan type, is recorded in a new `vendor_convention`
+object that mirrors the existing `ma_convention` shape. It is evidence, and it
+is NOT the counted document. Keeping the two apart is what stops one payer page
+from being counted as though it were policy.
+
+## A silent text-extraction defect, found while doing this and fixed
+
+`strip_html` stripped the pattern `<[^>]*>`, which is not tag shaped. It matches
+a bare `<` and then deletes everything up to the next `>`. Payer PDFs are full
+of ordinary prose like "joint space < 2 mm", and PDF text extraction emits those
+characters literally. On the Carelon guideline a single stray `<` deleted the
+passage containing CPT 27447.
+
+The failure was completely silent. No error, no exception, a plausible looking
+body of text, and an attestation quote reported as absent from a document that
+plainly contains it. It is the sixth false absence recorded on this board, and
+like the other five it pushed in the flattering direction: an absent quote makes
+a row look unattestable, an unattestable row invites abstention, and abstention
+earns full credit under the headline metric.
+
+The pattern is now `</?[A-Za-z!?][^<>]*>`, which requires a tag-shaped opening
+and forbids a nested `<`. I proved the change moves nothing already recorded:
+all 14 documents behind the 11 pre-existing retrievable rows normalise to
+byte-identical strings under the old and the new function, so no attestation
+verdict can shift. Two regression tests pin the behaviour in
+`tests/test_policy_eval_fetch_guards.py`.
+
+## known_limitations: 10 items became 14, and nothing true was deleted
+
+Items were identified by their OPENING TEXT, never by index. The false item
+opening "OPEN AND UNRESOLVED. On bm_0061 the Horizon attestation page" was
+replaced with the Judge T017 finding that disproved it. The TRUE item opening
+"Five of the eleven retrievable rows" was left standing; a one-based reading of
+the phrase "item 8" used elsewhere on the board would have destroyed it. Four
+new items were added verbatim from the ruling, plus one written by me recording
+the text-extraction defect above. Stale arithmetic inside four surviving items
+was corrected to the new counts, and a count note was appended to a fifth
+without touching its opening sentence.
+
+The same disproved sentences also lived inside
+`bm_0061.ma_convention.plan_page.content_hash_note`. They were corrected there
+too. The record that the T016 alarm was raised, and the counts of what T016 and
+T017 observed, were preserved word for word: an alarm that turned out to be
+wrong is still a fact about how this key was built.
+
+## Every gated row now states how it was verified, truthfully
+
+Fourteen gated rows carried the string "Firsthand HTTP fetch on 2026-07-26 with
+a browser user agent". That fetch did not happen on those rows. All fourteen now
+carry the replacement text the ruling supplies, and bm_0074 carries its
+additional per-row note. No gated row claims a fetch that was never made.
+
+Those fourteen rows keep `row_class: gated` for now. Re-probing them is T021 and
+it needs evidence first. A Worker may not reclassify.
+
+## Superseding counts
+
+| quantity | T016 value | T020 value |
+|---|---|---|
+| retrievable rows / documents / issuers | 11 / 7 / 4 | 12 / 8 / 5 |
+| gated | 17 | 14 |
+| none | 6 | 6 |
+| unverified | 4 | 6 |
+| invalid | 1 | 1 |
+| N_scored | 34 | 32 |
+| strong subset rows / documents / issuers | 9 / 6 / 4 | 10 / 7 / 4 |
+| strong subset excluding instrument-inferred | 8 / 5 / 3 | 9 / 6 / 4 |
+| honest-abstention denominator | 23 | 20 |
+| scored payers | 11 | 11 |
+
+`python3 scripts/policy_eval/denominators.py` prints ALL DENOMINATOR ASSERTIONS
+PASSED with all 19 derived values equal to the values pinned in rubric section
+0.2.
+
+## What T020 did not touch
+
+No file outside the task's allowed list. No `row_class` other than the three
+above. No `state.yaml`. No eval run was started. No page behind any of the 14
+remaining gated rows was reclassified.
