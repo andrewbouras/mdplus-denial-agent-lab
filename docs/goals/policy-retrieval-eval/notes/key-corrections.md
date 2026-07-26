@@ -649,3 +649,214 @@ documents to 34.8 percent at 7. Two facts limit that. The issuer bound does not
 move at all: 4 issuers, and 3 in the strong subset, which stays the binding
 constraint on the retrieval side. The headline confident-wrong metric only
 changes denominator, 33 to 34, an 8.7 to 8.4 percent bound.
+
+# 2026-07-26, T016: hash reproducibility sweep and caveat refresh
+
+Task T016. Applied by GoalBuddy Worker against
+`data/policy_platform/answer_key_v1.json`. Two jobs: test whether every
+recorded content hash still reproduces, and refresh the stale
+`known_limitations` block that rubric section 9 makes the report copy word for
+word.
+
+Every fetch below used a browser user agent over plain HTTPS, with no login, no
+credential and no payer telephone call. Every URL was fetched at least twice in
+the same pass, so that per-request instability can be told apart from a
+document that actually changed.
+
+## Headline: the defect is general, not isolated
+
+T013 found that one page, the Blue Shield of California utilization management
+page, does not have a reproducible hash. It is not alone. Of the 5 unique HTML
+pages recorded in `fetched`, only 1 reproduced its recorded digest on demand.
+Both PDFs reproduced exactly. No PDF changed, so no stop condition fired on
+that count.
+
+| Recorded page | Rows | Reproduced? |
+|---|---|---|
+| CMS article A59811 | bm_0056 | **No.** Per-request token |
+| CMS article A56777 | bm_0057 | **No.** Per-request token |
+| CMS article A56796 | bm_0059, bm_0061 | **No.** Per-request token |
+| Blue Shield of California utilization management | bm_0058 | Matched the T015 digest 5 times out of 5 today, but 3 digests exist across 3 sessions, so it stays unstable |
+| Highmark S-39-008 | bm_0060 | **Yes.** Byte identical twice |
+| UPMC MP.PA.133 (PDF) | bm_0065, bm_0075, bm_0094 | **Yes.** Byte identical twice, 385880 bytes |
+| Premera 7.01.550 (PDF) | bm_0073, bm_0084 | **Yes.** Byte identical twice, 912610 bytes |
+
+## Why the CMS pages never reproduce, and what to use instead
+
+This is not a CMS content change. Every CMS Medicare Coverage Database article
+page carries an ASP.NET anti-forgery token in a hidden form input named
+`__RequestVerificationToken`, and the server issues a fresh one on every
+request. A byte diff of two same-session fetches shows the two responses
+identical in length and different only inside that one attribute value:
+
+| Article | Response length | Differing byte positions | Where |
+|---|---|---|---|
+| A59811 | 640260, both | 126 | inside `__RequestVerificationToken` |
+| A56777 | 493235, both | 129 | inside `__RequestVerificationToken` |
+| A56796 | 400039, both | 124 | inside `__RequestVerificationToken` |
+
+Nothing else on the page moves. So the raw digest is useless as identity, but a
+normalised digest is not. Replace the token value with the literal `REDACTED`
+and hash the result. That value reproduced on 4 of 4 fetches across two separate
+sessions for each of the three articles, and it covers the whole document,
+including the CPT 27447 sentence, which no substring check does. It is recorded
+in the key as `content_hash_normalized`, with the exact rule in
+`content_hash_normalization`:
+
+| Article | Normalised sha256 |
+|---|---|
+| A59811 | `086c6e96b7f20647b1234c07226108aa43e90d1aaca701dfbf5428ade4619ad3` |
+| A56777 | `dd190eb37c51af98c9aa0aaf843ab3ebd05415f8ca1f1a3331eb57ec293c6476` |
+| A56796 | `a95ba32a7662bf3433e1464c591d01db3fcbaff08b9662620eb0a4d26ec461e4` |
+
+The normalised digest is established as of 2026-07-26 by T016. It cannot be
+compared against T003, which did not retain its raw bytes. What corroborates
+that the document is the same edition T003 read is the article's own revision
+block: all three articles show Revision Effective Date 01/01/2026, Revision
+Ending Date N/A and Retirement Date N/A, and each still carries exactly one
+occurrence of CPT 27447.
+
+## Every digest observed, preserved
+
+No recorded hash was overwritten. The recorded T003 value stays in the key as
+the T003 record, and the new observations sit beside it. Digests logged
+truncated to 16 characters during the byte-diff pass are marked as such.
+
+**A59811**, recorded `02fda72ef458094758c9eec1f27c94b9a1594f557397bd8fc93764ae21e33f03`:
+`4f240bf9e2f85ccff5c6f5e2ce66d93b12583d6b6a953955ac8ef2cef9f360a1`,
+`a0eea80b6d77c593175317db625bf4bc05ffd5af1224c4fb214c99faaa726007`,
+`2027b56afc2cd8c5` (truncated), `53f1a0042f4be3f3` (truncated),
+`d08b58013ae3785dcaf7a0b3f46703454937b7d65ae0c32b3b3869b303174bb2`,
+`7513e7baa0b847754eb8ee727d65b04e9209387eb3152862faa491ca4e48670f`,
+`12c71075eb3ba071bb5d104eab94b327c2cc803d2597809af8fd7768ea92da68`,
+`313a5642a0a65d586202a3621c8aeb21970ab38627a9ded1cafac275c13794e8`.
+
+**A56777**, recorded `0e32702668f2d8cab9f7c3bc25a8a32dc18be53ed524d0bcc96b1bc5e25b6378`:
+`04ad792405839f5c2b1cf956eb8b5ba115e5cce357d6299617180d0406a24964`,
+`52822e10d820bb5ff382f1e65c01dc204617864d3aeaa5e9a78f11ad3af54971`,
+`a38dc8399b3621c6` (truncated), `2160ddc92131cbf8` (truncated),
+`b091a83601d9f58b869ed37c6b1f278fb45c0fba63379febb22a568ef76c626a`,
+`ee26f5507784b3540f30192c02168fc3c454ee950c747c551a9052344796a692`,
+`b199d666b6a02064693f9f4715b41e39b5062222e7b9c563face1de8bac18000`,
+`8b5f34a6be6b7e17477acd3447e96aeaad2d663f496e6651e97d67bd78671957`.
+
+**A56796**, recorded `04cc0d3b62c6ca81b717808fb091e1961ea85b42365fbe24920118aecb1718d3`:
+`7e41532659a239744168aa93350f79f2ad99e55857cbbfdb667922a3c64c5614`,
+`53eaa78c8d6cc4e9d939189d4599155148040e60c3d115f118d3f5ba8a2d69bb`,
+`4ce119d7af66b4d3` (truncated), `c44009077e814052` (truncated),
+`81221943b8a735a3829986c371ae7b8b00381f9a67d18cdb8ee72e0b29db01b7`,
+`dc280c1fdc73a5431a40fd5c403f574d4548ad9710f59361b29daa292366ee2b`,
+`506621155c41f0da103502ab0a86bc302f841479a3d0ff49e294503e5b9072d9`,
+`5dd3351b6717d4f91ee2833d374915755d1472ed7578587043db95a5280eabbc`.
+
+Identity strings added to these three rows, each confirmed present verbatim in
+the raw response bytes:
+
+- bm_0056: `Billing and Coding: Total Joint Arthroplasty (A59811)`
+- bm_0057: `Billing and Coding: Total Joint Arthroplasty (A56777)`
+- bm_0059 and bm_0061: `Billing and Coding: Lower Extremity Major Joint Replacement (Hip and Knee) (A56796)`
+
+## bm_0058 re-confirmed, with one wording correction
+
+The Blue Shield of California utilization management page was refetched 5 times
+in one session. All 5 returned `8ee08c1e...`, the digest Worker T015 recorded.
+That does not rehabilitate the hash: 3 different digests still exist for this
+page across 3 sessions, at HTTP 200, carrying the same verbatim paragraph. The
+row keeps `content_hash_stable: false` and all 3 digests stay enumerated with
+none authoritative.
+
+One wording change. The existing note said the page "rebuilds its markup on
+every request". Five identical same-session responses show that claim is not
+accurate as stated, so T016 changed it to "does not return byte-identical
+markup across sessions" and appended the new observation with its evidence. The
+conclusion is unchanged and no digest was removed. The variation is between
+sessions or between edge-cache nodes, which is worse for a benchmark than a
+per-request rebuild, because a same-session refetch cannot detect it.
+
+## Extension beyond the assigned scope: the attestation pages
+
+The task named the 11 rows carrying `fetched.sha256`. T016 also swept the
+5 `ma_convention.plan_page` hashes, because those pages carry the deferral
+quotes that the retrievable rows actually rest on. Three more unstable pages
+turned up.
+
+| Plan page | Row | Result |
+|---|---|---|
+| BCBSM MA medical policy guidelines | bm_0056 | Unstable. 53308 bytes both times, 1 differing byte, inside `<!-- Timestamp: 26-07-2026 16:45:11-->` |
+| Blue Cross NC MA coverage hierarchy | bm_0057 | Reproduced exactly, twice |
+| Blue Shield BSC7.10 (PDF) | bm_0058 | Reproduced exactly, twice |
+| CareFirst medical policy | bm_0059 | Unstable. 70703 bytes both times, 8 differing bytes, inside the Dynatrace `ruxitagentjs` `data-dtconfig` attribute |
+| Horizon surgical and implantable device management | bm_0061 | Unstable, and see the escalation below |
+
+On BCBSM and CareFirst the recorded attestation quote was re-confirmed present,
+so those two are cosmetic instability of the same family as CMS. Both rows were
+already counted in the five, so the caveat count did not move.
+
+## ESCALATION, needs a Judge: bm_0061 Horizon
+
+This is the one finding T016 could not settle, and it is not a hash problem.
+
+The Horizon page was fetched 23 times. At about 16:45 UTC, two responses of
+495051 and 495050 bytes carried the recorded verbatim quote, part one of this
+row's `deferral_two_part` basis:
+
+> In the processing of claims for services provided to our MA members, we
+> follow Centers for Medicare & Medicaid Services (CMS) guidelines, NCDs and/or
+> LCDs.
+
+From about 16:48 to about 17:05 UTC, nineteen further responses of 492010,
+492143 and 492144 bytes did not carry it at all. The string `MA members` had
+zero occurrences in every one of them. This held under a cookie-bearing
+session, under `Cache-Control: no-cache`, and across three URL spellings, all
+at HTTP 200 with no login wall and no bot challenge.
+
+T016 did not retain the earlier bytes, so it cannot tell whether Horizon edited
+the page during the sweep or whether the site serves content variants from
+different edge nodes. Either way the attestation is not reliably re-retrievable
+right now, and the row's part-one basis depends on it. The row class was NOT
+changed, because a Worker may not change a class. It is recorded in the key as
+a `content_hash_note` on that plan page, and as an open item in
+`known_limitations`, and it is escalated here for a Judge.
+
+Lesson for the next sweep: retain the response bytes, not just the digest. A
+digest cannot answer the only question that matters when content moves.
+
+## What changed in known_limitations
+
+The block grew from 6 items to 9. No item was deleted or softened.
+
+1. Item 0: "6 unique documents across 10 rows" becomes "7 unique documents
+   across 11 rows", matching the promoted key.
+2. Item 2: rewritten for the T013 promotion. bm_0058 is no longer listed among
+   the unverified rows; the four remaining are bm_0068, bm_0079, bm_0086 and
+   bm_0089. The item now states that bm_0058 was promoted under rubric section
+   2.2, names the rows behind every number, and says how to re-derive them.
+3. New item: bm_0058 is `instrument_inferred`, not `explicit`, so the
+   strong-attestation subset must be printed both ways, 9 rows / 6 documents /
+   3 issuers including it and 8 rows / 5 documents / 3 issuers excluding it.
+4. New item: the hash-reproducibility finding, five retrievable rows, with the
+   mechanism.
+5. New item: the open Horizon question above.
+
+### One number went down, and it is not a softening
+
+Item 2 used to say "Six of the spec's thirteen public rows did not survive as
+retrievable." The true figure is now four, and two of those three steps down
+are not the T013 promotion.
+
+The rows that did not survive are bm_0063 (invalid), plus bm_0068, bm_0079 and
+bm_0089 (unverified). The fourth unverified row, bm_0086, was
+`login_gated` in the spec, not public, so it never belonged in a count of
+public non-survivors. The old figure of six was therefore one too high even
+before bm_0058 was promoted: it should have read five at T003 time, and four
+now. This is arithmetic anyone can re-derive by counting `row_class` against
+`provenance.spec_original_retrievability`, and the refreshed item says so in
+the text so that no reader has to take it on trust.
+
+## What T016 did not touch
+
+No `row_class`. No `counts` value. No recorded `sha256`. No attestation quote.
+No file other than `data/policy_platform/answer_key_v1.json` and this log. The
+rubric was not opened. `python3 scripts/policy_eval/denominators.py` still
+prints ALL DENOMINATOR ASSERTIONS PASSED, with all 18 derived values equal to
+the pinned ones.

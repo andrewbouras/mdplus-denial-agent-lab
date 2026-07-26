@@ -1,46 +1,77 @@
-# GoalBuddy v2 state.yaml
-# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
-
 version: 2
-
 goal:
-  title: "OrthoAppeals policy-retrieval eval + patient-website wireup"
-  slug: "policy-retrieval-eval"
+  title: OrthoAppeals policy-retrieval eval + patient-website wireup
+  slug: policy-retrieval-eval
   kind: existing_plan
-  tranche: "Produce a trustworthy, calibration-graded evaluation of Claude policy retrieval on a corrected benchmark, wire it to the patient website behind a lookup-first path, and reach a demoable state before MD Catalyst on 2026-08-17."
+  tranche: Produce a trustworthy, calibration-graded evaluation of Claude policy retrieval on a corrected
+    benchmark, wire it to the patient website behind a lookup-first path, and reach a demoable state before
+    MD Catalyst on 2026-08-17.
   status: active
   oracle:
-    signal: "A reproducible eval run over the corrected benchmark that reports, per row, the model's document claim AND its confidence, scored so that CONFIDENT-BUT-WRONG answers are counted separately and prominently. The headline metric is the count of confident-wrong answers, not raw accuracy."
-    cadence: "after each Worker package and at final audit"
-    final_proof: "Receipt-backed evidence of: (1) a corrected answer key where every retrievable row has a firsthand-fetched URL that resolves without login, contains CPT 27447, and carries a document-attested applicability quote; (2) a cold eval run over ALL 39 rows in three classes (retrievable, gated, none), with the model having no access to the key, emitting the fixed headline block with the confident-wrong count and the correct-retrieval count side by side; (3) a walkthrough of the patient website producing a retrieval result for at least one case end to end."
+    signal: A reproducible eval run over the corrected benchmark that reports, per row, the model's document
+      claim AND its confidence, scored so that CONFIDENT-BUT-WRONG answers are counted separately and
+      prominently. The headline metric is the count of confident-wrong answers, not raw accuracy.
+    cadence: after each Worker package and at final audit
+    final_proof: 'Receipt-backed evidence of: (1) a corrected answer key where every retrievable row has
+      a firsthand-fetched URL that resolves without login, contains CPT 27447, and carries a document-attested
+      applicability quote; (2) a cold eval run over ALL 39 rows in three classes (retrievable, gated,
+      none), with the model having no access to the key, emitting the fixed headline block with the confident-wrong
+      count and the correct-retrieval count side by side; (3) a walkthrough of the patient website producing
+      a retrieval result for at least one case end to end.'
   intake:
-    original_request: "Parse the Akin meeting for next steps, then use goal-prep to make this work."
-    interpreted_outcome: "Turn the agreed post-call plan into an executable board that produces an honest retrieval benchmark and connects the website to the AI, in time for MD Catalyst."
+    original_request: Parse the Akin meeting for next steps, then use goal-prep to make this work.
+    interpreted_outcome: Turn the agreed post-call plan into an executable board that produces an honest
+      retrieval benchmark and connects the website to the AI, in time for MD Catalyst.
     input_shape: existing_plan
-    audience: "Patients appealing denied knee-replacement surgery; near-term audience is the MD Catalyst judging panel and Dr. Kassam's team."
+    audience: Patients appealing denied knee-replacement surgery; near-term audience is the MD Catalyst
+      judging panel and Dr. Kassam's team.
     authority: approved
     proof_type: metric
-    completion_proof: "Corrected key + cold calibration-scored eval run + website producing a retrieval end to end."
-    likely_misfire: "Reporting a flattering accuracy number computed against a benchmark whose labels are wrong, self-inconsistent, or partly derived from the AI's own prior output; or polishing the eval while never wiring the website; or seeding work that depends on obtaining login-gated payer policies, which is now a proven dead end."
+    completion_proof: Corrected key + cold calibration-scored eval run + website producing a retrieval
+      end to end.
+    likely_misfire: Reporting a flattering accuracy number computed against a benchmark whose labels are
+      wrong, self-inconsistent, or partly derived from the AI's own prior output; or polishing the eval
+      while never wiring the website; or seeding work that depends on obtaining login-gated payer policies,
+      which is now a proven dead end.
     blind_spots_considered:
-      - "The current answer key is demonstrably wrong: 6 Medicare Advantage rows all point at one LCD (L36007) that cannot govern 4 different MAC jurisdictions. Grading against it today yields a meaningless number."
-      - "Circularity risk: some existing labels came from the AI's own output. Grading the AI against labels the AI produced proves nothing. Labels must be established independently."
-      - "After cutting 20 login-gated rows, only 13 remain, and several are turning out invalid or mislabeled. The benchmark may shrink to single digits and be too underpowered to support strong claims."
-      - "The MA deferral scoring convention is unsettled and is a human judgment. If it is decided AFTER seeing results, the definition will be chosen to flatter the score."
-      - "Deadline pressure: MD Catalyst is 2026-08-17. Akin returns to rotations 2026-07-27 and his capacity drops sharply."
-      - "Raw accuracy is the wrong ship gate for a patient-facing tool. A confidently wrong policy causes a patient to file an appeal citing criteria that do not apply to their plan."
+      - 'The current answer key is demonstrably wrong: 6 Medicare Advantage rows all point at one LCD
+        (L36007) that cannot govern 4 different MAC jurisdictions. Grading against it today yields a meaningless
+        number.'
+      - 'Circularity risk: some existing labels came from the AI''s own output. Grading the AI against
+        labels the AI produced proves nothing. Labels must be established independently.'
+      - After cutting 20 login-gated rows, only 13 remain, and several are turning out invalid or mislabeled.
+        The benchmark may shrink to single digits and be too underpowered to support strong claims.
+      - The MA deferral scoring convention is unsettled and is a human judgment. If it is decided AFTER
+        seeing results, the definition will be chosen to flatter the score.
+      - 'Deadline pressure: MD Catalyst is 2026-08-17. Akin returns to rotations 2026-07-27 and his capacity
+        drops sharply.'
+      - Raw accuracy is the wrong ship gate for a patient-facing tool. A confidently wrong policy causes
+        a patient to file an appeal citing criteria that do not apply to their plan.
     existing_plan_facts:
-      - "Remove login-gated rows from the benchmark. Only cases assessable from an open web search remain. (Proposed by Andrew, endorsed by Dr. Kassam.)"
-      - "Benchmark Claude ALONE first. Defer Claude vs ChatGPT vs Gemini comparison until ground truth exists."
-      - "Architecture: Claude attempts to find the controlling document per row; a SECOND model acts as judge to grade the attempt; output is 'confident + correct' or 'needs human review'."
-      - "SUCCESS CRITERION IS CALIBRATION, NOT RAW ACCURACY. The model must correctly say it found the right document OR that it cannot say so confidently. Confident-but-wrong is the failure mode that matters most."
-      - "Connect the currently-disconnected patient website (mockups/) to the AI retrieval backend. Simulated usage populates a log; the verification framework reads those rows."
-      - "Lookup-first, live-search-fallback: serve known-verified documents from a local library before doing a live search."
-      - "If results are bad, improve via harness + CLAUDE.md + skills (in-context). NOT fine-tuning, NOT training from scratch. Training an open-source model is at most a side proof the dataset has value, and is NOT the product."
-      - "OUT OF SCOPE for this tranche: generating the patient-facing appeal output across the permutation of denial reasons (PT documentation, imaging, etc.). Acknowledged as the biggest eventual value, but explicitly deferred."
-      - "HARD BLOCKER: Akin's campaign to phone payers for login-gated policies FAILED (payers demanded an NPI, treated him as a provider opening a practice, redirected to marketing). Do NOT seed tasks that depend on phoning payers for gated documents."
-      - "Collaboration protocol: Andrew works one step at a time and pushes to GitHub after each step; Akin's agent checks GitHub before starting anything to avoid duplicate work."
-
+      - Remove login-gated rows from the benchmark. Only cases assessable from an open web search remain.
+        (Proposed by Andrew, endorsed by Dr. Kassam.)
+      - Benchmark Claude ALONE first. Defer Claude vs ChatGPT vs Gemini comparison until ground truth
+        exists.
+      - 'Architecture: Claude attempts to find the controlling document per row; a SECOND model acts as
+        judge to grade the attempt; output is ''confident + correct'' or ''needs human review''.'
+      - SUCCESS CRITERION IS CALIBRATION, NOT RAW ACCURACY. The model must correctly say it found the
+        right document OR that it cannot say so confidently. Confident-but-wrong is the failure mode that
+        matters most.
+      - Connect the currently-disconnected patient website (mockups/) to the AI retrieval backend. Simulated
+        usage populates a log; the verification framework reads those rows.
+      - 'Lookup-first, live-search-fallback: serve known-verified documents from a local library before
+        doing a live search.'
+      - If results are bad, improve via harness + CLAUDE.md + skills (in-context). NOT fine-tuning, NOT
+        training from scratch. Training an open-source model is at most a side proof the dataset has value,
+        and is NOT the product.
+      - 'OUT OF SCOPE for this tranche: generating the patient-facing appeal output across the permutation
+        of denial reasons (PT documentation, imaging, etc.). Acknowledged as the biggest eventual value,
+        but explicitly deferred.'
+      - 'HARD BLOCKER: Akin''s campaign to phone payers for login-gated policies FAILED (payers demanded
+        an NPI, treated him as a provider opening a practice, redirected to marketing). Do NOT seed tasks
+        that depend on phoning payers for gated documents.'
+      - 'Collaboration protocol: Andrew works one step at a time and pushes to GitHub after each step;
+        Akin''s agent checks GitHub before starting anything to avoid duplicate work.'
 rules:
   pm_owns_state: true
   one_active_task: true
@@ -61,28 +92,26 @@ rules:
     prefer_vertical_slices: true
     judge_picks_largest_safe_slice: true
     worker_completes_whole_slice: true
-
 agents:
   scout: installed
   worker: installed
   judge: installed
-
 visual_board:
   selected: local
   local:
     status: live
-    url: "http://goalbuddy.localhost:41737/policy-retrieval-eval/"
-    command: "node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/policy-retrieval-eval"
-
-active_task: T016
-
+    url: http://goalbuddy.localhost:41737/policy-retrieval-eval/
+    command: node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs
+      --goal docs/goals/policy-retrieval-eval
+active_task: T017
 tasks:
   - id: T001
     type: scout
     assignee: Scout
     status: done
     reasoning_hint: medium
-    objective: "Map what already exists toward the retrieval eval and the website wireup, so no existing capability is rebuilt from scratch."
+    objective: Map what already exists toward the retrieval eval and the website wireup, so no existing
+      capability is rebuilt from scratch.
     inputs:
       - scripts/run_policy_retrieval.py
       - scripts/emit_row_trace.py
@@ -96,321 +125,665 @@ tasks:
       - data/policy_platform/criteria_extractions.json
       - mockups/**
     constraints:
-      - "Read-only. Do not edit implementation files."
-      - "Report concrete file paths, function names, and data shapes, not generic advice."
-      - "Explicitly answer: does a per-row retrieval runner already exist, and does anything already emit a confidence signal?"
-      - "Identify the exact seam where the website would call a retrieval backend, and note that mockups/ is currently static client-side HTML with no backend."
+      - Read-only. Do not edit implementation files.
+      - Report concrete file paths, function names, and data shapes, not generic advice.
+      - 'Explicitly answer: does a per-row retrieval runner already exist, and does anything already emit
+        a confidence signal?'
+      - Identify the exact seam where the website would call a retrieval backend, and note that mockups/
+        is currently static client-side HTML with no backend.
     expected_output:
-      - "Repo map for the retrieval path and the website path"
-      - "Data shapes: benchmark spec row schema, run/trace record schema"
-      - "What already exists toward the Claude-attempt + judge-model architecture"
-      - "The concrete website-to-backend seam and what is missing"
-      - "Verification commands that actually run in this repo, and an honest note that there is no gate test suite"
+      - Repo map for the retrieval path and the website path
+      - 'Data shapes: benchmark spec row schema, run/trace record schema'
+      - What already exists toward the Claude-attempt + judge-model architecture
+      - The concrete website-to-backend seam and what is missing
+      - Verification commands that actually run in this repo, and an honest note that there is no gate
+        test suite
     receipt:
       result: done
       evidence:
-        - "scripts/run_policy_retrieval.py L61-109 build_candidates/rank_and_select; L211-213 self_verdict"
-        - "synthetic_harness/kiss_oracle.py L38-47 urls_match/compute_oracle"
-        - "scripts/emit_row_trace.py L43,L59,L192,L205"
-        - "runs/run_0001.jsonl (6 lines), runs/run_0001.meta.json"
-        - "data/policy_platform/seed_review_39_spec.json 39 rows, 3 shapes, 13 with target_url"
-        - "grep fetch(|XMLHttpRequest|axios|/api|endpoint in mockups/ -> zero matches"
-        - "mockups/checklist-steps/index.html L92 state object A, L457 restUnlocked gate"
-        - "tests/ has 4 pytest files; pyproject testpaths=['tests']; pytest not installed"
-        - "data/policy_platform/criteria_extractions.json and source_registry.json are []"
-      summary: "A per-row retrieval runner exists but calls NO model. It is keyword-overlap ranking plus a real HTTP fetch, and build_candidates injects the ground-truth URL into its own candidate set, so it cannot be reused for a cold run. No confidence signal, no abstention path, and no judge model exist in the retrieval path. mockups/ is confirmed fully static with zero network calls. Only 13 of 39 spec rows carry a target_url, and the row schema is non-uniform across three shapes."
+        - scripts/run_policy_retrieval.py L61-109 build_candidates/rank_and_select; L211-213 self_verdict
+        - synthetic_harness/kiss_oracle.py L38-47 urls_match/compute_oracle
+        - scripts/emit_row_trace.py L43,L59,L192,L205
+        - runs/run_0001.jsonl (6 lines), runs/run_0001.meta.json
+        - data/policy_platform/seed_review_39_spec.json 39 rows, 3 shapes, 13 with target_url
+        - grep fetch(|XMLHttpRequest|axios|/api|endpoint in mockups/ -> zero matches
+        - mockups/checklist-steps/index.html L92 state object A, L457 restUnlocked gate
+        - tests/ has 4 pytest files; pyproject testpaths=['tests']; pytest not installed
+        - data/policy_platform/criteria_extractions.json and source_registry.json are []
+      summary: A per-row retrieval runner exists but calls NO model. It is keyword-overlap ranking plus
+        a real HTTP fetch, and build_candidates injects the ground-truth URL into its own candidate set,
+        so it cannot be reused for a cold run. No confidence signal, no abstention path, and no judge
+        model exist in the retrieval path. mockups/ is confirmed fully static with zero network calls.
+        Only 13 of 39 spec rows carry a target_url, and the row schema is non-uniform across three shapes.
       key_findings:
-        - "scripts/run_policy_retrieval.py L61-109: build_candidates() injects row.ground_truth.target_url into the candidate list; rank_and_select() always returns scored[0]. There is no abstention. This function is UNUSABLE for a cold eval without a rewrite."
-        - "No Anthropic SDK, no OpenAI SDK, no API key read, and no WebSearch exist anywhere in scripts/ or browser_capture/. The retrieval path is entirely deterministic Python and Node."
-        - "The only field resembling confidence is self_verdict at run_policy_retrieval.py L211-213, a hardcoded English string chosen by an if on HTTP status. It is not a self-assessed certainty and has no scale."
-        - "No judge/grader model step exists for retrieval. Grading is synthetic_harness/kiss_oracle.py compute_oracle(), a normalized host+path URL equality check returning reward 1/-1, plus manual human labels written by scripts/read_run.py into meta.json['label']."
-        - "synthetic_harness/evaluation.py L200 contains a judge PROMPT STRING with a 0-4 rubric and a not_judgeable enum, but nothing calls a model with it. It belongs to the unrelated synthetic-patient harness."
-        - "seed_review_39_spec.json has THREE distinct row shapes: public (13 rows, has target_url), login_gated (20 rows, has portal_url), no_public_policy (6 rows, no URL field). 26 of 39 rows have no target_url at all."
-        - "mockups/ confirmed static: grep for fetch(|XMLHttpRequest|axios|/api|endpoint returned ZERO matches. assets/data.js L6 states verbatim 'Nothing here makes a network call.' No package.json, no build step."
-        - "Website seam is mockups/checklist-steps/index.html L457 inside updateLocks(): 'const restUnlocked = insUnlocked && !!A.insurer;'. This is the first moment all retrieval inputs exist. State object A declared at L92. Available: A.surgery, A.catId, A.bodyPart, A.state, A.insurer. CPT exists in assets/data.js procedureCategories but is NEVER copied onto A. The mirror flow mockups/map/index.html has the same gate chain and needs the same insertion."
-        - "Trace schema in runs/*.jsonl: {i:int, action:str, args:obj, obs:str, self_verdict:str}. Actions: load_row, build_candidates, rank_select, fetch, inspect, return_policy. runs/ holds exactly ONE run, from 2026-07-12."
-        - "data/policy_platform/criteria_extractions.json and source_registry.json are both literally []. source_registry.csv is a header row only."
-        - "browser_capture/capture_policy_row.mjs needs NO credentials; login_gated rows deliberately dead-end at reward -1. It cannot run today because Playwright is unresolvable (~/.cache/ms-playwright empty), though /snap/bin/chromium and /usr/bin/chromium-browser are present."
+        - 'scripts/run_policy_retrieval.py L61-109: build_candidates() injects row.ground_truth.target_url
+          into the candidate list; rank_and_select() always returns scored[0]. There is no abstention.
+          This function is UNUSABLE for a cold eval without a rewrite.'
+        - No Anthropic SDK, no OpenAI SDK, no API key read, and no WebSearch exist anywhere in scripts/
+          or browser_capture/. The retrieval path is entirely deterministic Python and Node.
+        - The only field resembling confidence is self_verdict at run_policy_retrieval.py L211-213, a
+          hardcoded English string chosen by an if on HTTP status. It is not a self-assessed certainty
+          and has no scale.
+        - No judge/grader model step exists for retrieval. Grading is synthetic_harness/kiss_oracle.py
+          compute_oracle(), a normalized host+path URL equality check returning reward 1/-1, plus manual
+          human labels written by scripts/read_run.py into meta.json['label'].
+        - synthetic_harness/evaluation.py L200 contains a judge PROMPT STRING with a 0-4 rubric and a
+          not_judgeable enum, but nothing calls a model with it. It belongs to the unrelated synthetic-patient
+          harness.
+        - 'seed_review_39_spec.json has THREE distinct row shapes: public (13 rows, has target_url), login_gated
+          (20 rows, has portal_url), no_public_policy (6 rows, no URL field). 26 of 39 rows have no target_url
+          at all.'
+        - 'mockups/ confirmed static: grep for fetch(|XMLHttpRequest|axios|/api|endpoint returned ZERO
+          matches. assets/data.js L6 states verbatim ''Nothing here makes a network call.'' No package.json,
+          no build step.'
+        - 'Website seam is mockups/checklist-steps/index.html L457 inside updateLocks(): ''const restUnlocked
+          = insUnlocked && !!A.insurer;''. This is the first moment all retrieval inputs exist. State
+          object A declared at L92. Available: A.surgery, A.catId, A.bodyPart, A.state, A.insurer. CPT
+          exists in assets/data.js procedureCategories but is NEVER copied onto A. The mirror flow mockups/map/index.html
+          has the same gate chain and needs the same insertion.'
+        - 'Trace schema in runs/*.jsonl: {i:int, action:str, args:obj, obs:str, self_verdict:str}. Actions:
+          load_row, build_candidates, rank_select, fetch, inspect, return_policy. runs/ holds exactly
+          ONE run, from 2026-07-12.'
+        - data/policy_platform/criteria_extractions.json and source_registry.json are both literally [].
+          source_registry.csv is a header row only.
+        - browser_capture/capture_policy_row.mjs needs NO credentials; login_gated rows deliberately dead-end
+          at reward -1. It cannot run today because Playwright is unresolvable (~/.cache/ms-playwright
+          empty), though /snap/bin/chromium and /usr/bin/chromium-browser are present.
       contradictions_to_board:
-        - "Board recorded gate_suite as 'none. This repo has no test suite.' REFUTED as to source: tests/ contains test_kiss_run.py, test_oracle_to_rating.py, test_plinth_contract_conformance.py, test_synthetic_harness.py, verify_artifact_sha.py, and pyproject.toml sets testpaths=['tests']. CONFIRMED as to executability: pytest is not installed and there is no .venv, so nothing runs today."
-        - "T004 constraint says 'Reuse whatever T001 found already exists; do not rebuild a runner that is already present.' The runner that is present is answer-leaking keyword matching with no model. It cannot be reused for a cold model eval."
+        - 'Board recorded gate_suite as ''none. This repo has no test suite.'' REFUTED as to source: tests/
+          contains test_kiss_run.py, test_oracle_to_rating.py, test_plinth_contract_conformance.py, test_synthetic_harness.py,
+          verify_artifact_sha.py, and pyproject.toml sets testpaths=[''tests'']. CONFIRMED as to executability:
+          pytest is not installed and there is no .venv, so nothing runs today.'
+        - T004 constraint says 'Reuse whatever T001 found already exists; do not rebuild a runner that
+          is already present.' The runner that is present is answer-leaking keyword matching with no model.
+          It cannot be reused for a cold model eval.
       ambiguity_requiring_judge:
-        - "Only 13 of 39 rows carry a target_url. Whether the corrected key covers 39 rows or only the 13 public ones changes the scope of every downstream task."
-        - "Whether run_policy_retrieval.py is reusable scaffolding or dead code for the cold-eval purpose."
+        - Only 13 of 39 rows carry a target_url. Whether the corrected key covers 39 rows or only the
+          13 public ones changes the scope of every downstream task.
+        - Whether run_policy_retrieval.py is reusable scaffolding or dead code for the cold-eval purpose.
       verification_run:
-        - "python3 scripts/run_policy_retrieval.py --help -> PASS"
-        - "python3 scripts/emit_row_trace.py --help -> PASS"
-        - "python3 scripts/read_run.py runs/run_0001 -> PASS, prints 6 steps, correct=True reachable=True reward=1"
-        - "python3 -m pytest --collect-only -q -> FAIL, No module named pytest"
-        - "node -e \"import('@playwright/test')\" -> FAIL, ERR_MODULE_NOT_FOUND"
-
+        - python3 scripts/run_policy_retrieval.py --help -> PASS
+        - python3 scripts/emit_row_trace.py --help -> PASS
+        - python3 scripts/read_run.py runs/run_0001 -> PASS, prints 6 steps, correct=True reachable=True
+          reward=1
+        - python3 -m pytest --collect-only -q -> FAIL, No module named pytest
+        - node -e "import('@playwright/test')" -> FAIL, ERR_MODULE_NOT_FOUND
   - id: T002
     type: judge
     assignee: Judge
     status: done
     reasoning_hint: high
-    objective: "Validate the agreed 8-point plan against T001 evidence and the known-broken answer key, then fix the scoring rubric before any run happens."
+    objective: Validate the agreed 8-point plan against T001 evidence and the known-broken answer key,
+      then fix the scoring rubric before any run happens.
     inputs:
-      - "T001 receipt"
-      - "goal.intake.existing_plan_facts"
-      - "goal.intake.blind_spots_considered"
+      - T001 receipt
+      - goal.intake.existing_plan_facts
+      - goal.intake.blind_spots_considered
     constraints:
-      - "Do not implement."
-      - "Do not re-litigate the 8 agreed decisions; validate their feasibility and sequencing only."
-      - "The scoring rubric MUST be fixed in writing before any eval run, so the definition cannot be chosen after seeing results."
-      - "Treat the Medicare Advantage deferral convention as an unresolved HUMAN decision owned by Andrew. Do not invent an answer. Design the rubric so both candidate conventions can be scored without redoing research."
-      - "Assess honestly whether a benchmark of roughly 13 rows, minus invalid ones, can support any claim; if not, say so and specify what additional cases are required."
+      - Do not implement.
+      - Do not re-litigate the 8 agreed decisions; validate their feasibility and sequencing only.
+      - The scoring rubric MUST be fixed in writing before any eval run, so the definition cannot be chosen
+        after seeing results.
+      - Treat the Medicare Advantage deferral convention as an unresolved HUMAN decision owned by Andrew.
+        Do not invent an answer. Design the rubric so both candidate conventions can be scored without
+        redoing research.
+      - Assess honestly whether a benchmark of roughly 13 rows, minus invalid ones, can support any claim;
+        if not, say so and specify what additional cases are required.
     expected_output:
-      - "Decision: plan validated or amended, with reasons"
-      - "Written scoring rubric, including the definition of confident-wrong"
-      - "Ruling on whether benchmark size is sufficient, and what is needed if not"
-      - "Exact Worker objective for T003 with allowed_files, verify, stop_if"
-      - "Any task that must be blocked pending Andrew's MA ruling"
+      - 'Decision: plan validated or amended, with reasons'
+      - Written scoring rubric, including the definition of confident-wrong
+      - Ruling on whether benchmark size is sufficient, and what is needed if not
+      - Exact Worker objective for T003 with allowed_files, verify, stop_if
+      - Any task that must be blocked pending Andrew's MA ruling
     receipt:
       result: done
       decision: approved
       evidence:
-        - "seed_review_39_spec.json is an 11-payer x 4-line-of-business grid; NO row carries a state field, yet state is required to pick the governing LCD."
-        - "The 13 public rows resolve to only 5 UNIQUE documents (L36007 x6, Blue Shield CA knee PDF x3, Premera 7.01.550 x2, Highmark S-39-008 x1, Carelon joint-surgery PDF x1). Effective independent-document N on the retrievable side is 5, not 13."
-        - "bm_0073/bm_0084 share one URL; bm_0068/bm_0079/bm_0058 share one URL. Row count overstates evidence."
-        - "run_policy_retrieval.py L69 'candidates = [{\"url\": gt[\"target_url\"]}]' and L109 'return scored[0], scored' confirm the answer leak and the absence of abstention."
-        - "Rule-of-three 95% upper bound on confident-wrong rate given zero observed errors: N=9 -> 28.3%, N=13 -> 20.6%, N=39 -> 7.4%, N=60 -> 4.9%."
-        - "criteria_extractions.json and source_registry.json are empty arrays; there is no local policy library yet for the T007 lookup-first path."
-        - "Pre-T003 immutability baseline sha256(seed_review_39_spec.json) = 76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053"
-      summary: "Plan validated with three amendments. SCOPE AMENDED: score all 39 rows in three classes (retrievable / gated / none), NOT the 13 public rows. Gated and no-policy rows are the strongest confident-wrong tests available and cost nothing to add; restricting to ~9 rows makes every claim statistically dead. Rubric v1 written in full and frozen at docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md. T004's reuse constraint is refuted by T001 and rewritten. NO task is blocked on Andrew's MA ruling, because the key records both conventions and the scorer emits three parallel grades from one run."
-      rubric_location: "docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md (rubric v1, frozen 2026-07-25)"
+        - seed_review_39_spec.json is an 11-payer x 4-line-of-business grid; NO row carries a state field,
+          yet state is required to pick the governing LCD.
+        - The 13 public rows resolve to only 5 UNIQUE documents (L36007 x6, Blue Shield CA knee PDF x3,
+          Premera 7.01.550 x2, Highmark S-39-008 x1, Carelon joint-surgery PDF x1). Effective independent-document
+          N on the retrievable side is 5, not 13.
+        - bm_0073/bm_0084 share one URL; bm_0068/bm_0079/bm_0058 share one URL. Row count overstates evidence.
+        - 'run_policy_retrieval.py L69 ''candidates = [{"url": gt["target_url"]}]'' and L109 ''return
+          scored[0], scored'' confirm the answer leak and the absence of abstention.'
+        - 'Rule-of-three 95% upper bound on confident-wrong rate given zero observed errors: N=9 -> 28.3%,
+          N=13 -> 20.6%, N=39 -> 7.4%, N=60 -> 4.9%.'
+        - criteria_extractions.json and source_registry.json are empty arrays; there is no local policy
+          library yet for the T007 lookup-first path.
+        - Pre-T003 immutability baseline sha256(seed_review_39_spec.json) = 76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053
+      summary: 'Plan validated with three amendments. SCOPE AMENDED: score all 39 rows in three classes
+        (retrievable / gated / none), NOT the 13 public rows. Gated and no-policy rows are the strongest
+        confident-wrong tests available and cost nothing to add; restricting to ~9 rows makes every claim
+        statistically dead. Rubric v1 written in full and frozen at docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md.
+        T004''s reuse constraint is refuted by T001 and rewritten. NO task is blocked on Andrew''s MA
+        ruling, because the key records both conventions and the scorer emits three parallel grades from
+        one run.'
+      rubric_location: docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md (rubric v1, frozen
+        2026-07-25)
       key_rulings:
-        - "SCOPE: all 39 rows, three classes. GATED rows are scored as adjudicated-abstention tests, not excluded. A claim on a gated row that verifies as genuinely public is KEY_DEFECT_FOUND (a win) and promotes the row to retrievable. This is the only design in which the benchmark grows without further human research."
-        - "SUFFICIENCY: N=39 supports 'we can rule out a confident-wrong rate above about 7%'. N=9 supports nothing. Mandatory caveat in any presentation: the 39 rows are 11 payers x 4 lines of business and collapse to 5 unique documents on the retrievable side, so they are not 39 independent draws."
-        - "CONFIDENT_WRONG definition frozen: claim_type=document_identified AND confidence>=80 AND adjudicated grade is WRONG_DOCUMENT or UNRESOLVABLE. The 80 threshold may not be moved after any run is seen."
-        - "ANTI-DEGENERACY: always-abstaining scores zero confident-wrong. The report format therefore REQUIRES the confident-wrong line and the correct-retrieval line printed together; a report with one without the other is a failing build."
-        - "MA: every Medicare Advantage row graded three times in one pass (dual_accept, lcd_strict, plan_strict). Headline uses dual_accept. Andrew's ruling is applied by switching the headline column; no research is redone. Unconditionally, naming an LCD whose MAC does not cover the row's state is WRONG_DOCUMENT."
-        - "GRADING is two-stage: Stage A deterministic code decides mechanically checkable facts; Stage B model adjudicator only where Stage A is not decisive. Never delegate a mechanically checkable fact to a model. If NEEDS_HUMAN_REVIEW exceeds 20% of rows, the run is not reportable."
-        - "NEW PROBLEM FOUND: no row has a state field, and CareFirst (MD/DC/VA) and Regence (OR/WA/ID/UT) straddle MAC jurisdictions. Every row must be pinned to exactly one state before an LCD can be chosen."
-        - "CIRCULARITY MITIGATION: labels must be document-attested, not model-asserted. Every retrievable row carries a verbatim quote in which the document itself says it governs that payer, plan type, and state, plus a fetched sha256. Rows that cannot produce that quote are marked unverified and excluded, never guessed."
+        - 'SCOPE: all 39 rows, three classes. GATED rows are scored as adjudicated-abstention tests, not
+          excluded. A claim on a gated row that verifies as genuinely public is KEY_DEFECT_FOUND (a win)
+          and promotes the row to retrievable. This is the only design in which the benchmark grows without
+          further human research.'
+        - 'SUFFICIENCY: N=39 supports ''we can rule out a confident-wrong rate above about 7%''. N=9 supports
+          nothing. Mandatory caveat in any presentation: the 39 rows are 11 payers x 4 lines of business
+          and collapse to 5 unique documents on the retrievable side, so they are not 39 independent draws.'
+        - 'CONFIDENT_WRONG definition frozen: claim_type=document_identified AND confidence>=80 AND adjudicated
+          grade is WRONG_DOCUMENT or UNRESOLVABLE. The 80 threshold may not be moved after any run is
+          seen.'
+        - 'ANTI-DEGENERACY: always-abstaining scores zero confident-wrong. The report format therefore
+          REQUIRES the confident-wrong line and the correct-retrieval line printed together; a report
+          with one without the other is a failing build.'
+        - 'MA: every Medicare Advantage row graded three times in one pass (dual_accept, lcd_strict, plan_strict).
+          Headline uses dual_accept. Andrew''s ruling is applied by switching the headline column; no
+          research is redone. Unconditionally, naming an LCD whose MAC does not cover the row''s state
+          is WRONG_DOCUMENT.'
+        - 'GRADING is two-stage: Stage A deterministic code decides mechanically checkable facts; Stage
+          B model adjudicator only where Stage A is not decisive. Never delegate a mechanically checkable
+          fact to a model. If NEEDS_HUMAN_REVIEW exceeds 20% of rows, the run is not reportable.'
+        - 'NEW PROBLEM FOUND: no row has a state field, and CareFirst (MD/DC/VA) and Regence (OR/WA/ID/UT)
+          straddle MAC jurisdictions. Every row must be pinned to exactly one state before an LCD can
+          be chosen.'
+        - 'CIRCULARITY MITIGATION: labels must be document-attested, not model-asserted. Every retrievable
+          row carries a verbatim quote in which the document itself says it governs that payer, plan type,
+          and state, plus a fetched sha256. Rows that cannot produce that quote are marked unverified
+          and excluded, never guessed.'
       blocked_tasks: []
-      timing_warning: "Akin returns to clinical rotations 2026-07-27, two days away. T009 (his handoff note and the MA question for Andrew) must be pulled forward or his last window is lost."
-
+      timing_warning: Akin returns to clinical rotations 2026-07-27, two days away. T009 (his handoff
+        note and the MA question for Andrew) must be pulled forward or his last window is lost.
   - id: T003
     type: worker
     assignee: Worker
     status: done
     reasoning_hint: medium
-    objective: "Produce data/policy_platform/answer_key_v1.json: a corrected, evidence-backed 39-row answer key covering ALL rows in three scored classes (retrievable, gated, none) plus an invalid class, with every row pinned to a single US state, every Medicare Advantage row recording BOTH candidate conventions, and every retrievable row carrying firsthand fetch evidence."
+    objective: 'Produce data/policy_platform/answer_key_v1.json: a corrected, evidence-backed 39-row answer
+      key covering ALL rows in three scored classes (retrievable, gated, none) plus an invalid class,
+      with every row pinned to a single US state, every Medicare Advantage row recording BOTH candidate
+      conventions, and every retrievable row carrying firsthand fetch evidence.'
     inputs:
-      - "T002 receipt and docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md"
+      - T002 receipt and docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md
       - data/policy_platform/seed_review_39_spec.json
     constraints:
-      - "Do NOT mutate seed_review_39_spec.json. It is the historical record. Write a new file answer_key_v1.json."
-      - "Pin every row to exactly one US state. The spec has NO state field today, and state is required to choose the governing LCD. CareFirst spans MD/DC/VA and Regence spans OR/WA/ID/UT, so each must be pinned deliberately."
-      - "Finish firsthand verification of the 4 unverified Medicare Advantage rows: bm_0056 BCBS Michigan, bm_0057 BCBS North Carolina, bm_0059 CareFirst, bm_0061 Horizon BCBS NJ."
-      - "For each: determine whether the plan publishes its own MA knee policy or genuinely defers to CMS, and if it defers, which LCD actually applies in that state."
-      - "Fix the blanket L36007 assignment. One LCD cannot govern Michigan, North Carolina, Maryland/NJ/PA, and Washington simultaneously."
-      - "Carry forward the two already-verified findings: bm_0063 Premera is INVALID (exited Medicare Advantage 2025-01-01; its public policy 7.01.550 states it does not apply to Medicare Advantage and cites L36575). bm_0065 UPMC publishes its own MP.PA.133 covering CMS-MA HMO/PPO/DSNP and correctly cites L36007 for Pennsylvania."
-      - "Never invent or pattern-guess a URL. Every retrievable row must carry a URL actually fetched in this session, returning HTTP 200 without a login, containing CPT 27447, with a recorded sha256."
-      - "LABELS MUST BE DOCUMENT-ATTESTED, NOT MODEL-ASSERTED. Every retrievable row carries attestation_quote: a verbatim quote in which the document itself says it governs that payer, that plan type, and that state. A row that cannot produce that quote is row_class=unverified and excluded, never guessed."
-      - "Record BOTH candidate MA answers per row (ma_convention.lcd and ma_convention.plan_page) so Andrew's later ruling applies without redoing research. plan_page is null when the plan publishes nothing of its own."
-      - "Mark invalid rows as invalid with the reason. Do not silently delete them."
-      - "Do NOT drop the 20 gated and 6 no-policy rows. Per the T002 scope ruling they are scored abstention tests and are the strongest confident-wrong evidence available."
-      - "Document every change in docs/goals/policy-retrieval-eval/notes/key-corrections.md with the URL fetched, the HTTP status, and a verbatim quote."
+      - Do NOT mutate seed_review_39_spec.json. It is the historical record. Write a new file answer_key_v1.json.
+      - Pin every row to exactly one US state. The spec has NO state field today, and state is required
+        to choose the governing LCD. CareFirst spans MD/DC/VA and Regence spans OR/WA/ID/UT, so each must
+        be pinned deliberately.
+      - 'Finish firsthand verification of the 4 unverified Medicare Advantage rows: bm_0056 BCBS Michigan,
+        bm_0057 BCBS North Carolina, bm_0059 CareFirst, bm_0061 Horizon BCBS NJ.'
+      - 'For each: determine whether the plan publishes its own MA knee policy or genuinely defers to
+        CMS, and if it defers, which LCD actually applies in that state.'
+      - Fix the blanket L36007 assignment. One LCD cannot govern Michigan, North Carolina, Maryland/NJ/PA,
+        and Washington simultaneously.
+      - 'Carry forward the two already-verified findings: bm_0063 Premera is INVALID (exited Medicare
+        Advantage 2025-01-01; its public policy 7.01.550 states it does not apply to Medicare Advantage
+        and cites L36575). bm_0065 UPMC publishes its own MP.PA.133 covering CMS-MA HMO/PPO/DSNP and correctly
+        cites L36007 for Pennsylvania.'
+      - Never invent or pattern-guess a URL. Every retrievable row must carry a URL actually fetched in
+        this session, returning HTTP 200 without a login, containing CPT 27447, with a recorded sha256.
+      - 'LABELS MUST BE DOCUMENT-ATTESTED, NOT MODEL-ASSERTED. Every retrievable row carries attestation_quote:
+        a verbatim quote in which the document itself says it governs that payer, that plan type, and
+        that state. A row that cannot produce that quote is row_class=unverified and excluded, never guessed.'
+      - Record BOTH candidate MA answers per row (ma_convention.lcd and ma_convention.plan_page) so Andrew's
+        later ruling applies without redoing research. plan_page is null when the plan publishes nothing
+        of its own.
+      - Mark invalid rows as invalid with the reason. Do not silently delete them.
+      - Do NOT drop the 20 gated and 6 no-policy rows. Per the T002 scope ruling they are scored abstention
+        tests and are the strongest confident-wrong evidence available.
+      - Document every change in docs/goals/policy-retrieval-eval/notes/key-corrections.md with the URL
+        fetched, the HTTP status, and a verbatim quote.
     allowed_files:
       - data/policy_platform/**
       - docs/goals/policy-retrieval-eval/notes/**
     verify:
-      - "sha256sum data/policy_platform/seed_review_39_spec.json | grep -q 76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053 && echo ORIGINAL_UNTOUCHED"
-      - "python3 -c \"import json,collections;d=json.load(open('data/policy_platform/answer_key_v1.json'));r=d['rows'];print(len(r), collections.Counter(x['row_class'] for x in r))\""
-      - "python3 -c \"import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];req=('id','payer','plan_type','state','cpt','row_class','provenance');bad=[x['id'] for x in r if any(k not in x or x[k] in (None,'') for k in req)];print('MISSING_FIELDS',bad);assert not bad\""
-      - "python3 -c \"import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];t=[x for x in r if x['row_class']=='retrievable'];bad=[x['id'] for x in t if not(x['fetched']['http_status']==200 and x['fetched']['login_required'] is False and x['fetched']['cpt_27447_present'] is True and x['fetched'].get('sha256') and x.get('attestation_quote'))];print('BAD_RETRIEVABLE',bad);print('N_RETRIEVABLE',len(t));assert not bad\""
-      - "python3 -c \"import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];m=[x for x in r if x['plan_type']=='Medicare Advantage'];bad=[x['id'] for x in m if 'ma_deferral_status' not in x or 'lcd' not in x.get('ma_convention',{}) or 'plan_page' not in x.get('ma_convention',{})];print('BAD_MA',bad);assert not bad\""
-      - "python3 -c \"import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];bad=[(x['id'],x['state']) for x in r if x.get('ma_convention',{}).get('lcd') and x['state'] not in x['ma_convention']['lcd']['jurisdiction_states']];print('LCD_JURISDICTION_VIOLATIONS',bad);assert not bad\""
-      - "test -f docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md && grep -c 'CONFIDENT-BUT-WRONG' docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md"
+      - sha256sum data/policy_platform/seed_review_39_spec.json | grep -q 76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053
+        && echo ORIGINAL_UNTOUCHED
+      - python3 -c "import json,collections;d=json.load(open('data/policy_platform/answer_key_v1.json'));r=d['rows'];print(len(r),
+        collections.Counter(x['row_class'] for x in r))"
+      - python3 -c "import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];req=('id','payer','plan_type','state','cpt','row_class','provenance');bad=[x['id']
+        for x in r if any(k not in x or x[k] in (None,'') for k in req)];print('MISSING_FIELDS',bad);assert
+        not bad"
+      - python3 -c "import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];t=[x
+        for x in r if x['row_class']=='retrievable'];bad=[x['id'] for x in t if not(x['fetched']['http_status']==200
+        and x['fetched']['login_required'] is False and x['fetched']['cpt_27447_present'] is True and
+        x['fetched'].get('sha256') and x.get('attestation_quote'))];print('BAD_RETRIEVABLE',bad);print('N_RETRIEVABLE',len(t));assert
+        not bad"
+      - python3 -c "import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];m=[x
+        for x in r if x['plan_type']=='Medicare Advantage'];bad=[x['id'] for x in m if 'ma_deferral_status'
+        not in x or 'lcd' not in x.get('ma_convention',{}) or 'plan_page' not in x.get('ma_convention',{})];print('BAD_MA',bad);assert
+        not bad"
+      - python3 -c "import json;r=json.load(open('data/policy_platform/answer_key_v1.json'))['rows'];bad=[(x['id'],x['state'])
+        for x in r if x.get('ma_convention',{}).get('lcd') and x['state'] not in x['ma_convention']['lcd']['jurisdiction_states']];print('LCD_JURISDICTION_VIOLATIONS',bad);assert
+        not bad"
+      - test -f docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md && grep -c 'CONFIDENT-BUT-WRONG'
+        docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md
     stop_if:
-      - "Need files outside allowed_files."
-      - "About to record a URL that was not actually fetched in this session, or to infer a document's applicability without a verbatim quote from the document itself."
-      - "About to change a row's retrievability class on reasoning alone; class changes require fetch evidence."
-      - "Research would require a login, an NPI, a credential, or a phone call to a payer; mark the row gated and move on."
-      - "A payer's Medicare Advantage status cannot be settled from public sources after genuine effort; record row_class=unverified with what was tried, and continue."
-      - "Fewer than 6 rows survive as retrievable; record the count, escalate to PM, and continue rather than halting."
-      - "About to delete any original row; invalid rows are marked invalid with a reason, never removed."
+      - Need files outside allowed_files.
+      - About to record a URL that was not actually fetched in this session, or to infer a document's
+        applicability without a verbatim quote from the document itself.
+      - About to change a row's retrievability class on reasoning alone; class changes require fetch evidence.
+      - Research would require a login, an NPI, a credential, or a phone call to a payer; mark the row
+        gated and move on.
+      - A payer's Medicare Advantage status cannot be settled from public sources after genuine effort;
+        record row_class=unverified with what was tried, and continue.
+      - Fewer than 6 rows survive as retrievable; record the count, escalate to PM, and continue rather
+        than halting.
+      - About to delete any original row; invalid rows are marked invalid with a reason, never removed.
     receipt:
       result: done
       verification_attempts: 1
       commands:
-        - cmd: "sha256sum data/policy_platform/seed_review_39_spec.json | grep -q 76f64b65...c053"
-          result: "ORIGINAL_UNTOUCHED"
+        - cmd: sha256sum data/policy_platform/seed_review_39_spec.json | grep -q 76f64b65...c053
+          result: ORIGINAL_UNTOUCHED
           status: pass
-        - cmd: "row count and class counter"
-          result: "39 rows; Counter({'gated': 17, 'retrievable': 10, 'none': 6, 'unverified': 5, 'invalid': 1})"
+        - cmd: row count and class counter
+          result: '39 rows; Counter({''gated'': 17, ''retrievable'': 10, ''none'': 6, ''unverified'':
+            5, ''invalid'': 1})'
           status: pass
-        - cmd: "required-field check"
-          result: "MISSING_FIELDS []"
+        - cmd: required-field check
+          result: MISSING_FIELDS []
           status: pass
-        - cmd: "retrievable evidence check"
-          result: "BAD_RETRIEVABLE []; N_RETRIEVABLE 10"
+        - cmd: retrievable evidence check
+          result: BAD_RETRIEVABLE []; N_RETRIEVABLE 10
           status: pass
-        - cmd: "Medicare Advantage field check"
-          result: "BAD_MA []"
+        - cmd: Medicare Advantage field check
+          result: BAD_MA []
           status: pass
-        - cmd: "LCD jurisdiction check"
-          result: "LCD_JURISDICTION_VIOLATIONS []"
+        - cmd: LCD jurisdiction check
+          result: LCD_JURISDICTION_VIOLATIONS []
           status: pass
-        - cmd: "rubric present and grep -c CONFIDENT-BUT-WRONG"
-          result: "2"
+        - cmd: rubric present and grep -c CONFIDENT-BUT-WRONG
+          result: '2'
           status: pass
-        - cmd: "PM independent recheck: 39/39 states pinned; jurisdiction nested at ma_convention.lcd; retrievable rows span 6 unique documents"
-          result: "confirmed"
+        - cmd: 'PM independent recheck: 39/39 states pinned; jurisdiction nested at ma_convention.lcd;
+            retrievable rows span 6 unique documents'
+          result: confirmed
           status: pass
       changed_files:
         - data/policy_platform/answer_key_v1.json
         - docs/goals/policy-retrieval-eval/notes/key-corrections.md
-      summary: "Rebuilt all 39 rows from firsthand fetches. Final classes: 10 retrievable, 17 gated, 6 none, 5 unverified, 1 invalid. All 39 states pinned. All 7 verify commands passed first attempt. seed_review_39_spec.json untouched, sha256 still 76f64b65...c053."
+      summary: 'Rebuilt all 39 rows from firsthand fetches. Final classes: 10 retrievable, 17 gated, 6
+        none, 5 unverified, 1 invalid. All 39 states pinned. All 7 verify commands passed first attempt.
+        seed_review_39_spec.json untouched, sha256 still 76f64b65...c053.'
       key_rulings:
-        - "The blanket L36007 assignment is confirmed broken and is fixed. Only MD, NJ and PA are Novitas J-L. Michigan is WPS J-08 (L39911 / A59811). North Carolina is Palmetto GBA J-M (L33456 / A56777). Washington is Noridian J-F (L36575 / A57685)."
-        - "The CPT trap is confirmed empirically: grep -c 27447 returns 0 on all four LCD pages and 1 on all four companion Billing and Coding Articles. Every Medicare row records both URLs and measures cpt_27447_present against the article."
-        - "Premera bm_0063 is invalid, not merely unretrievable. Premera exited Medicare Advantage and its own policy states in writing that it does not apply to MA."
-        - "Blue Shield of California's document never states which line of business it covers. Three rows drop to unverified. This is exactly the unstated-scope shortcut the rubric was written to catch."
-        - "UPMC MP.PA.133 downloads without login and its own checkbox grid attests commercial and PA Medicaid scope, promoting bm_0075 and bm_0094 from gated to retrievable under the T002 KEY_DEFECT_FOUND rule."
+        - The blanket L36007 assignment is confirmed broken and is fixed. Only MD, NJ and PA are Novitas
+          J-L. Michigan is WPS J-08 (L39911 / A59811). North Carolina is Palmetto GBA J-M (L33456 / A56777).
+          Washington is Noridian J-F (L36575 / A57685).
+        - 'The CPT trap is confirmed empirically: grep -c 27447 returns 0 on all four LCD pages and 1
+          on all four companion Billing and Coding Articles. Every Medicare row records both URLs and
+          measures cpt_27447_present against the article.'
+        - Premera bm_0063 is invalid, not merely unretrievable. Premera exited Medicare Advantage and
+          its own policy states in writing that it does not apply to MA.
+        - Blue Shield of California's document never states which line of business it covers. Three rows
+          drop to unverified. This is exactly the unstated-scope shortcut the rubric was written to catch.
+        - UPMC MP.PA.133 downloads without login and its own checkbox grid attests commercial and PA Medicaid
+          scope, promoting bm_0075 and bm_0094 from gated to retrievable under the T002 KEY_DEFECT_FOUND
+          rule.
       evidence:
-        - "data/policy_platform/answer_key_v1.json: 39 rows, top-level counts / row_class_definitions / lcd_jurisdiction_map / known_limitations / open_human_decision"
-        - "docs/goals/policy-retrieval-eval/notes/key-corrections.md: per-row change log with reasons"
-        - "PM independently confirmed post-return: 39/39 rows carry a pinned state; MAC jurisdiction is present nested at ma_convention.lcd.{mac,jurisdiction,jurisdiction_states}; retrievable rows collapse to 6 unique documents; plan_type values are 'Medicare Advantage' (10), 'Commercial' (11), 'ACA Marketplace' (11), 'Medicaid' (7)."
+        - 'data/policy_platform/answer_key_v1.json: 39 rows, top-level counts / row_class_definitions
+          / lcd_jurisdiction_map / known_limitations / open_human_decision'
+        - 'docs/goals/policy-retrieval-eval/notes/key-corrections.md: per-row change log with reasons'
+        - 'PM independently confirmed post-return: 39/39 rows carry a pinned state; MAC jurisdiction is
+          present nested at ma_convention.lcd.{mac,jurisdiction,jurisdiction_states}; retrievable rows
+          collapse to 6 unique documents; plan_type values are ''Medicare Advantage'' (10), ''Commercial''
+          (11), ''ACA Marketplace'' (11), ''Medicaid'' (7).'
       deviations_accepted_by_pm:
-        - "ma_deferral_status gained a fourth value 'unverified' on bm_0058, bm_0062, bm_0064. Correct call. Asserting a status with no document behind it is the exact failure mode this benchmark hunts."
-        - "attestation_quote is a two-part composite joined by '||' on deferral rows, marked attestation_basis: deferral_two_part. Correct call. No single document can attest payer, plan type and state on a deferral row."
+        - ma_deferral_status gained a fourth value 'unverified' on bm_0058, bm_0062, bm_0064. Correct
+          call. Asserting a status with no document behind it is the exact failure mode this benchmark
+          hunts.
+        - 'attestation_quote is a two-part composite joined by ''||'' on deferral rows, marked attestation_basis:
+          deferral_two_part. Correct call. No single document can attest payer, plan type and state on
+          a deferral row.'
       deviations_escalated_to_judge:
-        - "row_class 'unverified' (5 rows) is a FIFTH class. Rubric v1.1 sections 0 and 1 define four. The grader cannot be built until the scoring treatment of this class is ruled. Escalated to T012."
-        - "bm_0073 and bm_0084 are retrievable on attestation_basis 'scope_by_exclusion', weaker than the strict bar. Accepting them gives 10 retrievable; rejecting them gives 8. Escalated to T012."
+        - row_class 'unverified' (5 rows) is a FIFTH class. Rubric v1.1 sections 0 and 1 define four.
+          The grader cannot be built until the scoring treatment of this class is ruled. Escalated to
+          T012.
+        - bm_0073 and bm_0084 are retrievable on attestation_basis 'scope_by_exclusion', weaker than the
+          strict bar. Accepting them gives 10 retrievable; rejecting them gives 8. Escalated to T012.
       pm_resolved_blockers:
-        - "GITIGNORE, FIXED BY PM. .gitignore line 18 'data/policy_platform/*' hid BOTH answer_key_v1.json and seed_review_39_spec.json from git, so Akin's agent, which clones from GitHub, would have seen neither the question set nor the key. PM added two allowlist lines following the existing !source_registry.json convention. git check-ignore now reports both files as un-ignored and git status shows them untracked. The commit and push remain an operator decision and are tracked in T009."
-        - "MTIME MYSTERY, EXPLAINED. The worker flagged that state.yaml and scoring-rubric-v1.md changed at 14:48 and 14:50 UTC inside its working window although it never wrote them. That was the PM, not a concurrent agent. The PM was writing rubric amendment v1.1 (section 5.1, the 42 CFR 422.101(b) authority ladder) at exactly those times. No other agent is active on this board. Good catch and correct to report it."
+        - GITIGNORE, FIXED BY PM. .gitignore line 18 'data/policy_platform/*' hid BOTH answer_key_v1.json
+          and seed_review_39_spec.json from git, so Akin's agent, which clones from GitHub, would have
+          seen neither the question set nor the key. PM added two allowlist lines following the existing
+          !source_registry.json convention. git check-ignore now reports both files as un-ignored and
+          git status shows them untracked. The commit and push remain an operator decision and are tracked
+          in T009.
+        - MTIME MYSTERY, EXPLAINED. The worker flagged that state.yaml and scoring-rubric-v1.md changed
+          at 14:48 and 14:50 UTC inside its working window although it never wrote them. That was the
+          PM, not a concurrent agent. The PM was writing rubric amendment v1.1 (section 5.1, the 42 CFR
+          422.101(b) authority ladder) at exactly those times. No other agent is active on this board.
+          Good catch and correct to report it.
       open_blockers_for_humans:
-        - "Blue Shield of California line-of-business scope for BSC7.10. Highest-value missing evidence: unblocks 3 rows. Andrew or the payer-call track."
-        - "CareFirst state pin is load-bearing. Pinned to Maryland (Novitas J-L, L36007). Virginia would be Palmetto J-M (L33456) and would change bm_0059's governing document. Andrew must confirm."
-        - "Healthy Blue North Carolina bm_0089: two provider URLs returned 404."
-
+        - 'Blue Shield of California line-of-business scope for BSC7.10. Highest-value missing evidence:
+          unblocks 3 rows. Andrew or the payer-call track.'
+        - CareFirst state pin is load-bearing. Pinned to Maryland (Novitas J-L, L36007). Virginia would
+          be Palmetto J-M (L33456) and would change bm_0059's governing document. Andrew must confirm.
+        - 'Healthy Blue North Carolina bm_0089: two provider URLs returned 404.'
   - id: T012
     type: judge
     assignee: Judge
     status: done
     reasoning_hint: high
-    objective: "Rule on the four scoring questions T003 surfaced, so the grader can be built against a complete and honest class list rather than an improvised one."
-    context: "T003 returned a defensible key that does not fit rubric v1.1's four-class model. It added a fifth class and two weak-basis rows, and it exposed that the retrievable side is far less independent than its row count suggests. These are definition questions, and rubric discipline requires they be settled BEFORE any run, not after results are visible. T005 has not executed. This is the last moment these can be decided cleanly."
+    objective: Rule on the four scoring questions T003 surfaced, so the grader can be built against a
+      complete and honest class list rather than an improvised one.
+    context: T003 returned a defensible key that does not fit rubric v1.1's four-class model. It added
+      a fifth class and two weak-basis rows, and it exposed that the retrievable side is far less independent
+      than its row count suggests. These are definition questions, and rubric discipline requires they
+      be settled BEFORE any run, not after results are visible. T005 has not executed. This is the last
+      moment these can be decided cleanly.
     inputs:
       - data/policy_platform/answer_key_v1.json
       - docs/goals/policy-retrieval-eval/notes/key-corrections.md
-      - "docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md (v1.1)"
-      - "T003 receipt on this board"
+      - docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md (v1.1)
+      - T003 receipt on this board
     constraints:
-      - "READ ONLY. Rule and record. Do not edit the key, the rubric, or the harness. The PM applies rulings."
-      - "RULING 1, the fifth class. 5 rows (bm_0058, bm_0068, bm_0079, bm_0086, bm_0089) are row_class 'unverified', meaning we could not establish the truth, as distinct from 'gated', meaning we established that the truth is behind a login. Decide exactly one treatment and say why: (a) EXCLUDED from all denominators and reported as a separate coverage-gap line; (b) SCORED as abstention-expected, identical to gated; (c) SCORED as a distinct class with its own correct behaviour. Note the trap in (b): if we cannot tell whether a policy is public, we cannot tell whether abstention is honest, so grading a model wrong for finding something we failed to find would be indefensible."
-      - "RULING 2, scope_by_exclusion. bm_0073 and bm_0084 rest on a document that states which plans it EXCLUDES rather than which it includes. Rule whether that meets the retrievable bar. Accepting gives 10 retrievable, rejecting gives 8. Rule on the evidence standard, not on which number is more convenient, and state that you did."
-      - "RULING 3, independence. The 10 retrievable rows rest on 6 unique documents, so they are not 6 independent draws either. Rule what the headline may honestly claim. The rule-of-three upper bound on the true error rate is roughly 3/N with zero observed errors: N=6 gives about 46 percent, N=8 about 35 percent, N=10 about 28 percent. Decide whether the denominator for the statistical claim is rows or unique documents, and require the headline to print both."
-      - "RULING 4, the open_human_decision block. Confirm the key's open_human_decision and known_limitations survive into the run artifact so a reader of the report cannot see the score without seeing the caveats."
-      - "Do NOT reopen settled definitions. The confident-wrong threshold stays at confidence >= 80. The three-class scope stays. Section 5.1's authority ladder stays."
+      - READ ONLY. Rule and record. Do not edit the key, the rubric, or the harness. The PM applies rulings.
+      - 'RULING 1, the fifth class. 5 rows (bm_0058, bm_0068, bm_0079, bm_0086, bm_0089) are row_class
+        ''unverified'', meaning we could not establish the truth, as distinct from ''gated'', meaning
+        we established that the truth is behind a login. Decide exactly one treatment and say why: (a)
+        EXCLUDED from all denominators and reported as a separate coverage-gap line; (b) SCORED as abstention-expected,
+        identical to gated; (c) SCORED as a distinct class with its own correct behaviour. Note the trap
+        in (b): if we cannot tell whether a policy is public, we cannot tell whether abstention is honest,
+        so grading a model wrong for finding something we failed to find would be indefensible.'
+      - RULING 2, scope_by_exclusion. bm_0073 and bm_0084 rest on a document that states which plans it
+        EXCLUDES rather than which it includes. Rule whether that meets the retrievable bar. Accepting
+        gives 10 retrievable, rejecting gives 8. Rule on the evidence standard, not on which number is
+        more convenient, and state that you did.
+      - 'RULING 3, independence. The 10 retrievable rows rest on 6 unique documents, so they are not 6
+        independent draws either. Rule what the headline may honestly claim. The rule-of-three upper bound
+        on the true error rate is roughly 3/N with zero observed errors: N=6 gives about 46 percent, N=8
+        about 35 percent, N=10 about 28 percent. Decide whether the denominator for the statistical claim
+        is rows or unique documents, and require the headline to print both.'
+      - RULING 4, the open_human_decision block. Confirm the key's open_human_decision and known_limitations
+        survive into the run artifact so a reader of the report cannot see the score without seeing the
+        caveats.
+      - Do NOT reopen settled definitions. The confident-wrong threshold stays at confidence >= 80. The
+        three-class scope stays. Section 5.1's authority ladder stays.
     expected_output:
-      - "Four explicit rulings, each with a one-line reason and the rubric section it amends"
-      - "A statement of whether these rulings require rubric v1.2, and if so exactly which lines change"
-      - "The final scored class list the grader must implement, with denominators named"
-      - "A go or no-go on proceeding to T004"
+      - Four explicit rulings, each with a one-line reason and the rubric section it amends
+      - A statement of whether these rulings require rubric v1.2, and if so exactly which lines change
+      - The final scored class list the grader must implement, with denominators named
+      - A go or no-go on proceeding to T004
     receipt:
       result: done
       decision: approved
       full_outcome_complete: false
-      summary: "All four rulings returned. GO to T004, on the hard prerequisite that the PM writes rubric v1.2 first, because T004's own constraint said 'implement rubric v1.1 EXACTLY' and v1.1 carries a four-class model these rulings supersede. One blocking risk flagged for T005, not for T004: no working web-search path is proven on this host."
-      ruling_1_fifth_class: "Option (c). 'unverified' is a real fifth class, excluded from every headline denominator, with its own mandatory printed block. Reason: on a gated row we established the truth sits behind a login, so abstention is verifiably honest; on an unverified row we established nothing, so neither abstention nor a scope-silent claim is decidable, and crediting abstention would hand an always-abstain policy 5 free points. Graded ONLY on outcomes wrong under every possible world state (404, 403, login wall, timeout, fabricated host, no CPT 27447). A resolving-but-unattesting claim is UNSCOREABLE, never WRONG. Abstention is UNSCORED, no credit. A verified public 200 with 27447 that self-attests is KEY_DEFECT_FOUND and promotes the row for the next run."
-      ruling_1_proof: "bm_0086 proves option (b) would be indefensible. T003 scored bm_0075 retrievable by reading UPMC MP.PA.133's 'COMMERCIAL All (X)' checkbox as covering that whole column, then scored bm_0086 unverified because the Marketplace sub-boxes inside that same column are unchecked. Under T003's own column reading, a model naming MP.PA.133 for bm_0086 may well be RIGHT. Grading it WRONG would corrupt the headline metric."
-      ruling_2_scope_by_exclusion: "ACCEPT, gated by a three-condition admissibility test now written as rubric section 2.1. E1: the exclusion is stated verbatim in the fetched document or in the same-session-fetched index that serves it. E2: the exclusion set is closed and the row's plan_type falls in the residual under the key's own four-value taxonomy. E3: the document carries no contrary marking for the row's plan type, and payer and state are attested positively, not by exclusion. Plus two guards: exclusion never extends to Medicaid or to a line of business the payer is not demonstrably licensed to sell in the pinned state; and where E1 and E2 pass but E3 is uncertain the row is unverified, not retrievable."
-      ruling_2_discrimination: "Checked against every row before adoption. bm_0073 and bm_0084 PASS E1, E2, E3. bm_0058, bm_0068, bm_0079 FAIL E1, the document states no scope at all across 24 pages. bm_0086 FAILS E3, the unchecked Marketplace boxes are contrary evidence. The rule readmits nothing T003 correctly rejected. Count-independence stated explicitly: under Ruling 3 the inference denominator is unique documents, and bm_0073 and bm_0084 share PREMERA_701550, so acceptance moves unique documents from 5 to 6 and moves no percentage materially."
-      ruling_3_independence: "The denominator for ANY rate, percentage, or confidence bound on the retrieval side is UNIQUE DOCUMENTS, never rows. Rows are the reporting unit; documents are the inference unit. On the safety side the denominator is rows, with unique payers printed alongside as the clustering unit. Measured structure of the 10 retrievable rows: 6 unique documents (UPMC_MPPA133 x3, A56796 x2, PREMERA_701550 x2, A59811 x1, A56777 x1, HIGHMARK_S39008 x1) from only 4 issuers (CMS, Highmark, UPMC, Premera). Two systematic behaviours, finding the UPMC policy PDF and finding the CMS Medicare Coverage Database, determine 7 of the 10 rows."
-      ruling_3_arithmetic_correction: "Load-bearing. The task brief's figures of 46, 35 and 28 percent for N=6, 8 and 10 were wrong. Rubric section 0.1's existing table is exact binomial, 1 - 0.05^(1/N), not the 3/N approximation. The same method gives N=5 45.1, N=6 39.3, N=8 31.2, N=10 25.9, N=11 23.8, N=33 8.7. The brief's 46 percent is the bound for N=5, not N=6. v1.2 uses the exact method throughout."
-      ruling_4_caveat_propagation: "YES, mandatory verbatim propagation, now rubric section 9. The grader copies known_limitations and open_human_decision byte for byte from the key into every run artifact and every printed report, records key_sha256, and asserts a hash match. A mismatch fails the build. Placement is exact: inside the section 7 fenced template, after the 'Wrong but hedged' line, as two headed blocks. Not a footer, not an appendix, not a separate file, so the template cannot be printed without them."
-      final_class_list: "N_total=39. EXCLUDED, never in any headline denominator: invalid=1 (bm_0063), unverified=5 (bm_0058, bm_0068, bm_0079, bm_0086, bm_0089). SCORED=33 rows across 11 payers. RETRIEVABLE=10 rows / 6 unique documents / 4 unique issuers, strong subset 8 rows / 5 documents / 3 issuers. GATED=17. NONE=6. Arithmetic verified: 10+17+6=33; 33+5+1=39. MA scored rows=8. NEEDS_HUMAN_REVIEW not-reportable trigger pinned to N_scored, so h>=7."
-      rubric_legitimacy: "v1.2 is legitimate under the freeze on the same test v1.1 passed: zero eval runs executed, T005 not started, the confidence >= 80 threshold does not move, no correctness tier boundary moves, the confident-wrong definition does not move, the three-class scoring scope stays, and section 5.1's authority ladder is untouched."
-      blocking_risk_for_t005: "key-corrections.md lines 519 to 523 record that every public search engine is blocked from this host (DuckDuckGo 202, Mojeek and Bing captchas, SearxNG 429/403) and that api.coverage.cms.gov returns 401. T003 worked around it by following links from insurer home pages. A cold run under those conditions would measure the network, not the model, and would produce a flattering abstention rate for the wrong reason. This blocks T005, not T004. Tracked as T014."
-      pm_applied: "Rubric v1.2 written 2026-07-26 with all fourteen required_board_updates applied, plus a canonical denominator table at new section 0.2 so the harness has one source of truth instead of numbers embedded in prose. Exact-binomial figures independently recomputed and confirmed. T004 and T005 constraints updated. T014 created for the search-path proof."
-      pm_deviation: "T012 listed the Blue Shield of California scope question as its single highest-value missing evidence. The PM had already researched it firsthand between T012's dispatch and its return, and found evidence that would promote bm_0058 and change every denominator in this receipt. The PM did NOT self-apply it. T013 was created to rule on it, because a Judge should gate a change that moves a denominator."
-
+      summary: 'All four rulings returned. GO to T004, on the hard prerequisite that the PM writes rubric
+        v1.2 first, because T004''s own constraint said ''implement rubric v1.1 EXACTLY'' and v1.1 carries
+        a four-class model these rulings supersede. One blocking risk flagged for T005, not for T004:
+        no working web-search path is proven on this host.'
+      ruling_1_fifth_class: 'Option (c). ''unverified'' is a real fifth class, excluded from every headline
+        denominator, with its own mandatory printed block. Reason: on a gated row we established the truth
+        sits behind a login, so abstention is verifiably honest; on an unverified row we established nothing,
+        so neither abstention nor a scope-silent claim is decidable, and crediting abstention would hand
+        an always-abstain policy 5 free points. Graded ONLY on outcomes wrong under every possible world
+        state (404, 403, login wall, timeout, fabricated host, no CPT 27447). A resolving-but-unattesting
+        claim is UNSCOREABLE, never WRONG. Abstention is UNSCORED, no credit. A verified public 200 with
+        27447 that self-attests is KEY_DEFECT_FOUND and promotes the row for the next run.'
+      ruling_1_proof: bm_0086 proves option (b) would be indefensible. T003 scored bm_0075 retrievable
+        by reading UPMC MP.PA.133's 'COMMERCIAL All (X)' checkbox as covering that whole column, then
+        scored bm_0086 unverified because the Marketplace sub-boxes inside that same column are unchecked.
+        Under T003's own column reading, a model naming MP.PA.133 for bm_0086 may well be RIGHT. Grading
+        it WRONG would corrupt the headline metric.
+      ruling_2_scope_by_exclusion: 'ACCEPT, gated by a three-condition admissibility test now written
+        as rubric section 2.1. E1: the exclusion is stated verbatim in the fetched document or in the
+        same-session-fetched index that serves it. E2: the exclusion set is closed and the row''s plan_type
+        falls in the residual under the key''s own four-value taxonomy. E3: the document carries no contrary
+        marking for the row''s plan type, and payer and state are attested positively, not by exclusion.
+        Plus two guards: exclusion never extends to Medicaid or to a line of business the payer is not
+        demonstrably licensed to sell in the pinned state; and where E1 and E2 pass but E3 is uncertain
+        the row is unverified, not retrievable.'
+      ruling_2_discrimination: 'Checked against every row before adoption. bm_0073 and bm_0084 PASS E1,
+        E2, E3. bm_0058, bm_0068, bm_0079 FAIL E1, the document states no scope at all across 24 pages.
+        bm_0086 FAILS E3, the unchecked Marketplace boxes are contrary evidence. The rule readmits nothing
+        T003 correctly rejected. Count-independence stated explicitly: under Ruling 3 the inference denominator
+        is unique documents, and bm_0073 and bm_0084 share PREMERA_701550, so acceptance moves unique
+        documents from 5 to 6 and moves no percentage materially.'
+      ruling_3_independence: 'The denominator for ANY rate, percentage, or confidence bound on the retrieval
+        side is UNIQUE DOCUMENTS, never rows. Rows are the reporting unit; documents are the inference
+        unit. On the safety side the denominator is rows, with unique payers printed alongside as the
+        clustering unit. Measured structure of the 10 retrievable rows: 6 unique documents (UPMC_MPPA133
+        x3, A56796 x2, PREMERA_701550 x2, A59811 x1, A56777 x1, HIGHMARK_S39008 x1) from only 4 issuers
+        (CMS, Highmark, UPMC, Premera). Two systematic behaviours, finding the UPMC policy PDF and finding
+        the CMS Medicare Coverage Database, determine 7 of the 10 rows.'
+      ruling_3_arithmetic_correction: Load-bearing. The task brief's figures of 46, 35 and 28 percent
+        for N=6, 8 and 10 were wrong. Rubric section 0.1's existing table is exact binomial, 1 - 0.05^(1/N),
+        not the 3/N approximation. The same method gives N=5 45.1, N=6 39.3, N=8 31.2, N=10 25.9, N=11
+        23.8, N=33 8.7. The brief's 46 percent is the bound for N=5, not N=6. v1.2 uses the exact method
+        throughout.
+      ruling_4_caveat_propagation: 'YES, mandatory verbatim propagation, now rubric section 9. The grader
+        copies known_limitations and open_human_decision byte for byte from the key into every run artifact
+        and every printed report, records key_sha256, and asserts a hash match. A mismatch fails the build.
+        Placement is exact: inside the section 7 fenced template, after the ''Wrong but hedged'' line,
+        as two headed blocks. Not a footer, not an appendix, not a separate file, so the template cannot
+        be printed without them.'
+      final_class_list: 'N_total=39. EXCLUDED, never in any headline denominator: invalid=1 (bm_0063),
+        unverified=5 (bm_0058, bm_0068, bm_0079, bm_0086, bm_0089). SCORED=33 rows across 11 payers. RETRIEVABLE=10
+        rows / 6 unique documents / 4 unique issuers, strong subset 8 rows / 5 documents / 3 issuers.
+        GATED=17. NONE=6. Arithmetic verified: 10+17+6=33; 33+5+1=39. MA scored rows=8. NEEDS_HUMAN_REVIEW
+        not-reportable trigger pinned to N_scored, so h>=7.'
+      rubric_legitimacy: 'v1.2 is legitimate under the freeze on the same test v1.1 passed: zero eval
+        runs executed, T005 not started, the confidence >= 80 threshold does not move, no correctness
+        tier boundary moves, the confident-wrong definition does not move, the three-class scoring scope
+        stays, and section 5.1''s authority ladder is untouched.'
+      blocking_risk_for_t005: key-corrections.md lines 519 to 523 record that every public search engine
+        is blocked from this host (DuckDuckGo 202, Mojeek and Bing captchas, SearxNG 429/403) and that
+        api.coverage.cms.gov returns 401. T003 worked around it by following links from insurer home pages.
+        A cold run under those conditions would measure the network, not the model, and would produce
+        a flattering abstention rate for the wrong reason. This blocks T005, not T004. Tracked as T014.
+      pm_applied: Rubric v1.2 written 2026-07-26 with all fourteen required_board_updates applied, plus
+        a canonical denominator table at new section 0.2 so the harness has one source of truth instead
+        of numbers embedded in prose. Exact-binomial figures independently recomputed and confirmed. T004
+        and T005 constraints updated. T014 created for the search-path proof.
+      pm_deviation: T012 listed the Blue Shield of California scope question as its single highest-value
+        missing evidence. The PM had already researched it firsthand between T012's dispatch and its return,
+        and found evidence that would promote bm_0058 and change every denominator in this receipt. The
+        PM did NOT self-apply it. T013 was created to rule on it, because a Judge should gate a change
+        that moves a denominator.
   - id: T013
     type: judge
     assignee: Judge
     status: done
     reasoning_hint: high
-    objective: "Rule on whether row bm_0058 may move from unverified to retrievable on evidence the PM found after T012 returned, and recompute the denominators if it does."
-    context: "T012 named the Blue Shield of California line-of-business scope question as its single highest-value missing evidence, saying it could move 3 rows out of the unverified block in one step. The PM researched it firsthand the same day. One row resolves, not three. bm_0058 (Medicare Advantage) gains a payer-attested Medicare deferral from a Blue Shield utilization management page T003 never reached; bm_0068 (Commercial) and bm_0079 (ACA Marketplace) stay unresolvable after four independent negative checks. The PM refused to self-approve a change that moves every denominator T012 just pinned, so this is a Judge call. The doubt is narrow and specific: the Blue Shield quote is phrased as a general statement about what regulators require, with Medicare as the example, whereas the quote that qualified bm_0056 is a first-person commitment naming the payer and the plan type."
+    objective: Rule on whether row bm_0058 may move from unverified to retrievable on evidence the PM
+      found after T012 returned, and recompute the denominators if it does.
+    context: 'T012 named the Blue Shield of California line-of-business scope question as its single highest-value
+      missing evidence, saying it could move 3 rows out of the unverified block in one step. The PM researched
+      it firsthand the same day. One row resolves, not three. bm_0058 (Medicare Advantage) gains a payer-attested
+      Medicare deferral from a Blue Shield utilization management page T003 never reached; bm_0068 (Commercial)
+      and bm_0079 (ACA Marketplace) stay unresolvable after four independent negative checks. The PM refused
+      to self-approve a change that moves every denominator T012 just pinned, so this is a Judge call.
+      The doubt is narrow and specific: the Blue Shield quote is phrased as a general statement about
+      what regulators require, with Medicare as the example, whereas the quote that qualified bm_0056
+      is a first-person commitment naming the payer and the plan type.'
     inputs:
       - docs/goals/policy-retrieval-eval/notes/pm-bsc-and-carefirst-findings.md
       - data/policy_platform/answer_key_v1.json
-      - "docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md (v1.2)"
-      - "T012 receipt on this board"
+      - docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md (v1.2)
+      - T012 receipt on this board
     constraints:
-      - "READ ONLY. Rule and record. Do not edit the key or the rubric. The PM applies rulings."
-      - "Test part one of the key's own deferral_two_part definition, which requires 'a payer page stating in writing that this plan type follows CMS NCDs and LCDs'. Part two is not in doubt: L36575 / article A57685, Noridian J-E, lists California and carries CPT 27447."
-      - "Apply the same discipline T012 applied in its Ruling 2. If you accept, write the test that makes it a rule rather than a favour, and check that test against every other row so it readmits nothing correctly rejected."
-      - "State explicitly whether the resulting count influenced you. It must not."
-      - "Prefer a smaller honest retrievable set over a larger soft one. A wrong promotion corrupts the one number this benchmark exists to produce."
+      - READ ONLY. Rule and record. Do not edit the key or the rubric. The PM applies rulings.
+      - 'Test part one of the key''s own deferral_two_part definition, which requires ''a payer page stating
+        in writing that this plan type follows CMS NCDs and LCDs''. Part two is not in doubt: L36575 /
+        article A57685, Noridian J-E, lists California and carries CPT 27447.'
+      - Apply the same discipline T012 applied in its Ruling 2. If you accept, write the test that makes
+        it a rule rather than a favour, and check that test against every other row so it readmits nothing
+        correctly rejected.
+      - State explicitly whether the resulting count influenced you. It must not.
+      - Prefer a smaller honest retrievable set over a larger soft one. A wrong promotion corrupts the
+        one number this benchmark exists to produce.
     expected_output:
-      - "PROMOTE or KEEP, with the admissibility test written out if PROMOTE"
-      - "If PROMOTE, the full recomputed denominator map replacing T012's, derived from the key by the Judge and not taken from the PM, with the arithmetic shown to sum to 39"
-      - "Confirmation of the counted document identity and issuer for bm_0058, and whether promoting adds a twelfth scored payer"
-      - "A ruling on whether bm_0068 and bm_0079 should instead be reclassified gated"
-      - "required_board_updates the PM can apply mechanically"
+      - PROMOTE or KEEP, with the admissibility test written out if PROMOTE
+      - If PROMOTE, the full recomputed denominator map replacing T012's, derived from the key by the
+        Judge and not taken from the PM, with the arithmetic shown to sum to 39
+      - Confirmation of the counted document identity and issuer for bm_0058, and whether promoting adds
+        a twelfth scored payer
+      - A ruling on whether bm_0068 and bm_0079 should instead be reclassified gated
+      - required_board_updates the PM can apply mechanically
     receipt:
       result: done
       decision: approved
       full_outcome_complete: false
-      summary: "PROMOTE bm_0058 from unverified to retrievable, basis deferral_two_part, but ONLY on an extended verbatim quote that the PM's submitted quote omitted, and with a new plan_type_named field that marks this row instrument_inferred rather than explicit. Two PM errors corrected: the submitted quote started one sentence too late, and the recorded page sha256 is not reproducible."
-      ruling_1_promotion: "PROMOTE. Part one of deferral_two_part is satisfied, but not by the sentence the PM submitted. The load-bearing sentence is the one immediately before it: 'Blue Shield and Blue Shield Life use the utilization management criteria found in the following resources to determine medical appropriateness and coverage.' That sentence supplies the payer subject and the verb of use. Without it the quoted paragraph is a general statement about what regulators require, with no payer commitment, and the promotion would not be supported. The key must record the extended quote, both sentences plus the two that follow, or the promotion is void."
-      ruling_1_correction_1: "PM ERROR. The submitted attestation quote began at 'The resources are not listed in use order...'. That start point drops the only clause naming Blue Shield as the user of the criteria. Recorded here so the key carries the correct span."
-      ruling_1_correction_2: "PM ERROR. The recorded sha256 d329984708e4c08ee6fca9216df93f60d5c2116dbc3ce1a1b331729bae409df3 is NOT reproducible. Judge refetch returned HTTP 200, no login, the identical verbatim paragraph, and sha256 e5982dc0c713588bcedfdb345903f14f58494acf56990ff6761ae2f3462ea692. The page rebuilds its markup per request, so a raw-HTML hash cannot serve as an identity check for this artifact. The key must record content_hash_stable false and rely on the verbatim string for identity."
-      ruling_2_admissibility_test: "New rubric section 2.2, the part-one admissibility test, four conditions all required. P1: the page names the payer entity as the actor, not regulators in the abstract. P2: the page names a verb of use, binding the criteria to the payer's own determinations. P3: the referenced resource set includes CMS NCD or LCD by name. P4: the row's plan_type is identified either explicitly in the text, or by an instrument that instructs only that plan type. bm_0058 passes P1 and P2 only via the extended sentence, passes P3 on 'Medicare Local (LCD) and National (NCD) coverage determination' and 'Medicare Managed Care Manual', and passes P4 only by instrument: the Medicare Managed Care Manual, CMS Pub. 100-16, instructs Medicare Advantage organizations exclusively, and two list entries are marked D-SNP only, D-SNP being a Medicare Advantage product type."
-      ruling_2_discrimination: "The test readmits nothing correctly rejected. Applied to bm_0068 Commercial and bm_0079 ACA Marketplace on the same page, both fail P4: no instrument in the resource list instructs commercial or Marketplace plans exclusively, and the page never names those lines of business. Applied to the four unverified rows generally, none gains admission. Applied to the ten existing retrievable rows, all pass and none changes basis."
-      ruling_2_new_field: "Because bm_0058 alone passes P4 by instrument rather than by text, a new field plan_type_named is required on every retrievable row, valued explicit on the ten existing rows and instrument_inferred on bm_0058, with instrument_basis prose. The strong-attestation subset must be reportable both including and excluding instrument-inferred rows, so a reader can see the softer row's contribution."
-      ruling_3_denominators: "Recomputed by the Judge from the key, not taken from the PM. N_total 39. EXCLUDED: invalid 1 (bm_0063), unverified 4 (bm_0068, bm_0079, bm_0086, bm_0089). N_scored 34 across 11 payers. RETRIEVABLE 11 rows / 7 unique documents / 4 unique issuers. Strong subset 9 rows / 6 documents / 3 issuers, or 8 rows / 5 documents / 3 issuers when instrument-inferred rows are excluded. GATED 17. NONE 6. Arithmetic: 11+17+6=34; 34+4+1=39. MA scored rows 9. NEEDS_HUMAN_REVIEW not-reportable trigger stays at 20 percent of N_scored, so h >= 7 of 34."
-      ruling_3_document_and_payer: "Counted document for bm_0058 is A57685 (companion billing and coding article to L36575, Noridian J-E), which zero existing retrievable rows use, so unique documents move 6 to 7. Issuer is CMS, already counted, so unique issuers stay 4 and the strong-subset issuer count stays 3. Blue Shield of California is already a scored payer via bm_0090 (Medicaid, class none), so no twelfth payer is added and scored_payers stays 11."
-      ruling_3_incentive_audit: "Stated as required. The promotion IS flattering: the 95 percent upper bound on retrieval error improves from 39.3 percent at N=6 to 34.8 percent at N=7. The Judge weighed this and it did not drive the ruling. Two facts limit the flattery and are recorded so the report cannot overstate it. The issuer bound does not move at all: 4 issuers, and 3 in the strong subset, giving 63.2 percent, which remains the binding constraint on the retrieval side. The headline confident-wrong metric is unaffected in kind; its denominator moves 33 to 34, an 8.7 to 8.4 percent bound."
-      ruling_4_bm0068_bm0079: "KEEP UNVERIFIED. Do not reclassify gated. The PM's own reasoning is correct and is adopted: 'probably behind a login' is a guess, and gated is supposed to mean established. Four independent negative checks (policy PDF term counts all zero, medical policy index, medical policy list page, prior authorization list PDF) establish absence of a public scope statement, not the presence of a gated one. Reclassifying on a guess would inflate the honest-abstention denominator with rows we never proved."
-      ruling_5_carefirst: "The PM's Maryland pin is sound and needs no Judge action. The recorded consequence, that a Northern Virginia CareFirst member is governed by L33456 (Palmetto J-M) not L36007, is a per-patient product routing rule. It belongs in the product routing notes, not in the benchmark row."
-      parallel_safety: "SAFE, conditionally. The Worker package touches data/policy_platform/answer_key_v1.json, notes/key-corrections.md and notes/pm-bsc-and-carefirst-findings.md. The PM concurrently holds notes/scoring-rubric-v1.md for the v1.3 amendment. These file sets are provably disjoint and the disjointness is enforced by the allowed_files list plus an explicit stop_if naming scoring-rubric-v1.md. The rubric section 2.2 text specified in required_board_updates must be written by the PM in its own pass, NOT by this Worker."
-      new_risk_found: "The bm_0058 hash defect is probably not isolated. Any payer page whose markup rebuilds per request will have the same non-reproducible raw-HTML hash. Other T003-recorded payer-page hashes must be spot-checked for reproducibility before T005 freezes the key, and unstable ones replaced with verbatim-string identity checks. A PDF hash that changes is a different and more serious event and must be escalated, never silently updated."
-      required_board_updates: "RULING 9, BOARD MECHANICS. Record the T012 receipt into state.yaml, which is still null with T012 marked active. Then record this T013 receipt, set T013 done, and set the next active task. T004's stop_if 'T012 has not ruled' is now satisfied once both receipts are written; the go for T004 is unaffected by this promotion. Create a Worker task to apply the key changes with the eight verify commands supplied. Create a Worker task for the payer-page hash-stability sweep. The PM writes rubric v1.3 concurrently on the disjoint file."
-
+      summary: 'PROMOTE bm_0058 from unverified to retrievable, basis deferral_two_part, but ONLY on an
+        extended verbatim quote that the PM''s submitted quote omitted, and with a new plan_type_named
+        field that marks this row instrument_inferred rather than explicit. Two PM errors corrected: the
+        submitted quote started one sentence too late, and the recorded page sha256 is not reproducible.'
+      ruling_1_promotion: 'PROMOTE. Part one of deferral_two_part is satisfied, but not by the sentence
+        the PM submitted. The load-bearing sentence is the one immediately before it: ''Blue Shield and
+        Blue Shield Life use the utilization management criteria found in the following resources to determine
+        medical appropriateness and coverage.'' That sentence supplies the payer subject and the verb
+        of use. Without it the quoted paragraph is a general statement about what regulators require,
+        with no payer commitment, and the promotion would not be supported. The key must record the extended
+        quote, both sentences plus the two that follow, or the promotion is void.'
+      ruling_1_correction_1: PM ERROR. The submitted attestation quote began at 'The resources are not
+        listed in use order...'. That start point drops the only clause naming Blue Shield as the user
+        of the criteria. Recorded here so the key carries the correct span.
+      ruling_1_correction_2: PM ERROR. The recorded sha256 d329984708e4c08ee6fca9216df93f60d5c2116dbc3ce1a1b331729bae409df3
+        is NOT reproducible. Judge refetch returned HTTP 200, no login, the identical verbatim paragraph,
+        and sha256 e5982dc0c713588bcedfdb345903f14f58494acf56990ff6761ae2f3462ea692. The page rebuilds
+        its markup per request, so a raw-HTML hash cannot serve as an identity check for this artifact.
+        The key must record content_hash_stable false and rely on the verbatim string for identity.
+      ruling_2_admissibility_test: 'New rubric section 2.2, the part-one admissibility test, four conditions
+        all required. P1: the page names the payer entity as the actor, not regulators in the abstract.
+        P2: the page names a verb of use, binding the criteria to the payer''s own determinations. P3:
+        the referenced resource set includes CMS NCD or LCD by name. P4: the row''s plan_type is identified
+        either explicitly in the text, or by an instrument that instructs only that plan type. bm_0058
+        passes P1 and P2 only via the extended sentence, passes P3 on ''Medicare Local (LCD) and National
+        (NCD) coverage determination'' and ''Medicare Managed Care Manual'', and passes P4 only by instrument:
+        the Medicare Managed Care Manual, CMS Pub. 100-16, instructs Medicare Advantage organizations
+        exclusively, and two list entries are marked D-SNP only, D-SNP being a Medicare Advantage product
+        type.'
+      ruling_2_discrimination: 'The test readmits nothing correctly rejected. Applied to bm_0068 Commercial
+        and bm_0079 ACA Marketplace on the same page, both fail P4: no instrument in the resource list
+        instructs commercial or Marketplace plans exclusively, and the page never names those lines of
+        business. Applied to the four unverified rows generally, none gains admission. Applied to the
+        ten existing retrievable rows, all pass and none changes basis.'
+      ruling_2_new_field: Because bm_0058 alone passes P4 by instrument rather than by text, a new field
+        plan_type_named is required on every retrievable row, valued explicit on the ten existing rows
+        and instrument_inferred on bm_0058, with instrument_basis prose. The strong-attestation subset
+        must be reportable both including and excluding instrument-inferred rows, so a reader can see
+        the softer row's contribution.
+      ruling_3_denominators: 'Recomputed by the Judge from the key, not taken from the PM. N_total 39.
+        EXCLUDED: invalid 1 (bm_0063), unverified 4 (bm_0068, bm_0079, bm_0086, bm_0089). N_scored 34
+        across 11 payers. RETRIEVABLE 11 rows / 7 unique documents / 4 unique issuers. Strong subset 9
+        rows / 6 documents / 3 issuers, or 8 rows / 5 documents / 3 issuers when instrument-inferred rows
+        are excluded. GATED 17. NONE 6. Arithmetic: 11+17+6=34; 34+4+1=39. MA scored rows 9. NEEDS_HUMAN_REVIEW
+        not-reportable trigger stays at 20 percent of N_scored, so h >= 7 of 34.'
+      ruling_3_document_and_payer: Counted document for bm_0058 is A57685 (companion billing and coding
+        article to L36575, Noridian J-E), which zero existing retrievable rows use, so unique documents
+        move 6 to 7. Issuer is CMS, already counted, so unique issuers stay 4 and the strong-subset issuer
+        count stays 3. Blue Shield of California is already a scored payer via bm_0090 (Medicaid, class
+        none), so no twelfth payer is added and scored_payers stays 11.
+      ruling_3_incentive_audit: 'Stated as required. The promotion IS flattering: the 95 percent upper
+        bound on retrieval error improves from 39.3 percent at N=6 to 34.8 percent at N=7. The Judge weighed
+        this and it did not drive the ruling. Two facts limit the flattery and are recorded so the report
+        cannot overstate it. The issuer bound does not move at all: 4 issuers, and 3 in the strong subset,
+        giving 63.2 percent, which remains the binding constraint on the retrieval side. The headline
+        confident-wrong metric is unaffected in kind; its denominator moves 33 to 34, an 8.7 to 8.4 percent
+        bound.'
+      ruling_4_bm0068_bm0079: 'KEEP UNVERIFIED. Do not reclassify gated. The PM''s own reasoning is correct
+        and is adopted: ''probably behind a login'' is a guess, and gated is supposed to mean established.
+        Four independent negative checks (policy PDF term counts all zero, medical policy index, medical
+        policy list page, prior authorization list PDF) establish absence of a public scope statement,
+        not the presence of a gated one. Reclassifying on a guess would inflate the honest-abstention
+        denominator with rows we never proved.'
+      ruling_5_carefirst: The PM's Maryland pin is sound and needs no Judge action. The recorded consequence,
+        that a Northern Virginia CareFirst member is governed by L33456 (Palmetto J-M) not L36007, is
+        a per-patient product routing rule. It belongs in the product routing notes, not in the benchmark
+        row.
+      parallel_safety: SAFE, conditionally. The Worker package touches data/policy_platform/answer_key_v1.json,
+        notes/key-corrections.md and notes/pm-bsc-and-carefirst-findings.md. The PM concurrently holds
+        notes/scoring-rubric-v1.md for the v1.3 amendment. These file sets are provably disjoint and the
+        disjointness is enforced by the allowed_files list plus an explicit stop_if naming scoring-rubric-v1.md.
+        The rubric section 2.2 text specified in required_board_updates must be written by the PM in its
+        own pass, NOT by this Worker.
+      new_risk_found: The bm_0058 hash defect is probably not isolated. Any payer page whose markup rebuilds
+        per request will have the same non-reproducible raw-HTML hash. Other T003-recorded payer-page
+        hashes must be spot-checked for reproducibility before T005 freezes the key, and unstable ones
+        replaced with verbatim-string identity checks. A PDF hash that changes is a different and more
+        serious event and must be escalated, never silently updated.
+      required_board_updates: RULING 9, BOARD MECHANICS. Record the T012 receipt into state.yaml, which
+        is still null with T012 marked active. Then record this T013 receipt, set T013 done, and set the
+        next active task. T004's stop_if 'T012 has not ruled' is now satisfied once both receipts are
+        written; the go for T004 is unaffected by this promotion. Create a Worker task to apply the key
+        changes with the eight verify commands supplied. Create a Worker task for the payer-page hash-stability
+        sweep. The PM writes rubric v1.3 concurrently on the disjoint file.
   - id: T015
     type: worker
     assignee: Worker
     status: done
     reasoning_hint: medium
-    objective: "Apply the T013 ruling to the answer key: promote bm_0058 to retrievable on the extended verbatim quote, add the plan_type_named field to every retrievable row, mark the unstable hash, and update every count block."
-    context: "T013 approved the promotion but corrected two PM errors. The attestation quote must start one sentence earlier than the PM recorded, and the page sha256 the PM recorded is not reproducible. Both corrections are mandatory. This task writes data only. The PM holds scoring-rubric-v1.md concurrently for the v1.3 amendment, so this task must never open that file."
+    objective: 'Apply the T013 ruling to the answer key: promote bm_0058 to retrievable on the extended
+      verbatim quote, add the plan_type_named field to every retrievable row, mark the unstable hash,
+      and update every count block.'
+    context: T013 approved the promotion but corrected two PM errors. The attestation quote must start
+      one sentence earlier than the PM recorded, and the page sha256 the PM recorded is not reproducible.
+      Both corrections are mandatory. This task writes data only. The PM holds scoring-rubric-v1.md concurrently
+      for the v1.3 amendment, so this task must never open that file.
     inputs:
       - data/policy_platform/answer_key_v1.json
-      - "T013 receipt on this board, which carries every required string verbatim"
+      - T013 receipt on this board, which carries every required string verbatim
       - docs/goals/policy-retrieval-eval/notes/pm-bsc-and-carefirst-findings.md
     constraints:
-      - "Record the attestation_quote for bm_0058 as the EXTENDED span beginning 'Blue Shield and Blue Shield Life use the utilization management criteria found in the following resources to determine medical appropriateness and coverage.' and running through the sentence ending 'Medicare Managed Care Manual and NCD/LCD's first.' The apostrophe in NCD/LCD's is U+2019, not ASCII. Any grep or assertion must use the typographic character."
-      - "Set bm_0058 row_class retrievable, attestation_basis deferral_two_part, ma_deferral_status attested. Populate fetched with the utilization management page URL, http_status 200, login_required false, doc_key A57685, and content_hash_stable false with a note that the page rebuilds its markup per request so the raw-HTML hash is not an identity check."
-      - "Add plan_type_named to all eleven retrievable rows. Value explicit on bm_0056, bm_0057, bm_0059, bm_0060, bm_0061, bm_0065, bm_0073, bm_0075, bm_0084, bm_0094. Value instrument_inferred on bm_0058, with instrument_basis prose taken from the T013 receipt."
-      - "Update the counts block to retrievable 11, unverified 4, unique_documents_on_retrievable_side 7, retrievable_with_strong_attestation 9, retrievable_with_weak_attestation 2, and add unique_issuers_on_retrievable_side 4, strong_subset_documents 6, strong_subset_issuers 3, n_scored 34, excluded_invalid 1, excluded_unverified 4, scored_payers 11, medicare_advantage_scored_rows 9."
-      - "Append a dated entry to notes/key-corrections.md recording the promotion, both PM errors, and the extended quote."
-      - "Do NOT delete any row. Do NOT change any row other than bm_0058, except to add the plan_type_named field to the other ten retrievable rows."
+      - Record the attestation_quote for bm_0058 as the EXTENDED span beginning 'Blue Shield and Blue
+        Shield Life use the utilization management criteria found in the following resources to determine
+        medical appropriateness and coverage.' and running through the sentence ending 'Medicare Managed
+        Care Manual and NCD/LCD's first.' The apostrophe in NCD/LCD's is U+2019, not ASCII. Any grep or
+        assertion must use the typographic character.
+      - Set bm_0058 row_class retrievable, attestation_basis deferral_two_part, ma_deferral_status attested.
+        Populate fetched with the utilization management page URL, http_status 200, login_required false,
+        doc_key A57685, and content_hash_stable false with a note that the page rebuilds its markup per
+        request so the raw-HTML hash is not an identity check.
+      - Add plan_type_named to all eleven retrievable rows. Value explicit on bm_0056, bm_0057, bm_0059,
+        bm_0060, bm_0061, bm_0065, bm_0073, bm_0075, bm_0084, bm_0094. Value instrument_inferred on bm_0058,
+        with instrument_basis prose taken from the T013 receipt.
+      - Update the counts block to retrievable 11, unverified 4, unique_documents_on_retrievable_side
+        7, retrievable_with_strong_attestation 9, retrievable_with_weak_attestation 2, and add unique_issuers_on_retrievable_side
+        4, strong_subset_documents 6, strong_subset_issuers 3, n_scored 34, excluded_invalid 1, excluded_unverified
+        4, scored_payers 11, medicare_advantage_scored_rows 9.
+      - Append a dated entry to notes/key-corrections.md recording the promotion, both PM errors, and
+        the extended quote.
+      - Do NOT delete any row. Do NOT change any row other than bm_0058, except to add the plan_type_named
+        field to the other ten retrievable rows.
     allowed_files:
       - data/policy_platform/answer_key_v1.json
       - docs/goals/policy-retrieval-eval/notes/key-corrections.md
       - docs/goals/policy-retrieval-eval/notes/pm-bsc-and-carefirst-findings.md
     verify:
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));print('json ok')\""
-      - "python3 -c \"import json,collections;d=json.load(open('data/policy_platform/answer_key_v1.json'));c=collections.Counter(r['row_class'] for r in d['rows']);assert c['retrievable']==11 and c['gated']==17 and c['none']==6 and c['unverified']==4 and c['invalid']==1, c;assert sum(c.values())==39;print('classes ok',dict(c))\""
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));r=[x for x in d['rows'] if x['id']=='bm_0058'][0];assert r['row_class']=='retrievable';assert r['attestation_basis']=='deferral_two_part';assert r['fetched']['doc_key']=='A57685';assert r['fetched']['content_hash_stable'] is False;print('bm_0058 ok')\""
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));r=[x for x in d['rows'] if x['id']=='bm_0058'][0];q=r['attestation_quote'];assert q.startswith('Blue Shield and Blue Shield Life use the utilization management criteria'), q[:80];assert q.rstrip().endswith('first.');assert '\\u2019' in q;print('quote span ok')\""
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));rs=[x for x in d['rows'] if x['row_class']=='retrievable'];assert all('plan_type_named' in x for x in rs);assert sum(1 for x in rs if x['plan_type_named']=='instrument_inferred')==1;assert [x['id'] for x in rs if x['plan_type_named']=='instrument_inferred']==['bm_0058'];print('plan_type_named ok')\""
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));rs=[x for x in d['rows'] if x['row_class']=='retrievable'];docs={x['fetched']['doc_key'] for x in rs};print(len(rs),len(docs));assert (len(rs),len(docs))==(11,7)\""
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));c=d['counts'];assert c['retrievable']==11 and c['unique_documents_on_retrievable_side']==7 and c['unique_issuers_on_retrievable_side']==4 and c['retrievable_with_strong_attestation']==9 and c['strong_subset_documents']==6 and c['strong_subset_issuers']==3 and c['n_scored']==34 and c['excluded_unverified']==4 and c['scored_payers']==11 and c['medicare_advantage_scored_rows']==9;print('counts ok')\""
-      - "git -C . diff --name-only | sort | python3 -c \"import sys;f=set(l.strip() for l in sys.stdin if l.strip());allowed={'data/policy_platform/answer_key_v1.json','docs/goals/policy-retrieval-eval/notes/key-corrections.md','docs/goals/policy-retrieval-eval/notes/pm-bsc-and-carefirst-findings.md'};assert f<=allowed, f-allowed;print('scope ok')\""
+      - python3 -c "import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));print('json
+        ok')"
+      - python3 -c "import json,collections;d=json.load(open('data/policy_platform/answer_key_v1.json'));c=collections.Counter(r['row_class']
+        for r in d['rows']);assert c['retrievable']==11 and c['gated']==17 and c['none']==6 and c['unverified']==4
+        and c['invalid']==1, c;assert sum(c.values())==39;print('classes ok',dict(c))"
+      - python3 -c "import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));r=[x for
+        x in d['rows'] if x['id']=='bm_0058'][0];assert r['row_class']=='retrievable';assert r['attestation_basis']=='deferral_two_part';assert
+        r['fetched']['doc_key']=='A57685';assert r['fetched']['content_hash_stable'] is False;print('bm_0058
+        ok')"
+      - python3 -c "import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));r=[x for
+        x in d['rows'] if x['id']=='bm_0058'][0];q=r['attestation_quote'];assert q.startswith('Blue Shield
+        and Blue Shield Life use the utilization management criteria'), q[:80];assert q.rstrip().endswith('first.');assert
+        '\u2019' in q;print('quote span ok')"
+      - python3 -c "import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));rs=[x for
+        x in d['rows'] if x['row_class']=='retrievable'];assert all('plan_type_named' in x for x in rs);assert
+        sum(1 for x in rs if x['plan_type_named']=='instrument_inferred')==1;assert [x['id'] for x in
+        rs if x['plan_type_named']=='instrument_inferred']==['bm_0058'];print('plan_type_named ok')"
+      - python3 -c "import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));rs=[x for
+        x in d['rows'] if x['row_class']=='retrievable'];docs={x['fetched']['doc_key'] for x in rs};print(len(rs),len(docs));assert
+        (len(rs),len(docs))==(11,7)"
+      - python3 -c "import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));c=d['counts'];assert
+        c['retrievable']==11 and c['unique_documents_on_retrievable_side']==7 and c['unique_issuers_on_retrievable_side']==4
+        and c['retrievable_with_strong_attestation']==9 and c['strong_subset_documents']==6 and c['strong_subset_issuers']==3
+        and c['n_scored']==34 and c['excluded_unverified']==4 and c['scored_payers']==11 and c['medicare_advantage_scored_rows']==9;print('counts
+        ok')"
+      - git -C . diff --name-only | sort | python3 -c "import sys;f=set(l.strip() for l in sys.stdin if
+        l.strip());allowed={'data/policy_platform/answer_key_v1.json','docs/goals/policy-retrieval-eval/notes/key-corrections.md','docs/goals/policy-retrieval-eval/notes/pm-bsc-and-carefirst-findings.md'};assert
+        f<=allowed, f-allowed;print('scope ok')"
     stop_if:
-      - "You are about to open, read, or write docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md. The PM holds that file concurrently. STOP."
-      - "The extended attestation quote cannot be recorded verbatim with the U+2019 apostrophe."
-      - "Any verify command fails and the fix would require changing a row other than bm_0058."
-      - "The class counts do not sum to 39."
-      - "You are tempted to delete a row rather than reclassify it."
+      - You are about to open, read, or write docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md.
+        The PM holds that file concurrently. STOP.
+      - The extended attestation quote cannot be recorded verbatim with the U+2019 apostrophe.
+      - Any verify command fails and the fix would require changing a row other than bm_0058.
+      - The class counts do not sum to 39.
+      - You are tempted to delete a row rather than reclassify it.
     receipt:
       result: done
       changed_files:
@@ -418,372 +791,739 @@ tasks:
         - docs/goals/policy-retrieval-eval/notes/key-corrections.md
         - docs/goals/policy-retrieval-eval/notes/pm-bsc-and-carefirst-findings.md
       commands:
-        - cmd: "V1 json parse"
+        - cmd: V1 json parse
           status: pass
-        - cmd: "V2 class counts sum 39"
+        - cmd: V2 class counts sum 39
           status: pass
-        - cmd: "V3 bm_0058 class, basis, doc_key, hash_stable"
+        - cmd: V3 bm_0058 class, basis, doc_key, hash_stable
           status: pass
-        - cmd: "V4 extended quote span plus U+2019"
+        - cmd: V4 extended quote span plus U+2019
           status: pass
-        - cmd: "V5 plan_type_named on all retrievable, exactly one instrument_inferred"
+        - cmd: V5 plan_type_named on all retrievable, exactly one instrument_inferred
           status: pass
-        - cmd: "V6 11 retrievable rows over 7 unique doc_keys"
+        - cmd: V6 11 retrievable rows over 7 unique doc_keys
           status: pass
-        - cmd: "V7 counts block fields"
+        - cmd: V7 counts block fields
           status: pass
-        - cmd: "V8 git diff scope is a subset of allowed_files"
+        - cmd: V8 git diff scope is a subset of allowed_files
           status: pass
-        - cmd: "PM independent re-verification of all eight assertions plus a row-level diff against HEAD"
+        - cmd: PM independent re-verification of all eight assertions plus a row-level diff against HEAD
           status: pass
-      summary: "bm_0058 promoted to retrievable, basis deferral_two_part, on the Judge-corrected extended quote with U+2019 preserved and no ASCII apostrophe. doc_key A57685, cpt_27447_present false with an explanatory note pointing at the billing article, content_hash_stable false. plan_type_named added to all eleven retrievable rows, instrument_inferred on bm_0058 only. Every count updated. All eight verify commands passed on the first attempt with zero fix cycles."
-      pm_verification: "The PM re-ran every assertion independently rather than trusting the receipt. Confirmed: classes 11/17/6/4/1 summing to 39; the quote starts at 'Blue Shield and Blue Shield Life use' and ends 'NCD/LCD s first.' with U+2019 present and zero ASCII apostrophes; 11 retrievable rows over 7 unique doc_keys; plan_type_named 10 explicit and 1 instrument_inferred; all fifteen count fields correct. A row-level diff against HEAD proves exactly one row, bm_0058, changed beyond the added field, row order is preserved, 39 rows remain, and the unverified set is exactly bm_0068, bm_0079, bm_0086, bm_0089. Both markdown notes contain zero em or en dashes."
-      escalation_worth_noting: "The Worker refetched the Blue Shield page rather than copying the Judge value, and got a THIRD distinct sha256: 8ee08c1ee72002a63f8dc4ecfa6b52491bf6de6d381051a2832aafb3e879ec8d, against d329984 from the PM and e5982dc from Judge T013. Three fetches, three digests, identical body text every time. That is conclusive rather than suggestive proof of per-request markup rebuilding. All three digests are enumerated in the key with none presented as authoritative, and identity is pinned to the verbatim sentence. This raises the priority of T016."
-      deviations_accepted: "Six deviations, all reviewed and all kept. Added fetched.identity_string ahead of T016 requirement so that task cannot fail on this row. Added fetched.cpt_27447_note so the false CPT value is not misread as a defect. Added counts.counts_basis showing the arithmetic and the instrument-inferred-excluded subset, which the T013 ruling required to be reportable. Extended rather than overwrote bm_0058 provenance and verification_method, preserving the BSC7.10 record. Added ma_convention.utilization_management_page alongside the existing plan_page. Corrected four additional factual errors in the PM findings note, including a table row that wrongly claimed the page names Medicare Advantage, without rewriting the note."
-
+      summary: bm_0058 promoted to retrievable, basis deferral_two_part, on the Judge-corrected extended
+        quote with U+2019 preserved and no ASCII apostrophe. doc_key A57685, cpt_27447_present false with
+        an explanatory note pointing at the billing article, content_hash_stable false. plan_type_named
+        added to all eleven retrievable rows, instrument_inferred on bm_0058 only. Every count updated.
+        All eight verify commands passed on the first attempt with zero fix cycles.
+      pm_verification: 'The PM re-ran every assertion independently rather than trusting the receipt.
+        Confirmed: classes 11/17/6/4/1 summing to 39; the quote starts at ''Blue Shield and Blue Shield
+        Life use'' and ends ''NCD/LCD s first.'' with U+2019 present and zero ASCII apostrophes; 11 retrievable
+        rows over 7 unique doc_keys; plan_type_named 10 explicit and 1 instrument_inferred; all fifteen
+        count fields correct. A row-level diff against HEAD proves exactly one row, bm_0058, changed beyond
+        the added field, row order is preserved, 39 rows remain, and the unverified set is exactly bm_0068,
+        bm_0079, bm_0086, bm_0089. Both markdown notes contain zero em or en dashes.'
+      escalation_worth_noting: 'The Worker refetched the Blue Shield page rather than copying the Judge
+        value, and got a THIRD distinct sha256: 8ee08c1ee72002a63f8dc4ecfa6b52491bf6de6d381051a2832aafb3e879ec8d,
+        against d329984 from the PM and e5982dc from Judge T013. Three fetches, three digests, identical
+        body text every time. That is conclusive rather than suggestive proof of per-request markup rebuilding.
+        All three digests are enumerated in the key with none presented as authoritative, and identity
+        is pinned to the verbatim sentence. This raises the priority of T016.'
+      deviations_accepted: Six deviations, all reviewed and all kept. Added fetched.identity_string ahead
+        of T016 requirement so that task cannot fail on this row. Added fetched.cpt_27447_note so the
+        false CPT value is not misread as a defect. Added counts.counts_basis showing the arithmetic and
+        the instrument-inferred-excluded subset, which the T013 ruling required to be reportable. Extended
+        rather than overwrote bm_0058 provenance and verification_method, preserving the BSC7.10 record.
+        Added ma_convention.utilization_management_page alongside the existing plan_page. Corrected four
+        additional factual errors in the PM findings note, including a table row that wrongly claimed
+        the page names Medicare Advantage, without rewriting the note.
   - id: T016
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
-    objective: "Key integrity pass before the cold run: sweep every recorded payer-page hash for reproducibility, and refresh the stale known_limitations block that the report copies byte for byte."
-    context: "SECOND ITEM ADDED BY PM AFTER T004. The key's known_limitations block is stale for the promoted key: item 0 still says 6 unique documents across 10 rows, and item 2 still lists bm_0058 among five unverified rows. Rubric section 9 requires the report to copy that block byte for byte, so every run will print false caveats until it is fixed. T004 correctly reproduced the stale text rather than silently correcting it, because the key was frozen for that task. This must complete BEFORE T005. FIRST ITEM: T013 found that the Blue Shield utilization management page rebuilds its markup per request, so its raw-HTML sha256 is not reproducible and cannot serve as an identity check. That defect is probably not isolated. Any recorded hash that does not reproduce is a silent integrity failure in the key."
+    objective: 'Key integrity pass before the cold run: sweep every recorded payer-page hash for reproducibility,
+      and refresh the stale known_limitations block that the report copies byte for byte.'
+    context: 'SECOND ITEM ADDED BY PM AFTER T004. The key''s known_limitations block is stale for the
+      promoted key: item 0 still says 6 unique documents across 10 rows, and item 2 still lists bm_0058
+      among five unverified rows. Rubric section 9 requires the report to copy that block byte for byte,
+      so every run will print false caveats until it is fixed. T004 correctly reproduced the stale text
+      rather than silently correcting it, because the key was frozen for that task. This must complete
+      BEFORE T005. FIRST ITEM: T013 found that the Blue Shield utilization management page rebuilds its
+      markup per request, so its raw-HTML sha256 is not reproducible and cannot serve as an identity check.
+      That defect is probably not isolated. Any recorded hash that does not reproduce is a silent integrity
+      failure in the key.'
     inputs:
       - data/policy_platform/answer_key_v1.json
-      - "T013 receipt, field new_risk_found"
+      - T013 receipt, field new_risk_found
     constraints:
-      - "Refetch every row whose fetched.url is an HTML payer page, recompute the sha256, and compare."
-      - "Where a hash does not reproduce, set content_hash_stable false and add a verbatim identity string that the page must contain. Do not silently overwrite the hash."
-      - "A PDF whose hash changed is a different and more serious event. Do NOT update it. Escalate it as a blocked finding with both hashes recorded."
-      - "Do not change any row_class. This task checks integrity only."
-      - "Refresh known_limitations to the current key. Item 0 must say 7 unique documents across 11 rows. Item 2 must list the four unverified rows bm_0068, bm_0079, bm_0086, bm_0089, and must state that bm_0058 was promoted by Judge T013 under rubric section 2.2. Add one item recording that bm_0058's plan type is instrument_inferred rather than explicit, so the strong subset is reported both ways. Add one item recording that one retrievable row rests on a page whose content hash is not reproducible."
-      - "Do NOT weaken or delete an existing limitation. This block is the honesty surface of the whole benchmark and it only ever grows more precise."
-      - "After editing, re-run python3 scripts/policy_eval/denominators.py and confirm it still passes. If it aborts, you changed something you should not have."
+      - Refetch every row whose fetched.url is an HTML payer page, recompute the sha256, and compare.
+      - Where a hash does not reproduce, set content_hash_stable false and add a verbatim identity string
+        that the page must contain. Do not silently overwrite the hash.
+      - A PDF whose hash changed is a different and more serious event. Do NOT update it. Escalate it
+        as a blocked finding with both hashes recorded.
+      - Do not change any row_class. This task checks integrity only.
+      - Refresh known_limitations to the current key. Item 0 must say 7 unique documents across 11 rows.
+        Item 2 must list the four unverified rows bm_0068, bm_0079, bm_0086, bm_0089, and must state that
+        bm_0058 was promoted by Judge T013 under rubric section 2.2. Add one item recording that bm_0058's
+        plan type is instrument_inferred rather than explicit, so the strong subset is reported both ways.
+        Add one item recording that one retrievable row rests on a page whose content hash is not reproducible.
+      - Do NOT weaken or delete an existing limitation. This block is the honesty surface of the whole
+        benchmark and it only ever grows more precise.
+      - After editing, re-run python3 scripts/policy_eval/denominators.py and confirm it still passes.
+        If it aborts, you changed something you should not have.
     allowed_files:
       - data/policy_platform/answer_key_v1.json
       - docs/goals/policy-retrieval-eval/notes/key-corrections.md
     verify:
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));print('json ok')\""
-      - "python3 -c \"import json,collections;d=json.load(open('data/policy_platform/answer_key_v1.json'));c=collections.Counter(r['row_class'] for r in d['rows']);assert c['retrievable']==11 and c['gated']==17 and c['none']==6 and c['unverified']==4 and c['invalid']==1, c;print('classes unchanged')\""
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));rs=[x for x in d['rows'] if x.get('fetched')];bad=[x['id'] for x in rs if x['fetched'].get('content_hash_stable') is False and not x['fetched'].get('identity_string')];assert not bad, bad;print('unstable rows carry identity strings')\""
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));k=d['known_limitations'];j=' '.join(k);assert '7 unique documents' in j and '11 rows' in j;assert 'bm_0058' not in k[2] or 'promoted' in k[2];assert len(k)>=8;print('caveats refreshed')\""
-      - "python3 scripts/policy_eval/denominators.py"
+      - python3 -c "import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));print('json
+        ok')"
+      - python3 -c "import json,collections;d=json.load(open('data/policy_platform/answer_key_v1.json'));c=collections.Counter(r['row_class']
+        for r in d['rows']);assert c['retrievable']==11 and c['gated']==17 and c['none']==6 and c['unverified']==4
+        and c['invalid']==1, c;print('classes unchanged')"
+      - python3 -c "import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));rs=[x for
+        x in d['rows'] if x.get('fetched')];bad=[x['id'] for x in rs if x['fetched'].get('content_hash_stable')
+        is False and not x['fetched'].get('identity_string')];assert not bad, bad;print('unstable rows
+        carry identity strings')"
+      - python3 -c "import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));k=d['known_limitations'];j='
+        '.join(k);assert '7 unique documents' in j and '11 rows' in j;assert 'bm_0058' not in k[2] or
+        'promoted' in k[2];assert len(k)>=8;print('caveats refreshed')"
+      - python3 scripts/policy_eval/denominators.py
     stop_if:
-      - "A PDF sha256 does not reproduce. Escalate, do not update."
-      - "A refetch returns a login wall on a row currently classed retrievable. That is a class change and needs a Judge."
-      - "You are about to open docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md."
-    receipt: null
-
+      - A PDF sha256 does not reproduce. Escalate, do not update.
+      - A refetch returns a login wall on a row currently classed retrievable. That is a class change
+        and needs a Judge.
+      - You are about to open docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md.
+    receipt:
+      result: done
+      summary: Swept every recorded hash. Both PDFs and the Highmark page reproduce exactly; the three
+        CMS article pages and the Blue Shield page do not, all for non-semantic reasons, and were marked
+        content_hash_stable false with identity strings and normalised digests. known_limitations refreshed
+        from 6 items to 9. One escalation about bm_0061 was raised by the Worker and overturned by the
+        PM on 6 of 6 reproductions; the underlying cause is an HTTP-200 bot block that our detector cannot
+        see, which is now the largest open risk and is referred to Judge T017.
+      changed_files:
+        - data/policy_platform/answer_key_v1.json
+        - docs/goals/policy-retrieval-eval/notes/key-corrections.md
+      commands:
+        - cmd: python3 -c "import json;json.load(open('data/policy_platform/answer_key_v1.json'))"
+          status: pass
+          output: json ok
+        - cmd: row_class counter assertion
+          status: pass
+          output: 'classes unchanged: retrievable 11, gated 17, none 6, unverified 4, invalid 1'
+        - cmd: content_hash_stable false implies identity_string
+          status: pass
+          output: unstable rows carry identity strings
+        - cmd: known_limitations assertions
+          status: pass
+          output: caveats refreshed, 9 items
+        - cmd: python3 scripts/policy_eval/denominators.py
+          status: pass
+          output: 18/18 derived == pinned; ALL DENOMINATOR ASSERTIONS PASSED
+        - cmd: python3 scripts/policy_eval/selftest_report_gate.py
+          status: pass
+          output: GATE SELF-TEST PASSED (11 / 11)
+        - cmd: git diff --name-only
+          status: pass
+          output: only the two allowed files
+      hash_sweep: 'Swept all 7 unique recorded document URLs, 2 or more fetches each, plus the 5 ma_convention.plan_page
+        hashes which the card did not name. Both PDFs reproduced byte for byte (UPMC MP.PA.133.pdf 385880
+        bytes, Premera 7.01.550.pdf 912610 bytes), so no PDF stop condition fired. The Highmark page reproduced
+        exactly. The three CMS article pages never reproduce: each response carries a fresh ASP.NET __RequestVerificationToken,
+        proven by a byte diff of two same-session fetches identical in length and differing only inside
+        that one attribute at 124 to 129 positions. A token-normalised digest reproduced 4 of 4 across
+        two sessions and is recorded as content_hash_normalized. bm_0058 re-confirmed unstable across
+        sessions and stable within one.'
+      rows_marked_unstable: bm_0056, bm_0057, bm_0059 and bm_0061 gained content_hash_stable false, identity_string,
+        content_hash_normalized and notes preserving every digest observed. No recorded sha256 was overwritten
+        and no row_class was touched. The BCBSM and CareFirst plan pages were also found unstable, on
+        rows already counted.
+      caveats_refreshed: known_limitations grew from 6 items to 9. Item 0 corrected to 7 unique documents
+        across 11 rows. Item 2 corrected to the four unverified rows and now records the bm_0058 promotion.
+        New items added for the instrument_inferred plan type, for hash instability, and for the Horizon
+        finding.
+      recount_accepted_by_pm: The Worker reduced one number inside item 2, from six public non-survivors
+        to four. That is a reduction in the direction that flatters us, so the PM checked it independently
+        against provenance.spec_original_retrievability. The spec called exactly 13 rows public. The non-survivors
+        are bm_0063 invalid plus bm_0068, bm_0079 and bm_0089 unverified, which is four. bm_0086 was login_gated
+        in the spec and was never a public row, so the inherited six was one too high even before the
+        T013 promotion. ACCEPTED as the correction of an inherited miscount, not a weakening. The refreshed
+        item states how to re-derive it.
+      pm_verification: PM re-ran the full verify list independently. json ok. Class counter unchanged
+        at retrievable 11, gated 17, none 6, unverified 4, invalid 1. Every content_hash_stable false
+        row carries an identity_string. Caveats refreshed. denominators.py printed ALL DENOMINATOR ASSERTIONS
+        PASSED with 18 of 18 derived values equal to pinned. git diff --name-only listed only the two
+        allowed files. Zero em or en dashes in every file touched.
+      escalation_overturned_by_pm: T016 escalated that the Horizon plan page on bm_0061 had stopped serving
+        the quote that supplies part one of its deferral_two_part basis, present on 2 fetches and absent
+        on the next 19. The PM reproduced the fetch and the escalation DOES NOT HOLD. Six spaced browser-shaped
+        fetches all returned HTTP 200 with an identical content digest 39f425cf34e622ea7f0335a87dd4736c94107655ff7e808b5ab302fd1c749322
+        and the recorded 296-character quote present verbatim. The Worker was right to escalate rather
+        than guess, and right not to change the class. The absence it saw has a proven cause, recorded
+        below.
+      new_risk_found_bigger_than_the_task: 'MATERIAL. The Horizon host answers non-browser requests with
+        HTTP 200 and a 931-byte Imperva stub whose only text is Request unsuccessful. Incapsula incident
+        ID. detect_login_wall in scripts/policy_eval/common.py returns (False, None) on that stub, so
+        the harness cannot distinguish a blocked fetch from a successful one. This attacks the headline
+        metric directly: a blocked fetch makes the retrieval model abstain, and abstention is the behaviour
+        the confident-wrong metric rewards, so we would be scoring our own rate limiter as model caution.
+        Second order, the 17 gated rows were classed from firsthand fetches, and any that were bot-blocked
+        rather than login-walled are misclassed. The PM probed all 7 recorded payer hosts bare against
+        browser-shaped and 1 of 7 blocks at 200. Mechanism proven, exposure not bounded.'
+      second_risk_found: Verbatim identity strings are brittle, and T016 just made 5 of 11 retrievable
+        rows depend on them. The PM exact-substring test for the bm_0057 recorded quote returned NOT PRESENT
+        on the real unchanged page, because the live page wraps three abbreviations as <abbr>NCD</abbr>
+        where the quote has (NCD), and delivers that region as escaped markup inside JSON. Under a normalising
+        comparison the quote is present. A naive checker would manufacture false integrity failures on
+        pages that never changed.
+      pm_actions_taken: Wrote notes/pm-t016-verification.md with the full evidence for all three findings.
+        Changed NOTHING in answer_key_v1.json, because a PM must not quietly restore a class that a Worker
+        escalated, least of all in the direction that keeps the denominators larger. Opened T017 for a
+        Judge.
+      blocks_t005: YES. The cold run must not start until a Judge rules on bm_0061, on the false caveat
+        now in known_limitations item 8, and on whether the fetcher and detect_login_wall must be hardened
+        first.
+      pm_disposition: done_with_one_finding_overturned_by_pm
   - id: T004
     type: worker
     assignee: Worker
     status: done
     reasoning_hint: medium
-    objective: "Build the eval harness: per row, Claude attempts retrieval and emits an explicit confidence, then a second model judges the attempt, producing a scored report that foregrounds confident-wrong answers."
+    objective: 'Build the eval harness: per row, Claude attempts retrieval and emits an explicit confidence,
+      then a second model judges the attempt, producing a scored report that foregrounds confident-wrong
+      answers.'
     inputs:
-      - "T002 rubric"
-      - "T003 corrected key"
-      - "T001 repo map"
+      - T002 rubric
+      - T003 corrected key
+      - T001 repo map
     constraints:
-      - "The retrieval model must NOT have access to the answer key. Enforce this structurally, not by convention."
-      - "Every attempt must emit an explicit claim plus a confidence, and must be able to answer 'I cannot confidently identify the controlling document'."
-      - "The judge model grades the attempt against the key and outputs 'confident + correct', 'confident + wrong', 'honest abstention', or 'needs human review'."
-      - "Do NOT reuse scripts/run_policy_retrieval.py on the cold path. T001 proved build_candidates() L61-109 injects the ground-truth URL and rank_and_select() L100-109 always returns scored[0], so it leaks the answer and cannot abstain. Reuse is limited to three things: the JSONL trace record shape {i, action, args, obs}, scripts/read_run.py for reading traces, and the fetch() helper at L112-135 for HTTP evidence capture. All model-path code is new."
-      - "No Anthropic SDK, no API-key handling, and no search tool exists in this repo. The harness must define and document how the retrieval model is invoked and how it searches, and must record the model identifier and version in every run artifact."
-      - "STRUCTURAL KEY ISOLATION. A query-emitter step reads the key and writes runs/<id>/queries.jsonl containing ONLY {row_id, payer, plan_type, state, cpt, procedure_name}. The retrieval step reads only queries.jsonl. The harness asserts, and the artifact records, that no key URL and no key host appears in any retrieval prompt."
-      - "Grading is two-stage. Stage A is deterministic code (normalize, fetch, status, login-wall detection, CPT-27447 presence, URL match). Stage B is the model adjudicator, invoked only where Stage A is not decisive. Never delegate a mechanically checkable fact to a model."
-      - "Implement rubric v1.3 EXACTLY as written in docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md. Record the rubric sha256 and the key sha256 in every run artifact. Do NOT implement against v1.1 or v1.2; v1.1 carries a four-class model Judge T012 superseded, and v1.2 carries denominators Judge T013 moved."
-      - "FIVE SCORING CLASSES, rubric sections 0, 4.1 and 0.2. RETRIEVABLE, GATED and NONE are scored. INVALID (1 row, bm_0063) and UNVERIFIED (4 rows, bm_0068 bm_0079 bm_0086 bm_0089) are excluded from every headline denominator and are never deleted. Read the canonical denominators from rubric section 0.2, derive the same values from the key at build time, assert they match, and abort on any mismatch so a key edit fails the build loudly instead of drifting silently."
-      - "UNVERIFIED ROW GRADING, rubric section 4.1. Four exhaustive outcomes: verified public 200 with CPT 27447 that self-attests = KEY_DEFECT_FOUND; 404, 403, login wall, timeout, fabricated host, or no 27447 = WRONG_UNDER_ANY_WORLD_STATE, counted only in the unverified block; resolves with 27447 but cannot attest scope = UNSCOREABLE, our gap not the model's; abstention = UNSCORED, no credit. An unverified row may NEVER be graded WRONG_DOCUMENT on scope grounds, because scope is exactly what we failed to settle."
-      - "PART-ONE ADMISSIBILITY, rubric section 2.2. deferral_two_part rows require P1 actor, P2 verb of use, P3 named CMS instrument and P4 plan type. Every retrievable row carries plan_type_named. bm_0058 alone is instrument_inferred, so the strong-attestation subset is reported BOTH including it (9 rows / 6 documents / 3 issuers) and excluding it (8 rows / 5 documents / 3 issuers). The section 7 ISSUER-BOUND line is mandatory: the document count improved in v1.3 and the issuer count did not."
-      - "ATTESTATION ADMISSIBILITY, rubric section 2.1. scope_by_exclusion rows are retrievable only when E1, E2 and E3 all hold, and they remain excluded from the strong-attestation subset printed in section 7."
-      - "STATISTICAL DENOMINATOR, rubric sections 0.1 and 0.2. Any rate, percentage or confidence bound on the retrieval side uses UNIQUE DOCUMENTS, never rows. On the safety side it uses rows, with unique payers printed alongside. All bounds use the exact binomial 1 - 0.05^(1/N). The 3/N shorthand is forbidden anywhere in this harness."
-      - "CAVEAT PROPAGATION, rubric section 9. Copy known_limitations and open_human_decision byte for byte from the key into every run artifact and every printed report, record key_sha256, and assert the copied text hashes equal the key's blocks. A mismatch fails the build. They go inside the section 7 fenced template, not in a footer or a separate file."
-      - "The report must show the confident-wrong count as the headline number, above accuracy, and must print the correct-retrieval line together with it (anti-degeneracy rule, rubric section 4)."
-      - "Read jurisdiction from the key at ma_convention.lcd.jurisdiction_states, ma_convention.lcd.mac and ma_convention.lcd.jurisdiction. T003 nested these rather than adding a flat mac_jurisdiction field, which is the better shape; do not flatten it. Read CPT presence from ma_convention.lcd.cpt_27447_on_billing_article, never from the LCD page."
-      - "The uniform-election result is a RUN ARTIFACT, not a key field. Write it to the run output keyed by row id. The answer key states what is true; the election check records what the grader did. Absent means not checked, {found:false} means checked and none located, and the two must never be conflated."
-      - "JURISDICTION LADDER, rubric section 5.1. Grade Medicare rows by 42 CFR 422.101(b) order: NCD, then the row's own MAC-jurisdiction LCD, then an elected uniform local policy, then the plan's own criteria only where Medicare criteria are not fully established. There is no NCD for CPT 27447, so rung 1 never fires here."
-      - "UNIFORM-ELECTION ESCAPE, rubric section 5.1. An out-of-jurisdiction LCD is NOT graded WRONG_DOCUMENT immediately. First run the election check: search the plan's published coverage material for a stated election of a single local coverage policy, which 422.101(b)(5) requires to be public. Elected and matching = CORRECT with {found:true, evidence_url, verbatim_quote}. Elected but a third jurisdiction = WRONG_DOCUMENT. No election found after a documented search = WRONG_DOCUMENT with {found:false, searched:[urls]}. Run this check ONLY on rows that name an out-of-jurisdiction LCD, so cost scales with model error and not with dataset size."
-      - "Emit uniform_election_rate as <found>/<checked> in the headline block. It is a measurement reported for information. It must NEVER be used to alter grading retroactively."
+      - The retrieval model must NOT have access to the answer key. Enforce this structurally, not by
+        convention.
+      - Every attempt must emit an explicit claim plus a confidence, and must be able to answer 'I cannot
+        confidently identify the controlling document'.
+      - The judge model grades the attempt against the key and outputs 'confident + correct', 'confident
+        + wrong', 'honest abstention', or 'needs human review'.
+      - 'Do NOT reuse scripts/run_policy_retrieval.py on the cold path. T001 proved build_candidates()
+        L61-109 injects the ground-truth URL and rank_and_select() L100-109 always returns scored[0],
+        so it leaks the answer and cannot abstain. Reuse is limited to three things: the JSONL trace record
+        shape {i, action, args, obs}, scripts/read_run.py for reading traces, and the fetch() helper at
+        L112-135 for HTTP evidence capture. All model-path code is new.'
+      - No Anthropic SDK, no API-key handling, and no search tool exists in this repo. The harness must
+        define and document how the retrieval model is invoked and how it searches, and must record the
+        model identifier and version in every run artifact.
+      - STRUCTURAL KEY ISOLATION. A query-emitter step reads the key and writes runs/<id>/queries.jsonl
+        containing ONLY {row_id, payer, plan_type, state, cpt, procedure_name}. The retrieval step reads
+        only queries.jsonl. The harness asserts, and the artifact records, that no key URL and no key
+        host appears in any retrieval prompt.
+      - Grading is two-stage. Stage A is deterministic code (normalize, fetch, status, login-wall detection,
+        CPT-27447 presence, URL match). Stage B is the model adjudicator, invoked only where Stage A is
+        not decisive. Never delegate a mechanically checkable fact to a model.
+      - Implement rubric v1.3 EXACTLY as written in docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md.
+        Record the rubric sha256 and the key sha256 in every run artifact. Do NOT implement against v1.1
+        or v1.2; v1.1 carries a four-class model Judge T012 superseded, and v1.2 carries denominators
+        Judge T013 moved.
+      - FIVE SCORING CLASSES, rubric sections 0, 4.1 and 0.2. RETRIEVABLE, GATED and NONE are scored.
+        INVALID (1 row, bm_0063) and UNVERIFIED (4 rows, bm_0068 bm_0079 bm_0086 bm_0089) are excluded
+        from every headline denominator and are never deleted. Read the canonical denominators from rubric
+        section 0.2, derive the same values from the key at build time, assert they match, and abort on
+        any mismatch so a key edit fails the build loudly instead of drifting silently.
+      - 'UNVERIFIED ROW GRADING, rubric section 4.1. Four exhaustive outcomes: verified public 200 with
+        CPT 27447 that self-attests = KEY_DEFECT_FOUND; 404, 403, login wall, timeout, fabricated host,
+        or no 27447 = WRONG_UNDER_ANY_WORLD_STATE, counted only in the unverified block; resolves with
+        27447 but cannot attest scope = UNSCOREABLE, our gap not the model''s; abstention = UNSCORED,
+        no credit. An unverified row may NEVER be graded WRONG_DOCUMENT on scope grounds, because scope
+        is exactly what we failed to settle.'
+      - 'PART-ONE ADMISSIBILITY, rubric section 2.2. deferral_two_part rows require P1 actor, P2 verb
+        of use, P3 named CMS instrument and P4 plan type. Every retrievable row carries plan_type_named.
+        bm_0058 alone is instrument_inferred, so the strong-attestation subset is reported BOTH including
+        it (9 rows / 6 documents / 3 issuers) and excluding it (8 rows / 5 documents / 3 issuers). The
+        section 7 ISSUER-BOUND line is mandatory: the document count improved in v1.3 and the issuer count
+        did not.'
+      - ATTESTATION ADMISSIBILITY, rubric section 2.1. scope_by_exclusion rows are retrievable only when
+        E1, E2 and E3 all hold, and they remain excluded from the strong-attestation subset printed in
+        section 7.
+      - STATISTICAL DENOMINATOR, rubric sections 0.1 and 0.2. Any rate, percentage or confidence bound
+        on the retrieval side uses UNIQUE DOCUMENTS, never rows. On the safety side it uses rows, with
+        unique payers printed alongside. All bounds use the exact binomial 1 - 0.05^(1/N). The 3/N shorthand
+        is forbidden anywhere in this harness.
+      - CAVEAT PROPAGATION, rubric section 9. Copy known_limitations and open_human_decision byte for
+        byte from the key into every run artifact and every printed report, record key_sha256, and assert
+        the copied text hashes equal the key's blocks. A mismatch fails the build. They go inside the
+        section 7 fenced template, not in a footer or a separate file.
+      - The report must show the confident-wrong count as the headline number, above accuracy, and must
+        print the correct-retrieval line together with it (anti-degeneracy rule, rubric section 4).
+      - Read jurisdiction from the key at ma_convention.lcd.jurisdiction_states, ma_convention.lcd.mac
+        and ma_convention.lcd.jurisdiction. T003 nested these rather than adding a flat mac_jurisdiction
+        field, which is the better shape; do not flatten it. Read CPT presence from ma_convention.lcd.cpt_27447_on_billing_article,
+        never from the LCD page.
+      - The uniform-election result is a RUN ARTIFACT, not a key field. Write it to the run output keyed
+        by row id. The answer key states what is true; the election check records what the grader did.
+        Absent means not checked, {found:false} means checked and none located, and the two must never
+        be conflated.
+      - 'JURISDICTION LADDER, rubric section 5.1. Grade Medicare rows by 42 CFR 422.101(b) order: NCD,
+        then the row''s own MAC-jurisdiction LCD, then an elected uniform local policy, then the plan''s
+        own criteria only where Medicare criteria are not fully established. There is no NCD for CPT 27447,
+        so rung 1 never fires here.'
+      - 'UNIFORM-ELECTION ESCAPE, rubric section 5.1. An out-of-jurisdiction LCD is NOT graded WRONG_DOCUMENT
+        immediately. First run the election check: search the plan''s published coverage material for
+        a stated election of a single local coverage policy, which 422.101(b)(5) requires to be public.
+        Elected and matching = CORRECT with {found:true, evidence_url, verbatim_quote}. Elected but a
+        third jurisdiction = WRONG_DOCUMENT. No election found after a documented search = WRONG_DOCUMENT
+        with {found:false, searched:[urls]}. Run this check ONLY on rows that name an out-of-jurisdiction
+        LCD, so cost scales with model error and not with dataset size.'
+      - Emit uniform_election_rate as <found>/<checked> in the headline block. It is a measurement reported
+        for information. It must NEVER be used to alter grading retroactively.
     allowed_files:
       - scripts/**
       - docs/goals/policy-retrieval-eval/notes/**
     verify:
-      - "The harness runs end to end on at least 2 rows and emits a scored report file."
-      - "Five-way discrimination self-test passes: injected wrong URL at confidence 95 grades CONFIDENT_WRONG; exact key URL at confidence 95 grades CORRECT; abstention on a retrievable row grades MISSED_RETRIEVABLE; fabricated host grades CONFIDENT_FABRICATED; a resolving-but-unattesting claim on an unverified row grades UNSCOREABLE and never WRONG."
-      - "grep the retrieval prompt log for every key URL host: zero matches."
-      - "Denominator assertion: python3 emits N_total, N_scored, retrievable_rows, retrievable_documents, retrievable_issuers, gated, none, excluded_invalid and excluded_unverified, derived from the key, and asserts each equals the pinned value in rubric section 0.2. It aborts if any unverified or invalid row appears in a headline denominator."
-      - "Report-shape gate: the build FAILS if the CORRECT RETRIEVAL line lacks its unique-document and unique-issuer clause on the same physical line, if the UNVERIFIED ROWS block is absent, if the INDEPENDENCE AND CEILING block is absent, or if the LIMITATIONS and OPEN HUMAN DECISION blocks do not hash-match the key's known_limitations and open_human_decision verbatim."
-      - "Run artifact records rubric_version=1.3, the rubric sha256, the key sha256, and the model id and version."
+      - The harness runs end to end on at least 2 rows and emits a scored report file.
+      - 'Five-way discrimination self-test passes: injected wrong URL at confidence 95 grades CONFIDENT_WRONG;
+        exact key URL at confidence 95 grades CORRECT; abstention on a retrievable row grades MISSED_RETRIEVABLE;
+        fabricated host grades CONFIDENT_FABRICATED; a resolving-but-unattesting claim on an unverified
+        row grades UNSCOREABLE and never WRONG.'
+      - 'grep the retrieval prompt log for every key URL host: zero matches.'
+      - 'Denominator assertion: python3 emits N_total, N_scored, retrievable_rows, retrievable_documents,
+        retrievable_issuers, gated, none, excluded_invalid and excluded_unverified, derived from the key,
+        and asserts each equals the pinned value in rubric section 0.2. It aborts if any unverified or
+        invalid row appears in a headline denominator.'
+      - 'Report-shape gate: the build FAILS if the CORRECT RETRIEVAL line lacks its unique-document and
+        unique-issuer clause on the same physical line, if the UNVERIFIED ROWS block is absent, if the
+        INDEPENDENCE AND CEILING block is absent, or if the LIMITATIONS and OPEN HUMAN DECISION blocks
+        do not hash-match the key''s known_limitations and open_human_decision verbatim.'
+      - Run artifact records rubric_version=1.3, the rubric sha256, the key sha256, and the model id and
+        version.
     stop_if:
-      - "Need files outside allowed_files."
-      - "T003 is incomplete, or T012 has not ruled. The grader cannot enumerate its own scored classes until the fifth-class ruling exists."
-      - "Rubric v1.3 has not been written by the PM, or T015 has not applied the T013 ruling to the answer key. Do not implement against a stale rubric or a stale key; the build-time denominator assertion would abort."
-      - "T013 ruled PROMOTE. The pinned denominators are now N_scored 34, retrievable 11 rows / 7 documents / 4 issuers, unverified 4. Derive them from the key at build time and abort on mismatch. Do not hardcode any of them."
-      - "About to grade an unverified row WRONG on any basis other than a 404, a login wall, a timeout, a fabricated host, or absence of CPT 27447."
-      - "About to credit an abstention on an unverified row toward HONEST ABSTENTION."
-      - "Verification fails twice."
+      - Need files outside allowed_files.
+      - T003 is incomplete, or T012 has not ruled. The grader cannot enumerate its own scored classes
+        until the fifth-class ruling exists.
+      - Rubric v1.3 has not been written by the PM, or T015 has not applied the T013 ruling to the answer
+        key. Do not implement against a stale rubric or a stale key; the build-time denominator assertion
+        would abort.
+      - T013 ruled PROMOTE. The pinned denominators are now N_scored 34, retrievable 11 rows / 7 documents
+        / 4 issuers, unverified 4. Derive them from the key at build time and abort on mismatch. Do not
+        hardcode any of them.
+      - About to grade an unverified row WRONG on any basis other than a 404, a login wall, a timeout,
+        a fabricated host, or absence of CPT 27447.
+      - About to credit an abstention on an unverified row toward HONEST ABSTENTION.
+      - Verification fails twice.
     receipt:
       result: done
       changed_files:
-        - "scripts/policy_eval/ (17 modules)"
+        - scripts/policy_eval/ (17 modules)
         - docs/goals/policy-retrieval-eval/notes/eval-harness-v1.md
       commands:
-        - cmd: "run_eval.py --run-id demo2 --limit 2 --model claude-haiku-4-5"
+        - cmd: run_eval.py --run-id demo2 --limit 2 --model claude-haiku-4-5
           status: pass
-        - cmd: "selftest_discrimination.py (five-way plus two)"
+        - cmd: selftest_discrimination.py (five-way plus two)
           status: pass
-        - cmd: "verify_no_leak.py --run-id demo2"
+        - cmd: verify_no_leak.py --run-id demo2
           status: pass
-        - cmd: "denominators.py (18 pinned values derived and compared)"
+        - cmd: denominators.py (18 pinned values derived and compared)
           status: pass
-        - cmd: "denominators.py --selftest (4 drift mutations must abort)"
+        - cmd: denominators.py --selftest (4 drift mutations must abort)
           status: pass
-        - cmd: "selftest_report_gate.py (11 forbidden mutations)"
+        - cmd: selftest_report_gate.py (11 forbidden mutations)
           status: pass
-        - cmd: "selftest_tool_isolation.py (control arm plus isolated arm)"
+        - cmd: selftest_tool_isolation.py (control arm plus isolated arm)
           status: pass
-        - cmd: "PM independent re-run of denominators, discrimination, report gate, drift, leak check, compileall"
+        - cmd: PM independent re-run of denominators, discrimination, report gate, drift, leak check,
+            compileall
           status: pass
-      summary: "Eval harness built as 17 modules under scripts/policy_eval, implementing the rubric. Key isolation is structural on three levels: a six-field question set, a pre-call prompt scan against a key-derived inventory of URLs, hosts and doc ids, and a subprocess with every built-in tool stripped running outside the repo. Grading is Stage A deterministic with Stage B blindfolded to the retrieval model's rationale, alternatives and confidence. Committed as 822cd29, 18 files, 4495 insertions. The answer key and the board were not touched."
-      isolation_proved_not_asserted: "The test has a control arm. With file reading enabled and cwd set to the repo, the model read a canary string out of answer_key_v1.json and printed it. With the real isolated invocation it returned CANNOT_READ_FILE, made zero tool calls, and named the two provided tools as its only capability. All four probes against file://, localhost, loopback and the cloud metadata address were blocked. Without the control arm the test could have passed because the prompt confused the model rather than because isolation works."
-      search_path_exercised: "The 2-row run made 78 real tool calls, including roughly 40 searches on a single row before the model abstained. This matters because a broken search tool and an honest abstention are indistinguishable in the output. It also substantially discharges T014's evidence requirement, leaving only the written note."
-      finding_1_self_test_caught_a_dead_assertion: "The denominator check was passing while comparing nothing. Its parser stopped at the first line containing three dashes, which is the markdown table's own separator row, so it returned an empty pinned table and then reported zero disagreements while printing ALL DENOMINATOR ASSERTIONS PASSED. The drift self-test that T004 was required to write is what exposed it. It now parses all 18 values and raises if the parse comes back short. This is the strongest available argument for requiring negative tests on every guard in this harness."
-      finding_2_pm_arithmetic_error: "The harness computed from the formula rather than copying the rubric prose, and caught a PM error. Rubric v1.3 attached 63.2 percent to N=4 issuers in both section 0.1 and the section 7 template. The exact binomial gives 52.7 percent at N=4; 63.2 percent is the N=3 value. This is the same class of error Judge T012 caught once already, when 46 percent was circulated for N=6. The Worker did not edit the rubric, correctly, because that needs a version bump. PM verified the arithmetic independently and issued rubric v1.4."
-      finding_3_stale_caveats_block_t005: "The answer key's known_limitations is stale for the promoted key. It still says 6 unique documents across 10 rows and still lists bm_0058 among five unverified rows. Rubric section 9 requires byte-for-byte copying, and the key was frozen for T004, so the Worker correctly reproduced the stale text rather than silently correcting it. Folded into T016, which must complete before T005."
-      pm_actions_taken: "Issued rubric v1.4 correcting the issuer bound in both places, with an amendment-log row naming the harness as the catcher. Replaced the hardcoded RUBRIC_VERSION constant in common.py with a parser that reads the version out of the rubric file, because the string had already drifted to 1.3 in three modules while the rubric moved to 1.4, which would have mislabelled the very artifact that exists to make a post-hoc rubric edit detectable. Re-ran all self-tests after the change; all pass."
-      deviations_accepted: "Six, all reviewed and kept. URL normalisation retains articleId, because stripping it would collapse A56796 and A59811 to one string and manufacture false CORRECT grades on exactly the Medicare rows this benchmark tests. Stage B temperature is not settable in CLI print mode, so rather than claim temperature 0 falsely the harness records a TEMPERATURE_NOTE in every artifact and gets determinism from a fixed prompt, a fixed field whitelist and a closed grade vocabulary revalidated in code. KEY_DEFECT_FOUND on a gated or none row also sets needs_human_review, reconciling rubric section 3 with section 6. The --bare flag is unused because it forces API-key-only auth and breaks the subprocess here. Run artifacts under runs/ are execution output and were not committed."
-
+      summary: 'Eval harness built as 17 modules under scripts/policy_eval, implementing the rubric. Key
+        isolation is structural on three levels: a six-field question set, a pre-call prompt scan against
+        a key-derived inventory of URLs, hosts and doc ids, and a subprocess with every built-in tool
+        stripped running outside the repo. Grading is Stage A deterministic with Stage B blindfolded to
+        the retrieval model''s rationale, alternatives and confidence. Committed as 822cd29, 18 files,
+        4495 insertions. The answer key and the board were not touched.'
+      isolation_proved_not_asserted: The test has a control arm. With file reading enabled and cwd set
+        to the repo, the model read a canary string out of answer_key_v1.json and printed it. With the
+        real isolated invocation it returned CANNOT_READ_FILE, made zero tool calls, and named the two
+        provided tools as its only capability. All four probes against file://, localhost, loopback and
+        the cloud metadata address were blocked. Without the control arm the test could have passed because
+        the prompt confused the model rather than because isolation works.
+      search_path_exercised: The 2-row run made 78 real tool calls, including roughly 40 searches on a
+        single row before the model abstained. This matters because a broken search tool and an honest
+        abstention are indistinguishable in the output. It also substantially discharges T014's evidence
+        requirement, leaving only the written note.
+      finding_1_self_test_caught_a_dead_assertion: The denominator check was passing while comparing nothing.
+        Its parser stopped at the first line containing three dashes, which is the markdown table's own
+        separator row, so it returned an empty pinned table and then reported zero disagreements while
+        printing ALL DENOMINATOR ASSERTIONS PASSED. The drift self-test that T004 was required to write
+        is what exposed it. It now parses all 18 values and raises if the parse comes back short. This
+        is the strongest available argument for requiring negative tests on every guard in this harness.
+      finding_2_pm_arithmetic_error: The harness computed from the formula rather than copying the rubric
+        prose, and caught a PM error. Rubric v1.3 attached 63.2 percent to N=4 issuers in both section
+        0.1 and the section 7 template. The exact binomial gives 52.7 percent at N=4; 63.2 percent is
+        the N=3 value. This is the same class of error Judge T012 caught once already, when 46 percent
+        was circulated for N=6. The Worker did not edit the rubric, correctly, because that needs a version
+        bump. PM verified the arithmetic independently and issued rubric v1.4.
+      finding_3_stale_caveats_block_t005: The answer key's known_limitations is stale for the promoted
+        key. It still says 6 unique documents across 10 rows and still lists bm_0058 among five unverified
+        rows. Rubric section 9 requires byte-for-byte copying, and the key was frozen for T004, so the
+        Worker correctly reproduced the stale text rather than silently correcting it. Folded into T016,
+        which must complete before T005.
+      pm_actions_taken: Issued rubric v1.4 correcting the issuer bound in both places, with an amendment-log
+        row naming the harness as the catcher. Replaced the hardcoded RUBRIC_VERSION constant in common.py
+        with a parser that reads the version out of the rubric file, because the string had already drifted
+        to 1.3 in three modules while the rubric moved to 1.4, which would have mislabelled the very artifact
+        that exists to make a post-hoc rubric edit detectable. Re-ran all self-tests after the change;
+        all pass.
+      deviations_accepted: Six, all reviewed and kept. URL normalisation retains articleId, because stripping
+        it would collapse A56796 and A59811 to one string and manufacture false CORRECT grades on exactly
+        the Medicare rows this benchmark tests. Stage B temperature is not settable in CLI print mode,
+        so rather than claim temperature 0 falsely the harness records a TEMPERATURE_NOTE in every artifact
+        and gets determinism from a fixed prompt, a fixed field whitelist and a closed grade vocabulary
+        revalidated in code. KEY_DEFECT_FOUND on a gated or none row also sets needs_human_review, reconciling
+        rubric section 3 with section 6. The --bare flag is unused because it forces API-key-only auth
+        and breaks the subprocess here. Run artifacts under runs/ are execution output and were not committed.
   - id: T005
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Run the eval cold over the full corrected key and produce the honest baseline report."
+    objective: Run the eval cold over the full corrected key and produce the honest baseline report.
     inputs:
-      - "T004 harness"
-      - "T003 corrected key"
+      - T004 harness
+      - T003 corrected key
     constraints:
-      - "Cold run: the retrieval model sees no answers."
-      - "Run over ALL 39 rows in three classes (retrievable, gated, none), per the T002 scope ruling. Do not restrict to the retrievable subset."
-      - "Emit the fixed headline block verbatim from rubric v1.3 section 7, including BOTH the confident-wrong line and the correct-retrieval line, the UNVERIFIED ROWS block, the INDEPENDENCE AND CEILING block, and the two verbatim caveat blocks."
-      - "This 39-row set is FROZEN as the comparison denominator for T008. Expansion rows from T010 are reported separately and never mixed into the before-and-after."
-      - "Report per-row outcomes plus the aggregate, with confident-wrong first."
-      - "State the denominator explicitly and state what was excluded and why."
-      - "Do not tune anything mid-run to improve the number."
+      - 'Cold run: the retrieval model sees no answers.'
+      - Run over ALL 39 rows in three classes (retrievable, gated, none), per the T002 scope ruling. Do
+        not restrict to the retrievable subset.
+      - Emit the fixed headline block verbatim from rubric v1.3 section 7, including BOTH the confident-wrong
+        line and the correct-retrieval line, the UNVERIFIED ROWS block, the INDEPENDENCE AND CEILING block,
+        and the two verbatim caveat blocks.
+      - This 39-row set is FROZEN as the comparison denominator for T008. Expansion rows from T010 are
+        reported separately and never mixed into the before-and-after.
+      - Report per-row outcomes plus the aggregate, with confident-wrong first.
+      - State the denominator explicitly and state what was excluded and why.
+      - Do not tune anything mid-run to improve the number.
     allowed_files:
       - runs/**
       - docs/goals/policy-retrieval-eval/notes/**
     verify:
-      - "A run artifact exists under runs/ with per-row results and an aggregate."
-      - "The report names its denominator and its exclusions."
+      - A run artifact exists under runs/ with per-row results and an aggregate.
+      - The report names its denominator and its exclusions.
     stop_if:
-      - "Need files outside allowed_files."
-      - "Harness is not verified (T004 incomplete)."
-      - "T014 has not proven a working search path on this host. A cold run without search measures the network, not the model, and produces a flattering abstention rate for the wrong reason."
+      - Need files outside allowed_files.
+      - Harness is not verified (T004 incomplete).
+      - T014 has not proven a working search path on this host. A cold run without search measures the
+        network, not the model, and produces a flattering abstention rate for the wrong reason.
     receipt: null
-
   - id: T014
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Prove end to end that the retrieval model has a working web-search path on this host, or establish and document the substitute, so the cold run measures the model and not the network."
-    context: "PM UPDATE 2026-07-26, the premise is partly falsified. The host carries a paid Brave Search API key in WEB_SEARCH_API_KEY, and the PM verified it firsthand: HTTP 200 with five usable results from a natural-language query about CPT 64721 carpal tunnel release, a code deliberately absent from the answer key. The blocked paths are the free scraping endpoints, not search itself. A model-invocation path is also proven: the claude CLI at /home/clawd/.local/bin/claude runs non-interactively and returned a correct one-word answer. So T014 narrows from find a search path to prove the harness search tool end to end and document its limits. ORIGINAL CONTEXT: Judge T012 flagged this as the one blocking risk for T005. key-corrections.md lines 519 to 523 record that every public search engine is blocked from this host: DuckDuckGo returns 202, Mojeek and Bing serve captchas, SearxNG returns 429 or 403, and api.coverage.cms.gov returns 401. T003 worked around it by following links from insurer home pages, which is a research technique, not a search capability. If the retrieval model cannot search, it will abstain for network reasons and the run will report a flattering safety number that means nothing."
+    objective: Prove end to end that the retrieval model has a working web-search path on this host, or
+      establish and document the substitute, so the cold run measures the model and not the network.
+    context: 'PM UPDATE 2026-07-26, the premise is partly falsified. The host carries a paid Brave Search
+      API key in WEB_SEARCH_API_KEY, and the PM verified it firsthand: HTTP 200 with five usable results
+      from a natural-language query about CPT 64721 carpal tunnel release, a code deliberately absent
+      from the answer key. The blocked paths are the free scraping endpoints, not search itself. A model-invocation
+      path is also proven: the claude CLI at /home/clawd/.local/bin/claude runs non-interactively and
+      returned a correct one-word answer. So T014 narrows from find a search path to prove the harness
+      search tool end to end and document its limits. ORIGINAL CONTEXT: Judge T012 flagged this as the
+      one blocking risk for T005. key-corrections.md lines 519 to 523 record that every public search
+      engine is blocked from this host: DuckDuckGo returns 202, Mojeek and Bing serve captchas, SearxNG
+      returns 429 or 403, and api.coverage.cms.gov returns 401. T003 worked around it by following links
+      from insurer home pages, which is a research technique, not a search capability. If the retrieval
+      model cannot search, it will abstain for network reasons and the run will report a flattering safety
+      number that means nothing.'
     inputs:
-      - "docs/goals/policy-retrieval-eval/notes/key-corrections.md lines 519 to 523"
-      - "T004 harness"
+      - docs/goals/policy-retrieval-eval/notes/key-corrections.md lines 519 to 523
+      - T004 harness
     constraints:
-      - "The proof must be end to end through whatever mechanism the harness actually gives the retrieval model, not a bare curl by the operator. A human being able to reach a page is not evidence that the model can."
-      - "Test on a query whose answer is NOT in the answer key, so the probe cannot contaminate the eval."
-      - "If no search path works, do not fake one and do not quietly proceed. Record the blocker, and evaluate the two honest alternatives: give the model a fixed seed-URL set per row (which measures navigation rather than search, and must be labelled that way in the report), or run the eval from a host that has search."
-      - "Whatever mechanism is chosen must be named in the run artifact, because a reader cannot interpret an abstention rate without knowing what the model could reach."
+      - The proof must be end to end through whatever mechanism the harness actually gives the retrieval
+        model, not a bare curl by the operator. A human being able to reach a page is not evidence that
+        the model can.
+      - Test on a query whose answer is NOT in the answer key, so the probe cannot contaminate the eval.
+      - 'If no search path works, do not fake one and do not quietly proceed. Record the blocker, and
+        evaluate the two honest alternatives: give the model a fixed seed-URL set per row (which measures
+        navigation rather than search, and must be labelled that way in the report), or run the eval from
+        a host that has search.'
+      - Whatever mechanism is chosen must be named in the run artifact, because a reader cannot interpret
+        an abstention rate without knowing what the model could reach.
     allowed_files:
       - scripts/**
       - docs/goals/policy-retrieval-eval/notes/**
     verify:
-      - "A probe script runs and records, per attempted mechanism, the HTTP status and whether usable results came back."
-      - "The chosen mechanism retrieves at least one document that is not in the answer key, starting from a natural-language query."
-      - "The result is written to a note naming the mechanism, its limits, and the exact wording the run artifact must carry."
+      - A probe script runs and records, per attempted mechanism, the HTTP status and whether usable results
+        came back.
+      - The chosen mechanism retrieves at least one document that is not in the answer key, starting from
+        a natural-language query.
+      - The result is written to a note naming the mechanism, its limits, and the exact wording the run
+        artifact must carry.
     stop_if:
-      - "Need files outside allowed_files."
-      - "About to use any credential, paid API key, or account not already present on this host without asking the operator first."
-      - "Verification fails twice."
+      - Need files outside allowed_files.
+      - About to use any credential, paid API key, or account not already present on this host without
+        asking the operator first.
+      - Verification fails twice.
     receipt: null
-
   - id: T010
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Expand the benchmark to 60 or more scored rows using only openly published policies, so the confident-wrong rate has a denominator that can support a claim."
+    objective: Expand the benchmark to 60 or more scored rows using only openly published policies, so
+      the confident-wrong rate has a denominator that can support a claim.
     inputs:
-      - "T005 baseline"
-      - "docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md"
+      - T005 baseline
+      - docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md
       - data/policy_platform/answer_key_v1.json
     constraints:
-      - "NO phone contact with any payer. That path is a proven dead end: payers demanded an NPI, treated the caller as a provider opening a practice, and redirected to marketing."
-      - "Candidate sources, all openly published: UnitedHealthcare, Aetna, Cigna, Humana, Elevance/Anthem via Carelon, Centene/Ambetter, Molina, HCSC, Kaiser, crossed with lines of business."
-      - "Also enumerate the CMS knee-arthroplasty LCD set across ALL Medicare Administrative Contractor jurisdictions. This is a small, authoritative, unambiguous ground-truth set and it directly tests the exact error the human key made."
-      - "Every new row must pass the same Stage A checker built in T004: fetched, HTTP 200, no login, contains CPT 27447, sha256 recorded, plus a document-attested applicability quote."
-      - "The original 39-row set stays frozen and separate. Expansion rows are reported on their own denominator and are never mixed into the T005-versus-T008 before-and-after."
-      - "data/policy_platform/kiss_row_uhc_27447.json already exists as a row template."
+      - 'NO phone contact with any payer. That path is a proven dead end: payers demanded an NPI, treated
+        the caller as a provider opening a practice, and redirected to marketing.'
+      - 'Candidate sources, all openly published: UnitedHealthcare, Aetna, Cigna, Humana, Elevance/Anthem
+        via Carelon, Centene/Ambetter, Molina, HCSC, Kaiser, crossed with lines of business.'
+      - Also enumerate the CMS knee-arthroplasty LCD set across ALL Medicare Administrative Contractor
+        jurisdictions. This is a small, authoritative, unambiguous ground-truth set and it directly tests
+        the exact error the human key made.
+      - 'Every new row must pass the same Stage A checker built in T004: fetched, HTTP 200, no login,
+        contains CPT 27447, sha256 recorded, plus a document-attested applicability quote.'
+      - The original 39-row set stays frozen and separate. Expansion rows are reported on their own denominator
+        and are never mixed into the T005-versus-T008 before-and-after.
+      - data/policy_platform/kiss_row_uhc_27447.json already exists as a row template.
     allowed_files:
       - data/policy_platform/**
       - docs/goals/policy-retrieval-eval/notes/**
     verify:
-      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));print(len(d['rows']))\" reports 60 or more rows, or the receipt states honestly how many were reachable and why."
-      - "Every added row passes the same Stage A validator used in T004, with zero exceptions."
+      - python3 -c "import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));print(len(d['rows']))"
+        reports 60 or more rows, or the receipt states honestly how many were reachable and why.
+      - Every added row passes the same Stage A validator used in T004, with zero exceptions.
     stop_if:
-      - "Need files outside allowed_files."
-      - "A source requires a login or a credential; skip it and record why."
-      - "T005 baseline has not been run, which would let expansion contaminate the frozen comparison set."
+      - Need files outside allowed_files.
+      - A source requires a login or a credential; skip it and record why.
+      - T005 baseline has not been run, which would let expansion contaminate the frozen comparison set.
     receipt: null
-
   - id: T006
     type: judge
     assignee: Judge
     status: queued
     reasoning_hint: high
-    objective: "Assess the baseline against the calibration oracle and rule on whether to wire the website as-is or run the in-context improvement loop first."
+    objective: Assess the baseline against the calibration oracle and rule on whether to wire the website
+      as-is or run the in-context improvement loop first.
     inputs:
-      - "T005 baseline report"
-      - "T002 rubric"
+      - T005 baseline report
+      - T002 rubric
     constraints:
-      - "Do not implement."
-      - "Judge against calibration, not raw accuracy. A modest hit rate with honest abstention is shippable; confident-wrong answers are not."
-      - "Be explicit about whether the sample size supports the conclusion."
+      - Do not implement.
+      - Judge against calibration, not raw accuracy. A modest hit rate with honest abstention is shippable;
+        confident-wrong answers are not.
+      - Be explicit about whether the sample size supports the conclusion.
     expected_output:
-      - "wire_now | improve_first, with reasons"
-      - "Whether the result is strong enough to present at MD Catalyst, stated honestly"
-      - "Exact next Worker objective"
+      - wire_now | improve_first, with reasons
+      - Whether the result is strong enough to present at MD Catalyst, stated honestly
+      - Exact next Worker objective
     receipt: null
-
   - id: T007
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Wire the patient website to the retrieval backend behind a lookup-first path, logging every run so simulated usage feeds the verification framework."
+    objective: Wire the patient website to the retrieval backend behind a lookup-first path, logging every
+      run so simulated usage feeds the verification framework.
     inputs:
-      - "T001 website seam"
-      - "T006 ruling"
+      - T001 website seam
+      - T006 ruling
     constraints:
-      - "Lookup-first: serve a known-verified document from the local library before attempting a live search."
-      - "Log every run with the inputs, the path taken (lookup or live), the claim, and the confidence."
-      - "The interface must surface honest uncertainty to the user rather than presenting a low-confidence guess as an answer."
-      - "Do not build the appeal-generation output; that is explicitly out of scope for this tranche."
-      - "Never hand the user a localhost URL; expose any running server over the tailnet per the repo and user conventions."
+      - 'Lookup-first: serve a known-verified document from the local library before attempting a live
+        search.'
+      - Log every run with the inputs, the path taken (lookup or live), the claim, and the confidence.
+      - The interface must surface honest uncertainty to the user rather than presenting a low-confidence
+        guess as an answer.
+      - Do not build the appeal-generation output; that is explicitly out of scope for this tranche.
+      - Never hand the user a localhost URL; expose any running server over the tailnet per the repo and
+        user conventions.
     allowed_files:
       - mockups/**
       - scripts/**
       - docs/goals/policy-retrieval-eval/notes/**
     verify:
-      - "A walkthrough of the website produces a retrieval result for at least one case end to end."
-      - "The run is recorded in the log with its path, claim, and confidence."
+      - A walkthrough of the website produces a retrieval result for at least one case end to end.
+      - The run is recorded in the log with its path, claim, and confidence.
     stop_if:
-      - "Need files outside allowed_files."
-      - "Wiring would require credentials or infrastructure not available; record the blocker and continue with a simulated backend."
+      - Need files outside allowed_files.
+      - Wiring would require credentials or infrastructure not available; record the blocker and continue
+        with a simulated backend.
     receipt: null
-
   - id: T008
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "If T006 ruled improve_first, run the in-context improvement loop (routing directory, skills, CLAUDE.md guidance), then re-run the eval and report the honest before-and-after."
+    objective: If T006 ruled improve_first, run the in-context improvement loop (routing directory, skills,
+      CLAUDE.md guidance), then re-run the eval and report the honest before-and-after.
     inputs:
-      - "T005 baseline"
-      - "T006 ruling"
+      - T005 baseline
+      - T006 ruling
     constraints:
-      - "In-context only: harness, CLAUDE.md, skills, routing directory. NO fine-tuning and NO training from scratch."
-      - "Seed the routing directory from documented retrievable-but-missed patterns, for example the UPMC open JSON policy-search endpoint."
-      - "Re-run cold against the same key and the same rubric so the comparison is honest."
-      - "Report the delta without cherry-picking rows."
+      - 'In-context only: harness, CLAUDE.md, skills, routing directory. NO fine-tuning and NO training
+        from scratch.'
+      - Seed the routing directory from documented retrievable-but-missed patterns, for example the UPMC
+        open JSON policy-search endpoint.
+      - Re-run cold against the same key and the same rubric so the comparison is honest.
+      - Report the delta without cherry-picking rows.
     allowed_files:
       - scripts/**
       - data/policy_platform/**
       - docs/goals/policy-retrieval-eval/notes/**
       - CLAUDE.md
     verify:
-      - "A second scored run exists and is directly comparable to the baseline."
-      - "The before-and-after uses the identical denominator."
+      - A second scored run exists and is directly comparable to the baseline.
+      - The before-and-after uses the identical denominator.
     stop_if:
-      - "Need files outside allowed_files."
-      - "T006 ruled wire_now, making this task unnecessary; mark it not-needed rather than inventing work."
+      - Need files outside allowed_files.
+      - T006 ruled wire_now, making this task unnecessary; mark it not-needed rather than inventing work.
     receipt: null
-
   - id: T009
     type: pm
     assignee: PM
     status: queued
     reasoning_hint: medium
-    objective: "Package the two human-dependency asks so they are not silently forgotten: Andrew's MA scoring ruling, and the request to Phil for real denial cases."
-    pulled_forward: "T002 ruled this must run IMMEDIATELY AFTER T003, not at the end of the board. Akin returns to clinical rotations 2026-07-27, which is two days out, and his last usable window closes then."
+    objective: 'Package the two human-dependency asks so they are not silently forgotten: Andrew''s MA
+      scoring ruling, and the request to Phil for real denial cases.'
+    pulled_forward: T002 ruled this must run IMMEDIATELY AFTER T003, not at the end of the board. Akin
+      returns to clinical rotations 2026-07-27, which is two days out, and his last usable window closes
+      then.
     inputs:
-      - "T002 rubric"
-      - "T003 corrected key"
+      - T002 rubric
+      - T003 corrected key
     constraints:
-      - "Write the Phil request as a concrete, short ask: recent real denials with state, procedure, and plan; ideally the actual document and his working trace; plus a request that he review the tool."
-      - "State Andrew's MA question in one sentence, with the two candidate conventions and the consequence of each."
-      - "Include an Akin handoff note naming the exact next step he can pick up, consistent with the agreed GitHub-check-first protocol."
-      - "Do not send anything. Prepare the asks only."
+      - 'Write the Phil request as a concrete, short ask: recent real denials with state, procedure, and
+        plan; ideally the actual document and his working trace; plus a request that he review the tool.'
+      - State Andrew's MA question in one sentence, with the two candidate conventions and the consequence
+        of each.
+      - Include an Akin handoff note naming the exact next step he can pick up, consistent with the agreed
+        GitHub-check-first protocol.
+      - Do not send anything. Prepare the asks only.
     expected_output:
-      - "Drafted Phil request"
-      - "One-sentence MA ruling question for Andrew"
-      - "Akin handoff note with an exact next step"
+      - Drafted Phil request
+      - One-sentence MA ruling question for Andrew
+      - Akin handoff note with an exact next step
     receipt: null
-
   - id: T999
     type: judge
     assignee: Judge
     status: queued
     reasoning_hint: high
-    objective: "Audit whether the tranche outcome is genuinely complete: corrected key, cold calibration-scored run, and a website producing a retrieval end to end."
+    objective: 'Audit whether the tranche outcome is genuinely complete: corrected key, cold calibration-scored
+      run, and a website producing a retrieval end to end.'
     inputs:
-      - "All done task receipts"
-      - "Last verification"
-      - "Current dirty diff"
+      - All done task receipts
+      - Last verification
+      - Current dirty diff
     constraints:
-      - "Do not implement."
-      - "Reject completion if required Worker work is still queued or active."
-      - "Reject completion if the reported number rests on labels the AI itself produced."
-      - "Reject completion if the scoring rubric was changed after results were seen."
-      - "Reject stopping only because a slice needs owner input, credentials, or a policy decision."
+      - Do not implement.
+      - Reject completion if required Worker work is still queued or active.
+      - Reject completion if the reported number rests on labels the AI itself produced.
+      - Reject completion if the scoring rubric was changed after results were seen.
+      - Reject stopping only because a slice needs owner input, credentials, or a policy decision.
     expected_output:
-      - "complete | not_complete"
-      - "full_outcome_complete: true | false"
-      - "missing evidence"
-      - "next task if not complete"
+      - complete | not_complete
+      - 'full_outcome_complete: true | false'
+      - missing evidence
+      - next task if not complete
     receipt: null
-
+  - id: T017
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: Rule on the bm_0061 escalation that the PM overturned, on the false caveat now in the key,
+      and on how far the HTTP-200 bot-block defect reaches before the cold run.
+    context: 'T016 swept every recorded hash and escalated one finding: that the Horizon plan page had
+      stopped serving the quote supplying part one of the bm_0061 deferral_two_part basis, present on
+      2 fetches and absent on the next 19. The PM reproduced it and got the opposite result, 6 of 6 fetches
+      with an identical content digest and the 296-character quote present verbatim. The PM then found
+      the mechanism: that host answers non-browser requests with HTTP 200 and a 931-byte Imperva stub,
+      and detect_login_wall returns (False, None) on that stub. READ notes/pm-t016-verification.md IN
+      FULL before ruling. It carries every table, digest and command. You are being asked to check a PM
+      that is overturning a Worker escalation in the direction which keeps the headline denominators larger,
+      at 11 retrievable rows rather than 10. That is exactly the incentive the rubric section 2.2 incentive
+      check exists to police. Apply it to the PM.'
+    inputs:
+      - docs/goals/policy-retrieval-eval/notes/pm-t016-verification.md
+      - data/policy_platform/answer_key_v1.json, rows bm_0061 and bm_0057
+      - scripts/policy_eval/common.py, function detect_login_wall
+      - docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md, sections 2.2 and 9
+      - T016 receipt in this file
+    constraints:
+      - READ-ONLY. Rule, do not edit. A Worker applies your ruling.
+      - Re-fetch the Horizon page yourself with browser-shaped headers and confirm or refute the PM 6
+        of 6 result. Do not rule on the PM word alone.
+      - Apply the section 2.2 incentive check to the PM ruling, not only to the payer evidence. State
+        plainly whether the PM overturn is evidence-led or denominator-led.
+      - Rule on known_limitations item 8, which currently asserts that no substring of the quote is presently
+        retrievable. If that is false it must be corrected, not deleted, and the record that the alarm
+        was raised must survive. Give exact replacement wording.
+      - Decide whether the 17 gated rows must be re-probed with browser-shaped requests before T005. A
+        gated row that was actually bot-blocked is misclassed, and gated is half the scored set.
+      - Decide whether detect_login_wall must gain a bot-block detector and whether the fetcher must send
+        browser headers, before any cold run rather than after.
+      - Decide whether identity checks must be normalised, and whether the 5 rows T016 moved onto identity_string
+        need re-validation under a normalising matcher.
+      - If you rule that bm_0061 loses retrievable, state every denominator that moves and the new exact
+        binomial bounds.
+    expected_output:
+      - 'ruling_bm_0061: KEEP or DEMOTE, with evidence you personally reproduced'
+      - 'ruling_pm_incentive_audit: is the PM overturn evidence-led or denominator-led'
+      - 'ruling_caveat_text: exact replacement wording for known_limitations item 8'
+      - 'ruling_gated_reprobe: required before T005 or not, with reasoning'
+      - 'ruling_harness_hardening: what must change in common.py and the fetcher, and whether it blocks
+        T005'
+      - 'ruling_identity_normalisation: required or not, and which rows need re-validation'
+      - 'denominator_impact: every count and bound that moves, or an explicit statement that none do'
+    receipt: null
 checks:
-  dirty_fingerprint: "clean at a45d66d before T001; T001 is read-only and wrote nothing"
+  dirty_fingerprint: clean at a45d66d before T001; T001 is read-only and wrote nothing
   spec_immutability_baseline:
     file: data/policy_platform/seed_review_39_spec.json
-    sha256: "76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053"
+    sha256: 76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053
     recorded_by: T002
   rubric:
     version: v1.3
-    frozen: "2026-07-25"
-    amended: "2026-07-26"
+    frozen: '2026-07-25'
+    amended: '2026-07-26'
     path: docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md
-    amendment_v1_1: "Added section 5.1, the 42 CFR 422.101(b) authority ladder plus the uniform-election escape, and softened the section 5 unconditional out-of-jurisdiction rule to defer to it. Legitimate under the freeze: zero eval runs had executed (T005 not started), no threshold or tier boundary moved, and no headline definition changed. Amendment log is in the rubric header."
-    amendment_v1_2: "Applied Judge T012's four rulings: added the unverified excluded class and its asymmetric grading (new 4.1); admitted scope_by_exclusion under a three-condition test (new 2.1); pinned every statistical denominator to unique documents and unique issuers (0.1, and a new canonical table at 0.2); made verbatim caveat propagation mandatory (new section 9); corrected the sufficiency figures to the exact binomial 1 - 0.05^(1/N) already used in 0.1, replacing a 3/N shorthand that overstated every bound. Legitimate under the freeze on the same test v1.1 passed: zero eval runs had executed, the confidence >= 80 threshold did not move, no correctness tier boundary moved, and the confident-wrong definition did not move."
-    amendment_v1_3: "Applied Judge T013's ruling promoting bm_0058 from unverified to retrievable. Added section 2.2, the four-condition part-one admissibility test (P1 actor, P2 verb of use, P3 named CMS instrument, P4 plan type explicit or instrument-inferred), and the plan_type_named field. Moved every pinned count in 0.2 to N_scored 34, retrievable 11 rows / 7 documents / 4 issuers, strong 9/6/3 and 8/5/3 excluding the instrument-inferred row, unverified 4. Added the exact-binomial rows for N=3, 4, 7 and 34. Rewrote the section 7 template and added a mandatory ISSUER-BOUND line, because the document count improved and the issuer count did not. Amended the 4.1 anti-easing safeguard to name the two legitimate routes out of the unverified class and to record the audit trail for this promotion. Legitimate under the freeze on the same test v1.1 and v1.2 passed: zero eval runs had executed, no threshold or tier boundary moved."
-    pending: "None. T013 has ruled. T015 applies the same ruling to the answer key; the rubric and the key must agree before T004 builds, and T004's build-time denominator assertion enforces that."
+    amendment_v1_1: 'Added section 5.1, the 42 CFR 422.101(b) authority ladder plus the uniform-election
+      escape, and softened the section 5 unconditional out-of-jurisdiction rule to defer to it. Legitimate
+      under the freeze: zero eval runs had executed (T005 not started), no threshold or tier boundary
+      moved, and no headline definition changed. Amendment log is in the rubric header.'
+    amendment_v1_2: 'Applied Judge T012''s four rulings: added the unverified excluded class and its asymmetric
+      grading (new 4.1); admitted scope_by_exclusion under a three-condition test (new 2.1); pinned every
+      statistical denominator to unique documents and unique issuers (0.1, and a new canonical table at
+      0.2); made verbatim caveat propagation mandatory (new section 9); corrected the sufficiency figures
+      to the exact binomial 1 - 0.05^(1/N) already used in 0.1, replacing a 3/N shorthand that overstated
+      every bound. Legitimate under the freeze on the same test v1.1 passed: zero eval runs had executed,
+      the confidence >= 80 threshold did not move, no correctness tier boundary moved, and the confident-wrong
+      definition did not move.'
+    amendment_v1_3: 'Applied Judge T013''s ruling promoting bm_0058 from unverified to retrievable. Added
+      section 2.2, the four-condition part-one admissibility test (P1 actor, P2 verb of use, P3 named
+      CMS instrument, P4 plan type explicit or instrument-inferred), and the plan_type_named field. Moved
+      every pinned count in 0.2 to N_scored 34, retrievable 11 rows / 7 documents / 4 issuers, strong
+      9/6/3 and 8/5/3 excluding the instrument-inferred row, unverified 4. Added the exact-binomial rows
+      for N=3, 4, 7 and 34. Rewrote the section 7 template and added a mandatory ISSUER-BOUND line, because
+      the document count improved and the issuer count did not. Amended the 4.1 anti-easing safeguard
+      to name the two legitimate routes out of the unverified class and to record the audit trail for
+      this promotion. Legitimate under the freeze on the same test v1.1 and v1.2 passed: zero eval runs
+      had executed, no threshold or tier boundary moved.'
+    pending: None. T013 has ruled. T015 applies the same ruling to the answer key; the rubric and the
+      key must agree before T004 builds, and T004's build-time denominator assertion enforces that.
   last_verification:
     result: pass
     task: T001
     commands:
-      - "python3 scripts/run_policy_retrieval.py --help"
-      - "python3 scripts/emit_row_trace.py --help"
-      - "python3 scripts/read_run.py runs/run_0001"
+      - python3 scripts/run_policy_retrieval.py --help
+      - python3 scripts/emit_row_trace.py --help
+      - python3 scripts/read_run.py runs/run_0001
   notes:
-    gate_suite: "CORRECTED BY T001. A pytest suite EXISTS in source (tests/ with 4 test files plus verify_artifact_sha.py; pyproject.toml testpaths=['tests']) but pytest is NOT installed and there is no .venv, so no gate runs today. Verification is per-task command execution plus artifact inspection. Installing pytest is a candidate cheap win."
+    gate_suite: CORRECTED BY T001. A pytest suite EXISTS in source (tests/ with 4 test files plus verify_artifact_sha.py;
+      pyproject.toml testpaths=['tests']) but pytest is NOT installed and there is no .venv, so no gate
+      runs today. Verification is per-task command execution plus artifact inspection. Installing pytest
+      is a candidate cheap win.
     available_scripts:
       - scripts/run_policy_retrieval.py
       - scripts/emit_row_trace.py
       - scripts/read_run.py
       - scripts/run_denial_simulation_lab.sh
-      - "browser_capture: npm run capture"
+      - 'browser_capture: npm run capture'
