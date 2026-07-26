@@ -1,9 +1,23 @@
-# RUBRIC v1 — OrthoAppeals policy retrieval, CPT 27447
+# RUBRIC v1.1: OrthoAppeals policy retrieval, CPT 27447
 
 **Frozen 2026-07-25 by Judge task T002, BEFORE any eval run.**
 Any change requires a new version number and invalidates all prior comparisons.
 Every run artifact must record `rubric_version` and `key_sha256` so a rubric edited
 after results is detectable.
+
+`rubric_version: 1.1`
+
+### Amendment log
+
+| Version | Date | Change | Runs invalidated |
+|---|---|---|---|
+| 1.0 | 2026-07-25 | Original freeze (T002). | none |
+| 1.1 | 2026-07-26 | Added section 5.1, the 42 CFR 422.101(b) authority ladder and the uniform-election escape. Softened the section 5 unconditional out-of-jurisdiction rule to defer to 5.1. | **none. No eval run had executed. T005 had not started.** |
+
+The 1.1 amendment is legitimate under the freeze because the freeze exists to stop
+definitions moving *after results are visible*. Zero results existed. No threshold, no
+tier boundary, and no headline definition changed. Section 5.1 only makes an existing rule
+(out-of-jurisdiction equals wrong) strictly more correct by adding the one lawful exception.
 
 ---
 
@@ -203,11 +217,76 @@ Every Medicare Advantage row is graded **three times in one pass**:
 **Headline uses `dual_accept`.** The two strict counts are printed underneath, always. Rows
 where the conventions disagree are listed by row_id as `convention_dependent`.
 
-**Unconditional rule, all three conventions:** naming an LCD whose Medicare Administrative
-Contractor does not cover the row's state is `WRONG_DOCUMENT`. This is the error the human
-answer key itself made, and it is the sharpest discriminating test in the benchmark.
+**Jurisdiction rule, all three conventions:** naming an LCD whose Medicare Administrative
+Contractor does not cover the row's state is `WRONG_DOCUMENT`, **unless the uniform-election
+escape in section 5.1 fires**. This is the error the human answer key itself made, and it is
+the sharpest discriminating test in the benchmark.
 
 Andrew's later ruling is applied by switching the headline column. No research is redone.
+
+---
+
+## 5.1 Which Medicare document governs (authority ladder, frozen)
+
+Section 5 leaves the LCD-versus-plan-page question switchable. This section resolves a
+different and narrower question that is NOT a matter of preference: **when several Medicare
+documents exist, which one has authority over this patient?** The answer is fixed by
+42 CFR 422.101(b) and is therefore frozen here rather than left to Andrew.
+
+Apply in order. Take the first rung that resolves.
+
+1. **NCD.** If a National Coverage Determination governs the procedure, it controls
+   nationwide. `422.101(b)(1)`. No plan or region may narrow it.
+2. **In-jurisdiction LCD.** Otherwise the binding document is the "written coverage decision
+   of the local Medicare contractor **with jurisdiction** for claims in the geographic area
+   in which services are covered under the MA plan." `422.101(b)(3)`. The controlling MAC is
+   the one covering the row's `state`, not any other MAC.
+3. **Elected uniform local policy.** `422.101(b)(3)` permits an MA organization spanning
+   multiple MAC jurisdictions to elect one local policy for all enrollees. The election is
+   conditional: the organization must notify CMS 60 days before bid deadlines and justify the
+   choice as most beneficial to enrollees, and `422.101(b)(5)` requires the elected policy to
+   be **published on the Internet**. An election is therefore discoverable by definition.
+4. **Plan's own internal criteria.** `422.101(b)(6)` permits publicly accessible internal
+   coverage criteria **only** "when coverage criteria are not fully established in applicable
+   Medicare statutes, regulations, NCDs or LCDs." The plan's own document is a gap-filler. It
+   never overrides rungs 1 to 3.
+
+**Standing finding for CPT 27447:** there is no NCD for total knee arthroplasty. Rung 1 never
+fires in this benchmark. So the operative rule for every Medicare Advantage row is: the row's
+own MAC jurisdiction LCD governs where that MAC publishes one; the plan's own published
+policy governs only where the MAC publishes none.
+
+### The escape, and why it removes a base-rate dependency
+
+A naive rule ("out-of-jurisdiction LCD is always wrong") would mark a correct answer wrong
+whenever a plan has legitimately elected a uniform policy under rung 3. Determining how often
+that happens nationally would require research we have not done and do not need. The grader
+therefore checks it per row instead of assuming a rate:
+
+1. Model names a document.
+2. Document is the row's in-jurisdiction LCD → `CORRECT`. Stop.
+3. Document is an out-of-jurisdiction LCD → do NOT grade yet. Run the election check.
+4. **Election check:** search the plan's published coverage material for a stated election of
+   a single local coverage policy. `422.101(b)(5)` guarantees a real election is public.
+   - Election found, and the named LCD is the elected one → `CORRECT`, and the row is
+     recorded with `uniform_election: {found: true, evidence_url, verbatim_quote}`.
+   - Election found, but the named LCD is a third, non-elected jurisdiction →
+     `WRONG_DOCUMENT`.
+   - No election found after a documented search → `WRONG_DOCUMENT`, and the row records
+     `uniform_election: {found: false, searched: [urls...]}`.
+
+The election check runs **only** on rows that reach step 3, so its cost scales with model
+error, not with dataset size.
+
+**Byproduct, recorded deliberately:** each fired election check yields one observation of how
+common uniform election is inside our own payer set. After the first full run the grader
+prints `uniform_election_rate: <found>/<checked>`. We obtain the base rate as a measurement
+rather than needing it as an input. This number is reported, never used to alter grading
+retroactively.
+
+**Answer-key rows carry the same fields.** T003 records `mac_jurisdiction` per Medicare row
+and `uniform_election: null` where no election was searched for, so the grader can tell
+"not checked" apart from "checked, none found."
 
 ---
 
@@ -247,7 +326,7 @@ number is quoted. This exists so failures cannot be buried in the review bucket.
 
 ```
 POLICY RETRIEVAL COLD RUN <run_id>
-model=<model id + version>  rubric=v1  key_sha256=<...>  date=<iso8601>
+model=<model id + version>  rubric=v1.1  key_sha256=<...>  date=<iso8601>
 
 CONFIDENT-BUT-WRONG:  <n> / <N_scored>     (fabricated URLs: <f>)
 CORRECT RETRIEVAL:    <c> / <R_retrievable>
@@ -260,6 +339,8 @@ Denominators: N_total=<39>  N_scored=<39-h>  retrievable=<R>  gated=<20>  none=<
 Excluded invalid: <row_id: one-line reason>, ...
 MA convention: headline=dual_accept; lcd_strict confident-wrong=<x>;
                plan_strict confident-wrong=<y>; convention_dependent=<row_ids>
+Jurisdiction: out_of_jurisdiction_named=<o>; uniform_election_rate=<found>/<checked>
+              (elected-policy rescues counted CORRECT: <e>)
 Wrong but hedged (confidence 50-79): <w>
 ```
 

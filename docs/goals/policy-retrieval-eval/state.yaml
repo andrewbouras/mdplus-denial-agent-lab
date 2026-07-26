@@ -74,7 +74,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/policy-retrieval-eval/"
     command: "node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/policy-retrieval-eval"
 
-active_task: T003
+active_task: T012
 
 tasks:
   - id: T001
@@ -94,7 +94,7 @@ tasks:
       - data/policy_platform/seed_review_39_spec.json
       - data/policy_platform/source_registry.json
       - data/policy_platform/criteria_extractions.json
-      - mockups/
+      - mockups/**
     constraints:
       - "Read-only. Do not edit implementation files."
       - "Report concrete file paths, function names, and data shapes, not generic advice."
@@ -194,7 +194,7 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Produce data/policy_platform/answer_key_v1.json: a corrected, evidence-backed 39-row answer key covering ALL rows in three scored classes (retrievable, gated, none) plus an invalid class, with every row pinned to a single US state, every Medicare Advantage row recording BOTH candidate conventions, and every retrievable row carrying firsthand fetch evidence."
     inputs:
@@ -214,8 +214,8 @@ tasks:
       - "Do NOT drop the 20 gated and 6 no-policy rows. Per the T002 scope ruling they are scored abstention tests and are the strongest confident-wrong evidence available."
       - "Document every change in docs/goals/policy-retrieval-eval/notes/key-corrections.md with the URL fetched, the HTTP status, and a verbatim quote."
     allowed_files:
-      - data/policy_platform/
-      - docs/goals/policy-retrieval-eval/notes/
+      - data/policy_platform/**
+      - docs/goals/policy-retrieval-eval/notes/**
     verify:
       - "sha256sum data/policy_platform/seed_review_39_spec.json | grep -q 76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053 && echo ORIGINAL_UNTOUCHED"
       - "python3 -c \"import json,collections;d=json.load(open('data/policy_platform/answer_key_v1.json'));r=d['rows'];print(len(r), collections.Counter(x['row_class'] for x in r))\""
@@ -232,6 +232,86 @@ tasks:
       - "A payer's Medicare Advantage status cannot be settled from public sources after genuine effort; record row_class=unverified with what was tried, and continue."
       - "Fewer than 6 rows survive as retrievable; record the count, escalate to PM, and continue rather than halting."
       - "About to delete any original row; invalid rows are marked invalid with a reason, never removed."
+    receipt:
+      result: done
+      verification_attempts: 1
+      commands:
+        - cmd: "sha256sum data/policy_platform/seed_review_39_spec.json | grep -q 76f64b65...c053"
+          result: "ORIGINAL_UNTOUCHED"
+          status: pass
+        - cmd: "row count and class counter"
+          result: "39 rows; Counter({'gated': 17, 'retrievable': 10, 'none': 6, 'unverified': 5, 'invalid': 1})"
+          status: pass
+        - cmd: "required-field check"
+          result: "MISSING_FIELDS []"
+          status: pass
+        - cmd: "retrievable evidence check"
+          result: "BAD_RETRIEVABLE []; N_RETRIEVABLE 10"
+          status: pass
+        - cmd: "Medicare Advantage field check"
+          result: "BAD_MA []"
+          status: pass
+        - cmd: "LCD jurisdiction check"
+          result: "LCD_JURISDICTION_VIOLATIONS []"
+          status: pass
+        - cmd: "rubric present and grep -c CONFIDENT-BUT-WRONG"
+          result: "2"
+          status: pass
+        - cmd: "PM independent recheck: 39/39 states pinned; jurisdiction nested at ma_convention.lcd; retrievable rows span 6 unique documents"
+          result: "confirmed"
+          status: pass
+      changed_files:
+        - data/policy_platform/answer_key_v1.json
+        - docs/goals/policy-retrieval-eval/notes/key-corrections.md
+      summary: "Rebuilt all 39 rows from firsthand fetches. Final classes: 10 retrievable, 17 gated, 6 none, 5 unverified, 1 invalid. All 39 states pinned. All 7 verify commands passed first attempt. seed_review_39_spec.json untouched, sha256 still 76f64b65...c053."
+      key_rulings:
+        - "The blanket L36007 assignment is confirmed broken and is fixed. Only MD, NJ and PA are Novitas J-L. Michigan is WPS J-08 (L39911 / A59811). North Carolina is Palmetto GBA J-M (L33456 / A56777). Washington is Noridian J-F (L36575 / A57685)."
+        - "The CPT trap is confirmed empirically: grep -c 27447 returns 0 on all four LCD pages and 1 on all four companion Billing and Coding Articles. Every Medicare row records both URLs and measures cpt_27447_present against the article."
+        - "Premera bm_0063 is invalid, not merely unretrievable. Premera exited Medicare Advantage and its own policy states in writing that it does not apply to MA."
+        - "Blue Shield of California's document never states which line of business it covers. Three rows drop to unverified. This is exactly the unstated-scope shortcut the rubric was written to catch."
+        - "UPMC MP.PA.133 downloads without login and its own checkbox grid attests commercial and PA Medicaid scope, promoting bm_0075 and bm_0094 from gated to retrievable under the T002 KEY_DEFECT_FOUND rule."
+      evidence:
+        - "data/policy_platform/answer_key_v1.json: 39 rows, top-level counts / row_class_definitions / lcd_jurisdiction_map / known_limitations / open_human_decision"
+        - "docs/goals/policy-retrieval-eval/notes/key-corrections.md: per-row change log with reasons"
+        - "PM independently confirmed post-return: 39/39 rows carry a pinned state; MAC jurisdiction is present nested at ma_convention.lcd.{mac,jurisdiction,jurisdiction_states}; retrievable rows collapse to 6 unique documents; plan_type values are 'Medicare Advantage' (10), 'Commercial' (11), 'ACA Marketplace' (11), 'Medicaid' (7)."
+      deviations_accepted_by_pm:
+        - "ma_deferral_status gained a fourth value 'unverified' on bm_0058, bm_0062, bm_0064. Correct call. Asserting a status with no document behind it is the exact failure mode this benchmark hunts."
+        - "attestation_quote is a two-part composite joined by '||' on deferral rows, marked attestation_basis: deferral_two_part. Correct call. No single document can attest payer, plan type and state on a deferral row."
+      deviations_escalated_to_judge:
+        - "row_class 'unverified' (5 rows) is a FIFTH class. Rubric v1.1 sections 0 and 1 define four. The grader cannot be built until the scoring treatment of this class is ruled. Escalated to T012."
+        - "bm_0073 and bm_0084 are retrievable on attestation_basis 'scope_by_exclusion', weaker than the strict bar. Accepting them gives 10 retrievable; rejecting them gives 8. Escalated to T012."
+      pm_resolved_blockers:
+        - "GITIGNORE, FIXED BY PM. .gitignore line 18 'data/policy_platform/*' hid BOTH answer_key_v1.json and seed_review_39_spec.json from git, so Akin's agent, which clones from GitHub, would have seen neither the question set nor the key. PM added two allowlist lines following the existing !source_registry.json convention. git check-ignore now reports both files as un-ignored and git status shows them untracked. The commit and push remain an operator decision and are tracked in T009."
+        - "MTIME MYSTERY, EXPLAINED. The worker flagged that state.yaml and scoring-rubric-v1.md changed at 14:48 and 14:50 UTC inside its working window although it never wrote them. That was the PM, not a concurrent agent. The PM was writing rubric amendment v1.1 (section 5.1, the 42 CFR 422.101(b) authority ladder) at exactly those times. No other agent is active on this board. Good catch and correct to report it."
+      open_blockers_for_humans:
+        - "Blue Shield of California line-of-business scope for BSC7.10. Highest-value missing evidence: unblocks 3 rows. Andrew or the payer-call track."
+        - "CareFirst state pin is load-bearing. Pinned to Maryland (Novitas J-L, L36007). Virginia would be Palmetto J-M (L33456) and would change bm_0059's governing document. Andrew must confirm."
+        - "Healthy Blue North Carolina bm_0089: two provider URLs returned 404."
+
+  - id: T012
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: "Rule on the four scoring questions T003 surfaced, so the grader can be built against a complete and honest class list rather than an improvised one."
+    context: "T003 returned a defensible key that does not fit rubric v1.1's four-class model. It added a fifth class and two weak-basis rows, and it exposed that the retrievable side is far less independent than its row count suggests. These are definition questions, and rubric discipline requires they be settled BEFORE any run, not after results are visible. T005 has not executed. This is the last moment these can be decided cleanly."
+    inputs:
+      - data/policy_platform/answer_key_v1.json
+      - docs/goals/policy-retrieval-eval/notes/key-corrections.md
+      - "docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md (v1.1)"
+      - "T003 receipt on this board"
+    constraints:
+      - "READ ONLY. Rule and record. Do not edit the key, the rubric, or the harness. The PM applies rulings."
+      - "RULING 1, the fifth class. 5 rows (bm_0058, bm_0068, bm_0079, bm_0086, bm_0089) are row_class 'unverified', meaning we could not establish the truth, as distinct from 'gated', meaning we established that the truth is behind a login. Decide exactly one treatment and say why: (a) EXCLUDED from all denominators and reported as a separate coverage-gap line; (b) SCORED as abstention-expected, identical to gated; (c) SCORED as a distinct class with its own correct behaviour. Note the trap in (b): if we cannot tell whether a policy is public, we cannot tell whether abstention is honest, so grading a model wrong for finding something we failed to find would be indefensible."
+      - "RULING 2, scope_by_exclusion. bm_0073 and bm_0084 rest on a document that states which plans it EXCLUDES rather than which it includes. Rule whether that meets the retrievable bar. Accepting gives 10 retrievable, rejecting gives 8. Rule on the evidence standard, not on which number is more convenient, and state that you did."
+      - "RULING 3, independence. The 10 retrievable rows rest on 6 unique documents, so they are not 6 independent draws either. Rule what the headline may honestly claim. The rule-of-three upper bound on the true error rate is roughly 3/N with zero observed errors: N=6 gives about 46 percent, N=8 about 35 percent, N=10 about 28 percent. Decide whether the denominator for the statistical claim is rows or unique documents, and require the headline to print both."
+      - "RULING 4, the open_human_decision block. Confirm the key's open_human_decision and known_limitations survive into the run artifact so a reader of the report cannot see the score without seeing the caveats."
+      - "Do NOT reopen settled definitions. The confident-wrong threshold stays at confidence >= 80. The three-class scope stays. Section 5.1's authority ladder stays."
+    expected_output:
+      - "Four explicit rulings, each with a one-line reason and the rubric section it amends"
+      - "A statement of whether these rulings require rubric v1.2, and if so exactly which lines change"
+      - "The final scored class list the grader must implement, with denominators named"
+      - "A go or no-go on proceeding to T004"
     receipt: null
 
   - id: T004
@@ -252,18 +332,23 @@ tasks:
       - "No Anthropic SDK, no API-key handling, and no search tool exists in this repo. The harness must define and document how the retrieval model is invoked and how it searches, and must record the model identifier and version in every run artifact."
       - "STRUCTURAL KEY ISOLATION. A query-emitter step reads the key and writes runs/<id>/queries.jsonl containing ONLY {row_id, payer, plan_type, state, cpt, procedure_name}. The retrieval step reads only queries.jsonl. The harness asserts, and the artifact records, that no key URL and no key host appears in any retrieval prompt."
       - "Grading is two-stage. Stage A is deterministic code (normalize, fetch, status, login-wall detection, CPT-27447 presence, URL match). Stage B is the model adjudicator, invoked only where Stage A is not decisive. Never delegate a mechanically checkable fact to a model."
-      - "Implement rubric v1 EXACTLY as written in docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md. Record the rubric sha256 and the key sha256 in every run artifact."
+      - "Implement rubric v1.1 EXACTLY as written in docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md. Record the rubric sha256 and the key sha256 in every run artifact."
       - "The report must show the confident-wrong count as the headline number, above accuracy, and must print the correct-retrieval line together with it (anti-degeneracy rule, rubric section 4)."
+      - "Read jurisdiction from the key at ma_convention.lcd.jurisdiction_states, ma_convention.lcd.mac and ma_convention.lcd.jurisdiction. T003 nested these rather than adding a flat mac_jurisdiction field, which is the better shape; do not flatten it. Read CPT presence from ma_convention.lcd.cpt_27447_on_billing_article, never from the LCD page."
+      - "The uniform-election result is a RUN ARTIFACT, not a key field. Write it to the run output keyed by row id. The answer key states what is true; the election check records what the grader did. Absent means not checked, {found:false} means checked and none located, and the two must never be conflated."
+      - "JURISDICTION LADDER, rubric section 5.1. Grade Medicare rows by 42 CFR 422.101(b) order: NCD, then the row's own MAC-jurisdiction LCD, then an elected uniform local policy, then the plan's own criteria only where Medicare criteria are not fully established. There is no NCD for CPT 27447, so rung 1 never fires here."
+      - "UNIFORM-ELECTION ESCAPE, rubric section 5.1. An out-of-jurisdiction LCD is NOT graded WRONG_DOCUMENT immediately. First run the election check: search the plan's published coverage material for a stated election of a single local coverage policy, which 422.101(b)(5) requires to be public. Elected and matching = CORRECT with {found:true, evidence_url, verbatim_quote}. Elected but a third jurisdiction = WRONG_DOCUMENT. No election found after a documented search = WRONG_DOCUMENT with {found:false, searched:[urls]}. Run this check ONLY on rows that name an out-of-jurisdiction LCD, so cost scales with model error and not with dataset size."
+      - "Emit uniform_election_rate as <found>/<checked> in the headline block. It is a measurement reported for information. It must NEVER be used to alter grading retroactively."
     allowed_files:
-      - scripts/
-      - docs/goals/policy-retrieval-eval/notes/
+      - scripts/**
+      - docs/goals/policy-retrieval-eval/notes/**
     verify:
       - "The harness runs end to end on at least 2 rows and emits a scored report file."
       - "Three-way discrimination self-test passes: an injected wrong URL at confidence 95 grades CONFIDENT_WRONG; the exact key URL at confidence 95 grades CORRECT; an abstention on a retrievable row grades MISSED_RETRIEVABLE; a fabricated host grades CONFIDENT_FABRICATED."
       - "grep the retrieval prompt log for every key URL host: zero matches."
     stop_if:
       - "Need files outside allowed_files."
-      - "The answer key is not yet corrected (T003 incomplete)."
+      - "T003 is incomplete, or T012 has not ruled. The grader cannot enumerate its own scored classes until the fifth-class ruling exists."
       - "Verification fails twice."
     receipt: null
 
@@ -285,8 +370,8 @@ tasks:
       - "State the denominator explicitly and state what was excluded and why."
       - "Do not tune anything mid-run to improve the number."
     allowed_files:
-      - runs/
-      - docs/goals/policy-retrieval-eval/notes/
+      - runs/**
+      - docs/goals/policy-retrieval-eval/notes/**
     verify:
       - "A run artifact exists under runs/ with per-row results and an aggregate."
       - "The report names its denominator and its exclusions."
@@ -313,8 +398,8 @@ tasks:
       - "The original 39-row set stays frozen and separate. Expansion rows are reported on their own denominator and are never mixed into the T005-versus-T008 before-and-after."
       - "data/policy_platform/kiss_row_uhc_27447.json already exists as a row template."
     allowed_files:
-      - data/policy_platform/
-      - docs/goals/policy-retrieval-eval/notes/
+      - data/policy_platform/**
+      - docs/goals/policy-retrieval-eval/notes/**
     verify:
       - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));print(len(d['rows']))\" reports 60 or more rows, or the receipt states honestly how many were reachable and why."
       - "Every added row passes the same Stage A validator used in T004, with zero exceptions."
@@ -359,9 +444,9 @@ tasks:
       - "Do not build the appeal-generation output; that is explicitly out of scope for this tranche."
       - "Never hand the user a localhost URL; expose any running server over the tailnet per the repo and user conventions."
     allowed_files:
-      - mockups/
-      - scripts/
-      - docs/goals/policy-retrieval-eval/notes/
+      - mockups/**
+      - scripts/**
+      - docs/goals/policy-retrieval-eval/notes/**
     verify:
       - "A walkthrough of the website produces a retrieval result for at least one case end to end."
       - "The run is recorded in the log with its path, claim, and confidence."
@@ -385,9 +470,9 @@ tasks:
       - "Re-run cold against the same key and the same rubric so the comparison is honest."
       - "Report the delta without cherry-picking rows."
     allowed_files:
-      - scripts/
-      - data/policy_platform/
-      - docs/goals/policy-retrieval-eval/notes/
+      - scripts/**
+      - data/policy_platform/**
+      - docs/goals/policy-retrieval-eval/notes/**
       - CLAUDE.md
     verify:
       - "A second scored run exists and is directly comparable to the baseline."
@@ -448,9 +533,11 @@ checks:
     sha256: "76f64b65382cffeb0bba6748895ba07a11f60440983887a9af430dfdf812c053"
     recorded_by: T002
   rubric:
-    version: v1
+    version: v1.1
     frozen: "2026-07-25"
+    amended: "2026-07-26"
     path: docs/goals/policy-retrieval-eval/notes/scoring-rubric-v1.md
+    amendment_v1_1: "Added section 5.1, the 42 CFR 422.101(b) authority ladder plus the uniform-election escape, and softened the section 5 unconditional out-of-jurisdiction rule to defer to it. Legitimate under the freeze: zero eval runs had executed (T005 not started), no threshold or tier boundary moved, and no headline definition changed. Amendment log is in the rubric header."
   last_verification:
     result: pass
     task: T001

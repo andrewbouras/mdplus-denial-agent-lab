@@ -1,0 +1,388 @@
+{
+  "cpt": "27447",
+  "procedure": "Total knee arthroplasty",
+  "source_tab": "seed_review_39",
+  "counts": {
+    "public": 13,
+    "login_gated": 20,
+    "no_public_policy": 6
+  },
+  "reviewer_counts": {
+    "Akin": 13,
+    "Anish": 13,
+    "Jocelyn": 13
+  },
+  "rows": [
+    {
+      "id": "bm_0056",
+      "payer": "BCBS Michigan",
+      "plan_type": "Medicare Advantage",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=36007",
+      "doc_kind": "html",
+      "doc_key": "cms",
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0057",
+      "payer": "BCBS North Carolina",
+      "plan_type": "Medicare Advantage",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=36007",
+      "doc_kind": "html",
+      "doc_key": "cms",
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0058",
+      "payer": "Blue Shield of California",
+      "plan_type": "Medicare Advantage",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.blueshieldca.com/content/dam/bsca/en/provider/docs/medical-policies/Knee-Arthroplasty-Adults.pdf",
+      "doc_kind": "pdf",
+      "doc_key": "bsca",
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0059",
+      "payer": "CareFirst BCBS",
+      "plan_type": "Medicare Advantage",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=36007",
+      "doc_kind": "html",
+      "doc_key": "cms",
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0060",
+      "payer": "Highmark",
+      "plan_type": "Medicare Advantage",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://securecms.highmark.com/content/medpolicy/en/highmark/pa/medicare-advantage/policies/Surgery/S-39/S-39-008.html",
+      "doc_kind": "html",
+      "doc_key": "highmark",
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0061",
+      "payer": "Horizon BCBS NJ",
+      "plan_type": "Medicare Advantage",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=36007",
+      "doc_kind": "html",
+      "doc_key": "cms",
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0062",
+      "payer": "Independence Blue Cross",
+      "plan_type": "Medicare Advantage",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0063",
+      "payer": "Premera Blue Cross",
+      "plan_type": "Medicare Advantage",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=36007",
+      "doc_kind": "html",
+      "doc_key": "cms",
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0064",
+      "payer": "Regence BCBS",
+      "plan_type": "Medicare Advantage",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0065",
+      "payer": "UPMC Health Plan",
+      "plan_type": "Medicare Advantage",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=36007",
+      "doc_kind": "html",
+      "doc_key": "cms",
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0066",
+      "payer": "BCBS Michigan",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "no_public_policy",
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0067",
+      "payer": "BCBS North Carolina",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "no_public_policy",
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0068",
+      "payer": "Blue Shield of California",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.blueshieldca.com/content/dam/bsca/en/provider/docs/medical-policies/Knee-Arthroplasty-Adults.pdf",
+      "doc_kind": "pdf",
+      "doc_key": "bsca",
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0069",
+      "payer": "CareFirst BCBS",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0070",
+      "payer": "Highmark",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0071",
+      "payer": "Horizon BCBS NJ",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0072",
+      "payer": "Independence Blue Cross",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0073",
+      "payer": "Premera Blue Cross",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.premera.com/medicalpolicies/7.01.550.pdf",
+      "doc_kind": "pdf",
+      "doc_key": "premera",
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0074",
+      "payer": "Regence BCBS",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": "https://www.regence.com/provider/library/policies-guidelines/medical-policy",
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0075",
+      "payer": "UPMC Health Plan",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0076",
+      "payer": "Wellmark BCBS",
+      "plan_type": "Commercial",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0077",
+      "payer": "BCBS Michigan",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "no_public_policy",
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0078",
+      "payer": "BCBS North Carolina",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "no_public_policy",
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0079",
+      "payer": "Blue Shield of California",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.blueshieldca.com/content/dam/bsca/en/provider/docs/medical-policies/Knee-Arthroplasty-Adults.pdf",
+      "doc_kind": "pdf",
+      "doc_key": "bsca",
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0080",
+      "payer": "CareFirst BCBS",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0081",
+      "payer": "Highmark",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0082",
+      "payer": "Horizon BCBS NJ",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0083",
+      "payer": "Independence Blue Cross",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0084",
+      "payer": "Premera Blue Cross",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://www.premera.com/medicalpolicies/7.01.550.pdf",
+      "doc_kind": "pdf",
+      "doc_key": "premera",
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0085",
+      "payer": "Regence BCBS",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0086",
+      "payer": "UPMC Health Plan",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0087",
+      "payer": "Wellmark BCBS",
+      "plan_type": "ACA Marketplace",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0088",
+      "payer": "BCBS Michigan",
+      "plan_type": "Medicaid",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0089",
+      "payer": "BCBS North Carolina",
+      "plan_type": "Medicaid",
+      "cpt": "27447",
+      "retrievability": "public",
+      "target_url": "https://guidelines.carelonmedicalbenefitsmanagement.com/wp-content/uploads/2025/11/PDF-Joint-Surgery-2025-11-15.pdf",
+      "doc_kind": "pdf",
+      "doc_key": "carelon",
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0090",
+      "payer": "Blue Shield of California",
+      "plan_type": "Medicaid",
+      "cpt": "27447",
+      "retrievability": "no_public_policy",
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0091",
+      "payer": "Highmark",
+      "plan_type": "Medicaid",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Jocelyn"
+    },
+    {
+      "id": "bm_0092",
+      "payer": "Horizon BCBS NJ",
+      "plan_type": "Medicaid",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Akin"
+    },
+    {
+      "id": "bm_0093",
+      "payer": "Independence Blue Cross",
+      "plan_type": "Medicaid",
+      "cpt": "27447",
+      "retrievability": "no_public_policy",
+      "reviewer": "Anish"
+    },
+    {
+      "id": "bm_0094",
+      "payer": "UPMC Health Plan",
+      "plan_type": "Medicaid",
+      "cpt": "27447",
+      "retrievability": "login_gated",
+      "portal_url": null,
+      "reviewer": "Jocelyn"
+    }
+  ]
+}

@@ -19,6 +19,10 @@ data/policy_platform/*
 !data/policy_platform/source_registry.json
 !data/policy_platform/source_registry.csv
 !data/policy_platform/criteria_extractions.json
+# Eval benchmark: the question set and its answer key must be visible on GitHub,
+# because collaborating agents clone the repo rather than this host.
+!data/policy_platform/seed_review_39_spec.json
+!data/policy_platform/answer_key_v1.json
 
 *.passphrase
 *.pem
