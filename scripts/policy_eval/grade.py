@@ -25,12 +25,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from policy_eval import stage_b as stage_b_mod  # noqa: E402
 from policy_eval import webtools  # noqa: E402
 from policy_eval.common import (  # noqa: E402
-    RUNS_DIR,
     key_sha256,
     load_key,
     normalize_url,
     read_jsonl,
     rubric_sha256,
+    RUBRIC_VERSION,
+    RUNS_DIR,
     write_json,
     write_jsonl,
 )
@@ -337,7 +338,7 @@ def run(
         run_dir / "aggregate.json",
         {
             "run_id": run_id,
-            "rubric_version": "1.3",
+            "rubric_version": RUBRIC_VERSION,
             "rubric_sha256": rubric_sha256(),
             "key_sha256": key_sha256(),
             "adjudicator_model": adjudicator_model,

@@ -74,7 +74,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/policy-retrieval-eval/"
     command: "node /home/clawd/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/policy-retrieval-eval"
 
-active_task: T004
+active_task: T016
 
 tasks:
   - id: T001
@@ -444,10 +444,10 @@ tasks:
   - id: T016
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Spot-check every payer-page sha256 recorded by T003 for reproducibility, and replace unstable hashes with verbatim-string identity checks before T005 freezes the key."
-    context: "T013 found that the Blue Shield utilization management page rebuilds its markup per request, so its raw-HTML sha256 is not reproducible and cannot serve as an identity check. That defect is probably not isolated. Any recorded hash that does not reproduce is a silent integrity failure in the key."
+    objective: "Key integrity pass before the cold run: sweep every recorded payer-page hash for reproducibility, and refresh the stale known_limitations block that the report copies byte for byte."
+    context: "SECOND ITEM ADDED BY PM AFTER T004. The key's known_limitations block is stale for the promoted key: item 0 still says 6 unique documents across 10 rows, and item 2 still lists bm_0058 among five unverified rows. Rubric section 9 requires the report to copy that block byte for byte, so every run will print false caveats until it is fixed. T004 correctly reproduced the stale text rather than silently correcting it, because the key was frozen for that task. This must complete BEFORE T005. FIRST ITEM: T013 found that the Blue Shield utilization management page rebuilds its markup per request, so its raw-HTML sha256 is not reproducible and cannot serve as an identity check. That defect is probably not isolated. Any recorded hash that does not reproduce is a silent integrity failure in the key."
     inputs:
       - data/policy_platform/answer_key_v1.json
       - "T013 receipt, field new_risk_found"
@@ -456,6 +456,9 @@ tasks:
       - "Where a hash does not reproduce, set content_hash_stable false and add a verbatim identity string that the page must contain. Do not silently overwrite the hash."
       - "A PDF whose hash changed is a different and more serious event. Do NOT update it. Escalate it as a blocked finding with both hashes recorded."
       - "Do not change any row_class. This task checks integrity only."
+      - "Refresh known_limitations to the current key. Item 0 must say 7 unique documents across 11 rows. Item 2 must list the four unverified rows bm_0068, bm_0079, bm_0086, bm_0089, and must state that bm_0058 was promoted by Judge T013 under rubric section 2.2. Add one item recording that bm_0058's plan type is instrument_inferred rather than explicit, so the strong subset is reported both ways. Add one item recording that one retrievable row rests on a page whose content hash is not reproducible."
+      - "Do NOT weaken or delete an existing limitation. This block is the honesty surface of the whole benchmark and it only ever grows more precise."
+      - "After editing, re-run python3 scripts/policy_eval/denominators.py and confirm it still passes. If it aborts, you changed something you should not have."
     allowed_files:
       - data/policy_platform/answer_key_v1.json
       - docs/goals/policy-retrieval-eval/notes/key-corrections.md
@@ -463,6 +466,8 @@ tasks:
       - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));print('json ok')\""
       - "python3 -c \"import json,collections;d=json.load(open('data/policy_platform/answer_key_v1.json'));c=collections.Counter(r['row_class'] for r in d['rows']);assert c['retrievable']==11 and c['gated']==17 and c['none']==6 and c['unverified']==4 and c['invalid']==1, c;print('classes unchanged')\""
       - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));rs=[x for x in d['rows'] if x.get('fetched')];bad=[x['id'] for x in rs if x['fetched'].get('content_hash_stable') is False and not x['fetched'].get('identity_string')];assert not bad, bad;print('unstable rows carry identity strings')\""
+      - "python3 -c \"import json;d=json.load(open('data/policy_platform/answer_key_v1.json'));k=d['known_limitations'];j=' '.join(k);assert '7 unique documents' in j and '11 rows' in j;assert 'bm_0058' not in k[2] or 'promoted' in k[2];assert len(k)>=8;print('caveats refreshed')\""
+      - "python3 scripts/policy_eval/denominators.py"
     stop_if:
       - "A PDF sha256 does not reproduce. Escalate, do not update."
       - "A refetch returns a login wall on a row currently classed retrievable. That is a class change and needs a Judge."
@@ -472,7 +477,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Build the eval harness: per row, Claude attempts retrieval and emits an explicit confidence, then a second model judges the attempt, producing a scored report that foregrounds confident-wrong answers."
     inputs:
@@ -518,7 +523,36 @@ tasks:
       - "About to grade an unverified row WRONG on any basis other than a 404, a login wall, a timeout, a fabricated host, or absence of CPT 27447."
       - "About to credit an abstention on an unverified row toward HONEST ABSTENTION."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - "scripts/policy_eval/ (17 modules)"
+        - docs/goals/policy-retrieval-eval/notes/eval-harness-v1.md
+      commands:
+        - cmd: "run_eval.py --run-id demo2 --limit 2 --model claude-haiku-4-5"
+          status: pass
+        - cmd: "selftest_discrimination.py (five-way plus two)"
+          status: pass
+        - cmd: "verify_no_leak.py --run-id demo2"
+          status: pass
+        - cmd: "denominators.py (18 pinned values derived and compared)"
+          status: pass
+        - cmd: "denominators.py --selftest (4 drift mutations must abort)"
+          status: pass
+        - cmd: "selftest_report_gate.py (11 forbidden mutations)"
+          status: pass
+        - cmd: "selftest_tool_isolation.py (control arm plus isolated arm)"
+          status: pass
+        - cmd: "PM independent re-run of denominators, discrimination, report gate, drift, leak check, compileall"
+          status: pass
+      summary: "Eval harness built as 17 modules under scripts/policy_eval, implementing the rubric. Key isolation is structural on three levels: a six-field question set, a pre-call prompt scan against a key-derived inventory of URLs, hosts and doc ids, and a subprocess with every built-in tool stripped running outside the repo. Grading is Stage A deterministic with Stage B blindfolded to the retrieval model's rationale, alternatives and confidence. Committed as 822cd29, 18 files, 4495 insertions. The answer key and the board were not touched."
+      isolation_proved_not_asserted: "The test has a control arm. With file reading enabled and cwd set to the repo, the model read a canary string out of answer_key_v1.json and printed it. With the real isolated invocation it returned CANNOT_READ_FILE, made zero tool calls, and named the two provided tools as its only capability. All four probes against file://, localhost, loopback and the cloud metadata address were blocked. Without the control arm the test could have passed because the prompt confused the model rather than because isolation works."
+      search_path_exercised: "The 2-row run made 78 real tool calls, including roughly 40 searches on a single row before the model abstained. This matters because a broken search tool and an honest abstention are indistinguishable in the output. It also substantially discharges T014's evidence requirement, leaving only the written note."
+      finding_1_self_test_caught_a_dead_assertion: "The denominator check was passing while comparing nothing. Its parser stopped at the first line containing three dashes, which is the markdown table's own separator row, so it returned an empty pinned table and then reported zero disagreements while printing ALL DENOMINATOR ASSERTIONS PASSED. The drift self-test that T004 was required to write is what exposed it. It now parses all 18 values and raises if the parse comes back short. This is the strongest available argument for requiring negative tests on every guard in this harness."
+      finding_2_pm_arithmetic_error: "The harness computed from the formula rather than copying the rubric prose, and caught a PM error. Rubric v1.3 attached 63.2 percent to N=4 issuers in both section 0.1 and the section 7 template. The exact binomial gives 52.7 percent at N=4; 63.2 percent is the N=3 value. This is the same class of error Judge T012 caught once already, when 46 percent was circulated for N=6. The Worker did not edit the rubric, correctly, because that needs a version bump. PM verified the arithmetic independently and issued rubric v1.4."
+      finding_3_stale_caveats_block_t005: "The answer key's known_limitations is stale for the promoted key. It still says 6 unique documents across 10 rows and still lists bm_0058 among five unverified rows. Rubric section 9 requires byte-for-byte copying, and the key was frozen for T004, so the Worker correctly reproduced the stale text rather than silently correcting it. Folded into T016, which must complete before T005."
+      pm_actions_taken: "Issued rubric v1.4 correcting the issuer bound in both places, with an amendment-log row naming the harness as the catcher. Replaced the hardcoded RUBRIC_VERSION constant in common.py with a parser that reads the version out of the rubric file, because the string had already drifted to 1.3 in three modules while the rubric moved to 1.4, which would have mislabelled the very artifact that exists to make a post-hoc rubric edit detectable. Re-ran all self-tests after the change; all pass."
+      deviations_accepted: "Six, all reviewed and kept. URL normalisation retains articleId, because stripping it would collapse A56796 and A59811 to one string and manufacture false CORRECT grades on exactly the Medicare rows this benchmark tests. Stage B temperature is not settable in CLI print mode, so rather than claim temperature 0 falsely the harness records a TEMPERATURE_NOTE in every artifact and gets determinism from a fixed prompt, a fixed field whitelist and a closed grade vocabulary revalidated in code. KEY_DEFECT_FOUND on a gated or none row also sets needs_human_review, reconciling rubric section 3 with section 6. The --bare flag is unused because it forces API-key-only auth and breaks the subprocess here. Run artifacts under runs/ are execution output and were not committed."
 
   - id: T005
     type: worker

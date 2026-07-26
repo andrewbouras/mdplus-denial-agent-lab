@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared primitives for the policy-retrieval eval harness (rubric v1.3).
+"""Shared primitives for the policy-retrieval eval harness (rubric v1.4).
 
 Nothing in this module reads the answer key on behalf of the retrieval model.
 The key loader here is used only by the query emitter, the graders and the
@@ -27,7 +27,21 @@ RUBRIC_PATH = (
 )
 RUNS_DIR = REPO_ROOT / "runs"
 
-RUBRIC_VERSION = "1.3"
+def _read_rubric_version() -> str:
+    # Hardcoding this drifted once: the rubric moved to 1.4 while three modules
+    # still stamped 1.3 into run artifacts, mislabelling the very artifact that
+    # exists to make a post-hoc rubric edit detectable.
+    m = re.search(
+        r"^`rubric_version:\s*([0-9]+\.[0-9]+)`",
+        RUBRIC_PATH.read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+    if not m:
+        raise RuntimeError(f"cannot parse rubric_version from {RUBRIC_PATH}")
+    return m.group(1)
+
+
+RUBRIC_VERSION = _read_rubric_version()
 
 # Rubric section 2 Tier 1: strip query parameters EXCEPT semantically required
 # ones. The rubric names LCDId, ncdid and policyId. articleId is included here

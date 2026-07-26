@@ -46,11 +46,12 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from policy_eval.common import (  # noqa: E402
-    RUNS_DIR,
     key_sha256,
     load_key,
     read_jsonl,
     rubric_sha256,
+    RUBRIC_VERSION,
+    RUNS_DIR,
     sha256_text,
     write_json,
     write_jsonl,
@@ -432,7 +433,7 @@ def run(
         run_dir / "retrieval_meta.json",
         {
             "run_id": run_id,
-            "rubric_version": "1.3",
+            "rubric_version": RUBRIC_VERSION,
             "rubric_sha256": rubric_sha256(),
             "key_sha256": key_sha256(),
             "retrieval_model": model,

@@ -1,11 +1,11 @@
-# RUBRIC v1.3: OrthoAppeals policy retrieval, CPT 27447
+# RUBRIC v1.4: OrthoAppeals policy retrieval, CPT 27447
 
 **Frozen 2026-07-25 by Judge task T002, BEFORE any eval run.**
 Any change requires a new version number and invalidates all prior comparisons.
 Every run artifact must record `rubric_version` and `key_sha256` so a rubric edited
 after results is detectable.
 
-`rubric_version: 1.3`
+`rubric_version: 1.4`
 
 ### Amendment log
 
@@ -15,14 +15,15 @@ after results is detectable.
 | 1.1 | 2026-07-26 | Added section 5.1, the 42 CFR 422.101(b) authority ladder and the uniform-election escape. Softened the section 5 unconditional out-of-jurisdiction rule to defer to 5.1. | **none. No eval run had executed. T005 had not started.** |
 | 1.2 | 2026-07-26 | Judge T012 rulings: added the unverified excluded class and its asymmetric grading; admitted scope_by_exclusion under a three-condition test (new 2.1); pinned all statistical denominators to unique documents and unique issuers; made verbatim caveat propagation mandatory (new section 9); corrected the sufficiency figures to the exact-binomial method already used in 0.1. | **none. No eval run had executed. T005 had not started.** |
 | 1.3 | 2026-07-26 | Judge T013 ruling: promoted bm_0058 to `retrievable` under a new part-one admissibility test (new 2.2); added the `plan_type_named` field and the instrument-inferred distinction; moved every denominator by one row and one document. | **none. No eval run had executed. T005 had not started.** |
+| 1.4 | 2026-07-26 | Arithmetic correction only. The v1.3 ISSUER-BOUND line and the section 0.1 prose both attached 63.2% to N=4 issuers. The exact binomial gives 52.7% at N=4; 63.2% is the N=3 value. Caught by the T004 harness, which computes from the formula rather than copying the prose. No definition, threshold or count changed. | **none. No eval run had executed. T005 had not started.** |
 
-All three amendments are legitimate under the freeze on the same test, because the freeze
+All four amendments are legitimate under the freeze on the same test, because the freeze
 exists to stop definitions moving *after results are visible*. Zero results existed at each
 amendment. No threshold moved: the `confidence >= 80` boundary, the correctness tiers, and
 the confident-wrong definition are all unchanged from v1.0. Section 5.1's authority ladder is
-untouched by v1.2 and v1.3.
+untouched by v1.2, v1.3 and v1.4.
 
-**Disclosure required with any v1.3 number.** The v1.3 promotion of bm_0058 improves the
+**Disclosure required with any v1.3 or later number.** The v1.3 promotion of bm_0058 improves the
 reportable retrieval ceiling, from a 39.3% upper bound at 6 unique documents to 34.8% at 7.
 A change that flatters our own number was made by a Judge, not by the party who found the
 evidence, and the Judge recorded the incentive check in its receipt. Two facts limit the
@@ -108,9 +109,10 @@ finding the UPMC policy PDF and finding the CMS Medicare Coverage Database, dete
 the 11 retrievable rows.
 
 **The issuer count is the binding constraint, and it did not improve.** Four issuers give a
-63.2% upper bound, and the strong subset rests on three. Adding documents from an issuer we
-already count buys much less than the document count suggests. Any report that quotes the
-7-document bound without the 4-issuer bound on the same line is overstating the result.
+52.7% upper bound, and the strong subset rests on three issuers, which is 63.2%. Adding
+documents from an issuer we already count buys much less than the document count suggests.
+Any report that quotes the 7-document bound without the 4-issuer bound on the same line is
+overstating the result.
 
 **Can claim:** "Across 34 scored payer-and-plan-type combinations spanning 11
 Blue-affiliated insurers and 4 lines of business, for total knee replacement, the system
@@ -571,7 +573,7 @@ bucket.
 
 ```
 POLICY RETRIEVAL COLD RUN <run_id>
-model=<model id + version>  rubric=v1.3  rubric_sha256=<...>
+model=<model id + version>  rubric=v1.4  rubric_sha256=<...>
 key_sha256=<...>  date=<iso8601>
 
 CONFIDENT-BUT-WRONG:  <n> / <N_scored - h>   (fabricated URLs: <f>)
@@ -598,7 +600,7 @@ UNVERIFIED ROWS BLOCK (4 rows, 10.3% of 39, excluded from every line above)
 INDEPENDENCE AND CEILING
   retrieval: 95% upper bound on error <= 34.8% at N=7 unique documents
              (39.3% at N=6 strong-only; 45.1% at N=5 excluding instrument-inferred)
-             ISSUER-BOUND, binding: <= 63.2% at N=4 issuers (3 in the strong subset)
+             ISSUER-BOUND, binding: <= 52.7% at N=4 issuers (63.2% at N=3 issuers in the strong subset)
   safety:    95% upper bound on confident-wrong <= 8.4% at N=34 rows,
              23.8% at N=11 unique payers
 
