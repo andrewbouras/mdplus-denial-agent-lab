@@ -1,11 +1,11 @@
-# RUBRIC v1.2: OrthoAppeals policy retrieval, CPT 27447
+# RUBRIC v1.3: OrthoAppeals policy retrieval, CPT 27447
 
 **Frozen 2026-07-25 by Judge task T002, BEFORE any eval run.**
 Any change requires a new version number and invalidates all prior comparisons.
 Every run artifact must record `rubric_version` and `key_sha256` so a rubric edited
 after results is detectable.
 
-`rubric_version: 1.2`
+`rubric_version: 1.3`
 
 ### Amendment log
 
@@ -14,19 +14,23 @@ after results is detectable.
 | 1.0 | 2026-07-25 | Original freeze (T002). | none |
 | 1.1 | 2026-07-26 | Added section 5.1, the 42 CFR 422.101(b) authority ladder and the uniform-election escape. Softened the section 5 unconditional out-of-jurisdiction rule to defer to 5.1. | **none. No eval run had executed. T005 had not started.** |
 | 1.2 | 2026-07-26 | Judge T012 rulings: added the unverified excluded class and its asymmetric grading; admitted scope_by_exclusion under a three-condition test (new 2.1); pinned all statistical denominators to unique documents and unique issuers; made verbatim caveat propagation mandatory (new section 9); corrected the sufficiency figures to the exact-binomial method already used in 0.1. | **none. No eval run had executed. T005 had not started.** |
+| 1.3 | 2026-07-26 | Judge T013 ruling: promoted bm_0058 to `retrievable` under a new part-one admissibility test (new 2.2); added the `plan_type_named` field and the instrument-inferred distinction; moved every denominator by one row and one document. | **none. No eval run had executed. T005 had not started.** |
 
-Both amendments are legitimate under the freeze on the same test, because the freeze exists
-to stop definitions moving *after results are visible*. Zero results existed at each
+All three amendments are legitimate under the freeze on the same test, because the freeze
+exists to stop definitions moving *after results are visible*. Zero results existed at each
 amendment. No threshold moved: the `confidence >= 80` boundary, the correctness tiers, and
 the confident-wrong definition are all unchanged from v1.0. Section 5.1's authority ladder is
-untouched by v1.2.
+untouched by v1.2 and v1.3.
 
-**Open item at the time of the v1.2 freeze.** Judge task T013 is ruling on whether row
-bm_0058 (Blue Shield of California, Medicare Advantage) should move from `unverified` to
-`retrievable`, on evidence found after T012 returned. If T013 promotes it, every count in
-sections 0.1, 0.2, 4.1 and 7 shifts by one row and one document, and this file becomes v1.3.
-The counts below are the T012-ruled state and are correct as of the v1.2 freeze. The harness
-must read them from section 0.2, never hardcode them anywhere else.
+**Disclosure required with any v1.3 number.** The v1.3 promotion of bm_0058 improves the
+reportable retrieval ceiling, from a 39.3% upper bound at 6 unique documents to 34.8% at 7.
+A change that flatters our own number was made by a Judge, not by the party who found the
+evidence, and the Judge recorded the incentive check in its receipt. Two facts limit the
+flattery and must travel with it. The issuer bound does not move at all, staying at 4
+issuers and 3 in the strong subset, which is the binding constraint on the retrieval side.
+The headline confident-wrong denominator moves only from 33 to 34, an 8.7% to 8.4% bound.
+
+The harness reads every count from section 0.2 and never hardcodes one anywhere else.
 
 ---
 
@@ -55,7 +59,7 @@ Three scored classes, plus two classes excluded from every headline denominator:
   outcome and gets its own counter.
 - **INVALID** (1 row). The row is not answerable because the product does not exist.
   Excluded from every denominator, listed by row_id with its reason, never deleted.
-- **UNVERIFIED** (5 rows). We pursued public evidence in good faith and could not settle
+- **UNVERIFIED** (4 rows). We pursued public evidence in good faith and could not settle
   the label. Excluded from every headline denominator. Graded ONLY on outcomes that are
   wrong under every possible world state, and abstention here earns no credit. See
   section 4.1.
@@ -71,14 +75,18 @@ is `1 - 0.05^(1/N)`:
 
 | Scored N | 95% upper bound on confident-wrong rate |
 |---|---|
+| 3 | 63.2% |
+| 4 | 52.7% |
 | 5 | 45.1% |
 | 6 | 39.3% |
+| 7 | 34.8% |
 | 8 | 31.2% |
 | 9 | 28.3% |
 | 10 | 25.9% |
 | 11 | 23.8% |
 | 13 | 20.6% |
 | 33 | 8.7% |
+| 34 | 8.4% |
 | 39 | 7.4% |
 | 60 | 4.9% |
 
@@ -93,19 +101,24 @@ four. That is not a result.
 
 **Mandatory caveat, to be stated out loud in any presentation:** these 39 rows are not
 39 independent draws. They are 11 payers crossed with 4 lines of business. After the T003
-rebuild, 33 rows are scored across 11 payers, and the retrievable side collapses to
-**6 unique documents issued by only 4 issuers**. UPMC MP.PA.133 is cited by 3 rows,
-CMS article A56796 by 2, and Premera 7.01.550 by 2. Two systematic behaviours, finding the
-UPMC policy PDF and finding the CMS Medicare Coverage Database, determine 7 of the 10
-retrievable rows.
+rebuild and the T013 promotion, 34 rows are scored across 11 payers, and the retrievable
+side collapses to **7 unique documents issued by only 4 issuers**. UPMC MP.PA.133 is cited
+by 3 rows, CMS article A56796 by 2, and Premera 7.01.550 by 2. Two systematic behaviours,
+finding the UPMC policy PDF and finding the CMS Medicare Coverage Database, determine 8 of
+the 11 retrievable rows.
 
-**Can claim:** "Across 33 scored payer-and-plan-type combinations spanning 11
+**The issuer count is the binding constraint, and it did not improve.** Four issuers give a
+63.2% upper bound, and the strong subset rests on three. Adding documents from an issuer we
+already count buys much less than the document count suggests. Any report that quotes the
+7-document bound without the 4-issuer bound on the same line is overstating the result.
+
+**Can claim:** "Across 34 scored payer-and-plan-type combinations spanning 11
 Blue-affiliated insurers and 4 lines of business, for total knee replacement, the system
 produced N confidently wrong answers and abstained honestly on M."
 
 **Cannot claim:** any accuracy number generalizing to US insurers at large; any
 statement about procedures other than knee replacement; any Claude-versus-other-model
-comparison; any percentage resting on the retrievable subset, because 6 unique documents
+comparison; any percentage resting on the retrievable subset, because 7 unique documents
 from 4 issuers cannot support a rate. The retrievable side may be reported only as a count
 of rows with its unique-document and unique-issuer counts attached on the same line.
 
@@ -119,21 +132,22 @@ edit fails the build loudly instead of drifting silently.
 |---|---|---|
 | `N_total` | 39 | Every row in the spec. |
 | `excluded_invalid` | 1 | bm_0063. |
-| `excluded_unverified` | 5 | bm_0058, bm_0068, bm_0079, bm_0086, bm_0089. |
-| `N_scored` | 33 | 10 + 17 + 6. Also 39 minus 5 minus 1. |
-| `scored_payers` | 11 | Clustering unit for the safety side. |
-| `retrievable_rows` | 10 | Reporting unit only. |
-| `retrievable_documents` | 6 | Inference unit for the retrieval side. |
-| `retrievable_issuers` | 4 | CMS, Highmark, UPMC, Premera. |
-| `strong_rows` / `strong_documents` / `strong_issuers` | 8 / 5 / 3 | Excludes the two `scope_by_exclusion` rows. |
+| `excluded_unverified` | 4 | bm_0068, bm_0079, bm_0086, bm_0089. |
+| `N_scored` | 34 | 11 + 17 + 6. Also 39 minus 4 minus 1. |
+| `scored_payers` | 11 | Clustering unit for the safety side. bm_0058's payer was already counted via bm_0090. |
+| `retrievable_rows` | 11 | Reporting unit only. |
+| `retrievable_documents` | 7 | Inference unit for the retrieval side. |
+| `retrievable_issuers` | 4 | CMS, Highmark, UPMC, Premera. Unchanged by the T013 promotion. |
+| `strong_rows` / `strong_documents` / `strong_issuers` | 9 / 6 / 3 | Excludes the two `scope_by_exclusion` rows. |
+| `strong_rows_excl_instrument` / `_documents` / `_issuers` | 8 / 5 / 3 | Also excludes bm_0058, whose plan type is instrument-inferred. |
 | `gated` | 17 | |
 | `none` | 6 | |
-| `ma_scored_rows` | 8 | 10 MA rows minus bm_0063 invalid and bm_0058 unverified. |
-| `needs_human_review_not_reportable_at` | h >= 7 | 20% of `N_scored`, pinned to 33. |
+| `ma_scored_rows` | 9 | 10 MA rows minus bm_0063 invalid. |
+| `needs_human_review_not_reportable_at` | h >= 7 | 20% of `N_scored`, pinned to 34. |
 
-**Denominator map.** CONFIDENT-BUT-WRONG over `N_scored - h`. CORRECT RETRIEVAL over 10 rows
-and 6 documents. HONEST ABSTENTION over 23 (17 gated plus 6 none), unverified rows excluded.
-MISSED RETRIEVABLE over 10. NEEDS HUMAN REVIEW over 33. `grade_plan_strict` additionally
+**Denominator map.** CONFIDENT-BUT-WRONG over `N_scored - h`. CORRECT RETRIEVAL over 11 rows
+and 7 documents. HONEST ABSTENTION over 23 (17 gated plus 6 none), unverified rows excluded.
+MISSED RETRIEVABLE over 11. NEEDS HUMAN REVIEW over 34. `grade_plan_strict` additionally
 excludes bm_0062 and bm_0064, where `plan_page` is null.
 
 ---
@@ -250,6 +264,74 @@ weight and could not have influenced the ruling.
 Rows admitted this way are still tagged `scope_by_exclusion` and are still excluded from the
 strong-attestation subset printed in section 7.
 
+**v1.3 note.** bm_0058 still fails E1 and is still inadmissible under this section. Its
+promotion in v1.3 runs through a different and independent route, the `deferral_two_part`
+basis tested in section 2.2, which never relies on BSC7.10 stating its own scope.
+
+---
+
+## 2.2 PART-ONE ADMISSIBILITY (when a payer page proves a Medicare deferral)
+
+Ruled by Judge T013. The `deferral_two_part` basis has two halves. Part two is a CMS
+document check and is mechanical: the LCD's own contractor table must list the row's state,
+and its companion Billing and Coding Article must list CPT 27447. Part one is the soft half.
+It requires "a payer page stating in writing that this plan type follows CMS NCDs and LCDs",
+and until v1.3 that phrase had no test.
+
+The distinction that forced the test: a page can describe what regulators require in the
+abstract without committing the payer to anything. That is a fact about law, not an
+attestation. Part one is satisfied only when the payer binds itself.
+
+Part one is admissible only when ALL FOUR conditions hold.
+
+- **P1, actor.** The page names the payer entity as the actor. Regulators in the abstract do
+  not count. "Medicare requires X" alone fails P1. "We use X" passes.
+- **P2, verb of use.** The page names a verb of use that binds the referenced criteria to the
+  payer's own coverage or medical-necessity determinations. A page that merely lists resources
+  without saying it uses them fails P2.
+- **P3, named CMS instrument.** The referenced resource set names a CMS National Coverage
+  Determination or Local Coverage Determination explicitly. A generic reference to "federal
+  guidance" fails P3.
+- **P4, plan type.** The row's `plan_type` is identified either **explicitly** in the text, or
+  **by instrument**, meaning the referenced resource instructs only that plan type and no
+  other. Identification by instrument must be recorded, not assumed.
+
+**The new field `plan_type_named`.** Every retrievable row now carries it, valued `explicit`
+or `instrument_inferred`. Ten of the eleven retrievable rows are `explicit`. Only bm_0058 is
+`instrument_inferred`: its page never writes "Medicare Advantage", and the plan type is
+established by the Medicare Managed Care Manual, CMS Pub. 100-16, which instructs Medicare
+Advantage organizations only, and by two resource entries marked D-SNP only, D-SNP being a
+Medicare Advantage product type.
+
+Because an instrument-inferred row rests on a softer identification than an explicit one, the
+strong-attestation subset must be reported **both ways**, including and excluding
+instrument-inferred rows, so a reader can see exactly what that one row contributes. Section
+0.2 pins both figures and section 7 prints both.
+
+**Discriminating power, checked against the key before the rule was adopted.** bm_0058 passes
+all four, but passes P1 and P2 only on the extended sentence "Blue Shield and Blue Shield Life
+use the utilization management criteria found in the following resources to determine medical
+appropriateness and coverage." On the shorter span originally submitted it fails P1 and P2 and
+would not be admitted. bm_0068 (Commercial) and bm_0079 (ACA Marketplace) sit on the same page
+and fail P4: no instrument in that resource list instructs commercial or Marketplace plans
+exclusively, and the page never names those lines of business. They stay `unverified`. The
+four existing `deferral_two_part` rows all pass on explicit text and change basis. No row
+that T003 correctly rejected is readmitted.
+
+**Count-independence and the incentive check, stated for the record.** T013 recorded that the
+promotion is flattering: it moves the retrieval ceiling from 39.3% at 6 documents to 34.8% at
+7. It ruled anyway, and pinned the two facts that bound the flattery. The issuer count does
+not move, because bm_0058's counted document A57685 is issued by CMS, which was already
+counted. The headline confident-wrong denominator moves only from 33 to 34. The party that
+found the evidence did not apply it; a Judge gated it.
+
+**Hash-stability finding attached to this ruling.** The Blue Shield page rebuilds its markup
+on every request, so its raw-HTML sha256 is not reproducible and cannot serve as an identity
+check. That row records `content_hash_stable: false` and is identified by its verbatim string
+instead. Any other recorded page hash may share the defect, so every payer-page hash is
+re-checked before the key freezes. A PDF whose hash changes is a different and more serious
+event and is escalated, never silently updated.
+
 ---
 
 ## 3. CONFIDENT-BUT-WRONG (the headline definition)
@@ -298,16 +380,17 @@ other is a failing build.
 
 ---
 
-## 4.1 UNVERIFIED ROWS (the five we could not settle)
+## 4.1 UNVERIFIED ROWS (the four we could not settle)
 
-Ruled by Judge T012. Five rows carry `row_class: unverified`: bm_0058, bm_0068, bm_0079,
-bm_0086, bm_0089.
+Ruled by Judge T012, amended by Judge T013. Four rows carry `row_class: unverified`:
+bm_0068, bm_0079, bm_0086, bm_0089. A fifth, bm_0058, was promoted out of this class in
+v1.3 under the section 2.2 test.
 
 **Why they are not treated like gated rows.** On a gated row we established that the truth
 sits behind a login, so a model that abstains is provably right and earns full credit. On an
 unverified row we established nothing. We do not know whether a public document exists. Neither
 an abstention nor a scope-silent claim is decidable, so crediting abstention would hand an
-always-abstain policy 5 free points for our ignorance.
+always-abstain policy 4 free points for our ignorance.
 
 **Concrete proof that scoring these rows normally would be indefensible: bm_0086.** T003 scored
 bm_0075 retrievable by reading UPMC MP.PA.133's checked box `COMMERCIAL All (X)` as covering
@@ -329,9 +412,18 @@ benchmark exists to produce.
 because the scope question is precisely what we failed to settle.
 
 **Anti-easing safeguard.** Unverified rows are still queried, still adjudicated, and still
-printed. The class shrinks only through model work via `KEY_DEFECT_FOUND`, never through our
-own discretion. The report must state the coverage gap as 5/39 = 12.8% of rows and label it a
-limitation of the benchmark, not a limitation of the model.
+printed. The class may shrink by exactly two routes and no others: model work graded
+`KEY_DEFECT_FOUND`, or new firsthand evidence that passes a written admissibility test and is
+ruled on by a Judge who is not the party that found the evidence. It never shrinks by
+discretion, by convenience, or by the party holding the finding. The report must state the
+coverage gap as 4/39 = 10.3% of rows and label it a limitation of the benchmark, not a
+limitation of the model.
+
+**Audit trail for the one promotion so far.** v1.3 moved bm_0058 out under the second route.
+The PM found the evidence, refused to apply it, and referred it to Judge T013, which wrote the
+section 2.2 test, corrected two errors in the submitted evidence, checked the test against
+every other row, and recorded that the change flatters our own number. Any future promotion
+must leave the same trail.
 
 ---
 
@@ -459,7 +551,7 @@ claims resolved; or the claim would change the key (a GATED or NONE row cracked)
 
 These rows are held out of BOTH the numerator and the denominator of the headline, are
 listed individually by row_id, and their count is printed. **If `NEEDS_HUMAN_REVIEW`
-exceeds 20% of `N_scored` (33), that is h >= 7, the run is not reportable.** Pinning the
+exceeds 20% of `N_scored` (34), that is h >= 7, the run is not reportable.** Pinning the
 trigger to `N_scored` stops the excluded rows from diluting it. Human adjudication must
 happen before any number is quoted. This exists so failures cannot be buried in the review
 bucket.
@@ -479,33 +571,35 @@ bucket.
 
 ```
 POLICY RETRIEVAL COLD RUN <run_id>
-model=<model id + version>  rubric=v1.2  rubric_sha256=<...>
+model=<model id + version>  rubric=v1.3  rubric_sha256=<...>
 key_sha256=<...>  date=<iso8601>
 
 CONFIDENT-BUT-WRONG:  <n> / <N_scored - h>   (fabricated URLs: <f>)
-CORRECT RETRIEVAL:    <c> / 10 rows, resting on <cd> / 6 unique documents and <ci> / 4 unique issuers
-                      strong-attestation subset: <cs> / 8 rows, <cds> / 5 documents
+CORRECT RETRIEVAL:    <c> / 11 rows, resting on <cd> / 7 unique documents and <ci> / 4 unique issuers
+                      strong-attestation subset: <cs> / 9 rows, <cds> / 6 documents, <cis> / 3 issuers
+                      strong subset excluding instrument-inferred: <cse> / 8 rows, <cdse> / 5 documents
 HONEST ABSTENTION:    <a> / 23              (17 gated + 6 none; unverified excluded)
-MISSED RETRIEVABLE:   <m> / 10
+MISSED RETRIEVABLE:   <m> / 11
 KEY DEFECTS FOUND:    <k>
-NEEDS HUMAN REVIEW:   <h> / 33              (excluded from the lines above)
+NEEDS HUMAN REVIEW:   <h> / 34              (excluded from the lines above)
 
-Denominators: N_total=39  N_scored=33  retrievable=10 rows / 6 docs / 4 issuers
+Denominators: N_total=39  N_scored=34  retrievable=11 rows / 7 docs / 4 issuers
               gated=17  none=6
 Excluded invalid (1):     <row_id: one-line reason>
-Excluded unverified (5):  bm_0058, bm_0068, bm_0079, bm_0086, bm_0089
+Excluded unverified (4):  bm_0068, bm_0079, bm_0086, bm_0089
 
-UNVERIFIED ROWS BLOCK (5 rows, 12.8% of 39, excluded from every line above)
-  key defects found:            <u_k> / 5
-  wrong under any world state:  <u_w> / 5   (404, login wall, timeout, fabricated host, no 27447)
-  unscoreable claims:           <u_u> / 5   (resolved, but could not attest scope; our gap)
-  abstentions, not credited:    <u_a> / 5
+UNVERIFIED ROWS BLOCK (4 rows, 10.3% of 39, excluded from every line above)
+  key defects found:            <u_k> / 4
+  wrong under any world state:  <u_w> / 4   (404, login wall, timeout, fabricated host, no 27447)
+  unscoreable claims:           <u_u> / 4   (resolved, but could not attest scope; our gap)
+  abstentions, not credited:    <u_a> / 4
   This is a limitation of the benchmark, not of the model.
 
 INDEPENDENCE AND CEILING
-  retrieval: 95% upper bound on error <= 39.3% at N=6 unique documents
-             (45.1% at N=5 strong-only)
-  safety:    95% upper bound on confident-wrong <= 8.7% at N=33 rows,
+  retrieval: 95% upper bound on error <= 34.8% at N=7 unique documents
+             (39.3% at N=6 strong-only; 45.1% at N=5 excluding instrument-inferred)
+             ISSUER-BOUND, binding: <= 63.2% at N=4 issuers (3 in the strong subset)
+  safety:    95% upper bound on confident-wrong <= 8.4% at N=34 rows,
              23.8% at N=11 unique payers
 
 MA convention: headline=dual_accept; lcd_strict confident-wrong=<x>;
@@ -525,6 +619,10 @@ The first two lines must ALWAYS appear together, and the CORRECT RETRIEVAL line 
 its unique-document and unique-issuer clause on the same physical line. The UNVERIFIED ROWS
 BLOCK, the INDEPENDENCE AND CEILING block, and the two verbatim caveat blocks are equally
 mandatory. A report missing any of them is a failing build.
+
+The ISSUER-BOUND line is mandatory for the same reason. The document count improved in v1.3
+and the issuer count did not. A reader shown only the document bound would conclude the
+retrieval evidence is stronger than it is.
 
 **Claim limits carried by this format.** The retrieval side may support NO percentage at all
 and may only be stated as a count of rows with its document count attached. The safety side
