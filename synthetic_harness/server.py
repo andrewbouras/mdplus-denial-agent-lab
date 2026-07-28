@@ -25,6 +25,7 @@ from .arms import (
     prepare_follow_up_arm,
 )
 from .adjudication import latest_adjudication, record_adjudication
+from .agent_runner import engine_name, run_claude_arm
 from .episode import Episode
 from .evaluation import (
     evaluation_eligibility,
@@ -35,6 +36,7 @@ from .evaluation import (
 from .integrity import read_jsonl, utc_now, write_json_atomic
 from .metrics import build_metrics
 from .results import ingest_arm_result
+from .run_log import build_record, log_run_async
 from .source_review import (
     latest_source_reviews,
     record_source_review,
@@ -162,6 +164,7 @@ def launch_prepared_arm(
     arm_dir = Path(arm_data["arm_directory"])
     stdout_path = arm_dir / "codex_events.jsonl"
     stderr_path = arm_dir / "codex_stderr.log"
+    engine = engine_name()
     command = [
         "codex",
         "exec",
@@ -188,7 +191,7 @@ def launch_prepared_arm(
     if replacement_path:
         command.extend(["--add-dir", str(Path(replacement_path).parent)])
     command.append("-")
-    if arm == "web_only":
+    if arm == "web_only" and engine == "codex":
         profile = write_web_read_barrier(
             workspace=WORKSPACE,
             episode_root=episode.root,
@@ -216,33 +219,45 @@ def launch_prepared_arm(
     episode.log_event(
         role="orchestrator",
         arm=arm,
-        event_type="codex_agent_spawned",
+        event_type="agent_spawned",
         status="running",
-        summary=f"Spawned fresh Codex process for {arm}.",
+        summary=f"Spawned fresh {engine} agent for {arm}.",
         artifacts=[str(Path(arm_data["prompt_path"]).relative_to(episode.root))],
         details={
             "revision": arm_data.get("revision", 0),
-            "os_read_barrier": arm == "web_only",
+            "engine": engine,
+            "os_read_barrier": arm == "web_only" and engine == "codex",
         },
     )
     try:
-        with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open(
-            "w", encoding="utf-8"
-        ) as stderr:
-            process = subprocess.run(
-                command,
-                input=arm_data["prompt"],
-                text=True,
-                stdout=stdout,
-                stderr=stderr,
-                cwd=WORKSPACE,
-                timeout=1800,
+        if engine == "claude":
+            work_order = json.loads(
+                Path(arm_data["work_order_path"]).read_text(encoding="utf-8")
             )
+            run = run_claude_arm(arm_dir, work_order)
+            returncode = run["returncode"]
+            run_error = run.get("error")
+        else:
+            with stdout_path.open("w", encoding="utf-8") as stdout, stderr_path.open(
+                "w", encoding="utf-8"
+            ) as stderr:
+                process = subprocess.run(
+                    command,
+                    input=arm_data["prompt"],
+                    text=True,
+                    stdout=stdout,
+                    stderr=stderr,
+                    cwd=WORKSPACE,
+                    timeout=1800,
+                )
+            returncode = process.returncode
+            run_error = None
         outcome: dict[str, Any] = {
-            "status": "completed" if process.returncode == 0 else "failed",
-            "returncode": process.returncode,
+            "status": "completed" if returncode == 0 else "failed",
+            "returncode": returncode,
+            "engine": engine,
         }
-        if process.returncode == 0 and (arm_dir / "result.json").exists():
+        if returncode == 0 and (arm_dir / "result.json").exists():
             outcome["validation"] = ingest_arm_result(episode, arm, arm_dir)
             if not outcome["validation"].get("valid"):
                 outcome["status"] = "failed"
@@ -251,23 +266,27 @@ def launch_prepared_arm(
                     "Agent returned an invalid result"
                     + (f": {'; '.join(errors[:3])}" if errors else ".")
                 )
-        elif process.returncode == 0:
+        elif returncode == 0:
             outcome["status"] = "failed"
             outcome["error"] = "Agent finished without result.json"
         else:
-            outcome["error"] = "Codex process exited before producing a valid result."
+            outcome["error"] = (
+                run_error or f"The {engine} agent exited before producing a valid result."
+            )
             episode.log_event(
                 role="orchestrator",
                 arm=arm,
-                event_type="codex_agent_failed",
+                event_type="agent_failed",
                 status="failed",
-                summary=f"{arm} process exited with code {process.returncode}.",
+                summary=f"{arm} agent exited with code {returncode}: {outcome['error']}",
                 artifacts=[
-                    str(stdout_path.relative_to(episode.root)),
-                    str(stderr_path.relative_to(episode.root)),
+                    str(path.relative_to(episode.root))
+                    for path in (stdout_path, stderr_path)
+                    if path.exists()
                 ],
                 details={
-                    "returncode": process.returncode,
+                    "returncode": returncode,
+                    "engine": engine,
                     "revision": arm_data.get("revision", 0),
                 },
             )
@@ -282,11 +301,21 @@ def launch_prepared_arm(
                 "run_directory": str(arm_dir.relative_to(episode.root)),
             },
         )
+        log_run_async(
+            build_record(
+                episode_id=episode.episode_id,
+                arm=arm,
+                episode_root=episode.root,
+                arm_dir=arm_dir,
+                outcome={**outcome, "revision": arm_data.get("revision", 0)},
+            ),
+            arm_dir,
+        )
     except Exception as exc:
         episode.log_event(
             role="orchestrator",
             arm=arm,
-            event_type="codex_agent_failed",
+            event_type="agent_failed",
             status="failed",
             summary=f"{arm} process failed: {exc}",
             details={"traceback": traceback.format_exc(limit=5)},
@@ -306,6 +335,21 @@ def launch_prepared_arm(
                 "revision": arm_data.get("revision", 0),
                 "run_directory": str(arm_dir.relative_to(episode.root)),
             },
+        )
+        log_run_async(
+            build_record(
+                episode_id=episode.episode_id,
+                arm=arm,
+                episode_root=episode.root,
+                arm_dir=arm_dir,
+                outcome={
+                    "status": "failed",
+                    "error": str(exc),
+                    "engine": engine,
+                    "revision": arm_data.get("revision", 0),
+                },
+            ),
+            arm_dir,
         )
 
 
@@ -810,12 +854,13 @@ class Handler(SimpleHTTPRequestHandler):
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--host", default="127.0.0.1")
     args = parser.parse_args()
     if not UI_DIST.exists():
         raise SystemExit("UI build missing. Run: cd ui && npm install && npm run build")
     EPISODES_ROOT.mkdir(parents=True, exist_ok=True)
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"Denial Simulation Lab: http://127.0.0.1:{args.port}")
+    server = ThreadingHTTPServer((args.host, args.port), Handler)
+    print(f"Denial Simulation Lab: http://{args.host}:{args.port} (engine: {engine_name()})")
     server.serve_forever()
 
 
