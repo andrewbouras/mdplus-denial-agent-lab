@@ -1,5 +1,5 @@
 /* Shared mockup content.
- * DEFAULT STATE IS EMPTY / FROM ZERO — a brand-new visitor has provided nothing.
+ * DEFAULT STATE IS EMPTY / FROM ZERO. A brand-new visitor has provided nothing.
  * `requirements` is the GENERIC "what insurers usually ask for" list (no patient
  * specifics). `example` holds the optional Maria demo, whose wording is taken from
  * the real source e2e/tests/denial-case.spec.js. No invented medical numbers.
@@ -7,9 +7,9 @@
 window.APPEAL = {
   product: {
     name: "OrthoAppeals",
-    tagline: "Your knee replacement was denied? You can fight it — for free.",
+    tagline: "Your knee replacement was denied? You can fight it, for free.",
     promise:
-      "Insurance denials are often just missing paperwork, not a final no. We walk you through it in plain language and help you build a strong appeal — step by step.",
+      "Insurance denials are often just missing paperwork, not a final no. We walk you through it in plain language and help you build a strong appeal, step by step.",
     reassure: "Most denials like this can be appealed. Let's do it together.",
   },
 
@@ -23,7 +23,7 @@ window.APPEAL = {
     "Another surgery",
   ],
 
-  // PROCEDURE PICKER — the patient first picks a body-area category, then a
+  // PROCEDURE PICKER: the patient first picks a body-area category, then a
   // specific procedure (or "My procedure isn't listed" free text). Grouped into
   // the 5 categories the clinical team specified. CPT codes are secondary/tiny
   // in the UI. Taxonomy source: procedure_taxonomy.csv.
@@ -73,7 +73,7 @@ window.APPEAL = {
       bodyPart: "spine",
       procedures: [
         { id: "lumbar-fusion", label: "Lower back (lumbar) fusion", cpt: "22612", bodyPart: "spine" },
-        { id: "acdf", label: "Neck (cervical) fusion — ACDF", cpt: "22551", bodyPart: "spine" },
+        { id: "acdf", label: "Neck (cervical) fusion (ACDF)", cpt: "22551", bodyPart: "spine" },
         { id: "microdisc", label: "Lower back disc surgery / decompression", cpt: "63030", bodyPart: "spine" },
       ],
     },
@@ -88,15 +88,15 @@ window.APPEAL = {
       id: "xray",
       q: "Have you had any X-rays of the joint?",
       title: "X-ray report",
-      plain: "The written report from your X-rays — not just the images.",
-      why: "Your doctor's notes usually point to an X-ray, and insurers want the written report that describes the wear or damage in the joint — so this is a key piece.",
-      how: "Call the imaging center and ask them to send the written report to your surgeon — they do this all the time.",
+      plain: "The written report from your X-rays, not just the images.",
+      why: "Your doctor's notes usually point to an X-ray, and insurers want the written report that describes the wear or damage in the joint, so this is a key piece.",
+      how: "Call the imaging center and ask them to send the written report to your surgeon. They do this all the time.",
     },
     mri: {
       id: "mri",
       q: "Have you had an MRI or other advanced scan of the joint?",
       title: "MRI / advanced imaging report",
-      plain: "The written report from an MRI or similar scan — not just the images.",
+      plain: "The written report from an MRI or similar scan, not just the images.",
       why: "For this body part, insurers often expect a more detailed scan on top of an X-ray. Your doctor's notes usually mention it, and the written report really strengthens your case.",
       how: "Call the imaging center and ask them to send the written MRI report to your surgeon.",
     },
@@ -113,7 +113,7 @@ window.APPEAL = {
     _default: ["xray", "mri"],
   },
 
-  // US states — asked BEFORE the insurer so we can filter the insurer list.
+  // US states, asked BEFORE the insurer so we can filter the insurer list.
   states: [
     "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
     "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
@@ -127,7 +127,7 @@ window.APPEAL = {
   ],
 
   // STATE → INSURER map. IMPORTANT: this is a REPRESENTATIVE / SYNTHETIC mockup
-  // stand-in — curated payer names come from seed_review_39_spec.json where we
+  // stand-in. Curated payer names come from seed_review_39_spec.json where we
   // have them (e.g. Blue Shield of California, BCBS Michigan, CareFirst BCBS),
   // filled out with plausible regional plans for demo purposes. It is NOT a
   // complete or authoritative directory and MUST be replaced by the real
@@ -152,47 +152,47 @@ window.APPEAL = {
     "Kaiser Permanente", "Medicare", "Medicaid", "UnitedHealthcare",
   ],
 
-  // CONSERVATIVE-CARE questions — the four things a patient may have tried
+  // CONSERVATIVE-CARE questions: the four things a patient may have tried
   // before surgery. Per the surgeon's clinical model, patients typically must
   // have tried at least 2 OF THESE 4: (1) activity modification, (2) anti-
   // inflammatories, (3) injections, (4) formal physical therapy.
   //
   // We ask by RECENCY ("in the last 6 months"), NOT by dates, session counts,
-  // or months of therapy — those are backend/insurer-threshold logic for later,
+  // or months of therapy. Those are backend/insurer-threshold logic for later,
   // never asked here. No doctor or pharmacy record is required to say yes (an
   // over-the-counter Advil counts). Every answer is PREPOPULATED "yes"
   // (`default: "yes"`) because most patients have tried these, but the patient
-  // can change any answer — nothing is locked. A "yes" means it goes into the
+  // can change any answer; nothing is locked. A "yes" means it goes into the
   // appeal as "tried it, and it didn't give lasting relief."
   //
   // `followup` (when present) is the light lasting-vs-not nuance captured only
-  // when the answer is yes. `reassure` drives the gentle 2-of-4 guidance —
-  // this is reassurance, NOT a hard gate; progress is never blocked on it.
+  // when the answer is yes. `reassure` drives the gentle 2-of-4 guidance.
+  // This is reassurance, NOT a hard gate; progress is never blocked on it.
   //
   // Copy is body-part-generic ("your joint" / "your pain"), so it reads
   // correctly for a knee, shoulder, or spine patient. NOTE: imaging (X-ray /
-  // MRI) is NOT in this list — it is derived from bodyPart via `imaging` /
+  // MRI) is NOT in this list. It is derived from bodyPart via `imaging` /
   // `imagingByBodyPart` above.
   requirementsIntro:
-    "Most people have tried at least two of these four — that's usually all that's needed. Answer honestly; you can change any answer.",
+    "Most people have tried at least two of these four, and that's usually all that's needed. Answer honestly; you can change any answer.",
   requirements: [
     {
       id: "activity",
-      q: "Have you changed your activities to avoid the pain — like cutting back on stairs, walking, or sports?",
+      q: "Have you changed your activities to avoid the pain, like cutting back on stairs, walking, or sports?",
       title: "Changing your activities",
       default: "yes",
-      plain: "You eased off the things that hurt — stairs, walking, standing, sports, or work — to get by.",
+      plain: "You eased off the things that hurt, such as stairs, walking, standing, sports, or work, to get by.",
       why: "Cutting back on the activities that hurt is one of the everyday things insurers count as trying to manage it without surgery. Almost everyone does this, so it usually helps your case.",
-      how: "Nothing to request — just tell us in your own words how you've had to change what you do. Your surgeon's notes often mention it too.",
+      how: "Nothing to request. Just tell us in your own words how you've had to change what you do. Your surgeon's notes often mention it too.",
     },
     {
       id: "meds",
-      q: "In the last 6 months, have you taken an anti-inflammatory — like Advil or ibuprofen (even the over-the-counter kind)?",
+      q: "In the last 6 months, have you taken an anti-inflammatory, like Advil or ibuprofen (even the over-the-counter kind)?",
       title: "Anti-inflammatory medicine",
       default: "yes",
       plain: "You took something like Advil, Motrin, ibuprofen, Aleve, or a prescription version to ease the pain.",
-      why: "Anti-inflammatory medicine counts as one of the treatments insurers expect you to try first. Over-the-counter is fine — you don't need a prescription or a pharmacy record.",
-      how: "Nothing to request — an over-the-counter pill counts. Just let us know what you took; your doctor's chart may note it too.",
+      why: "Anti-inflammatory medicine counts as one of the treatments insurers expect you to try first. Over-the-counter is fine. You don't need a prescription or a pharmacy record.",
+      how: "Nothing to request. An over-the-counter pill counts. Just let us know what you took; your doctor's chart may note it too.",
       followup: {
         q: "Did it help enough?",
         options: [
@@ -207,8 +207,8 @@ window.APPEAL = {
       title: "Steroid / cortisone injection",
       default: "yes",
       plain: "You had a shot in the joint to calm the pain and swelling.",
-      why: "An injection is another treatment insurers like to see you tried. What matters most is whether the relief lasted — a shot that wore off actually strengthens the case for surgery.",
-      how: "Nothing to request right now — just tell us if you had one and how it went. Your doctor's office can confirm it from your chart.",
+      why: "An injection is another treatment insurers like to see you tried. What matters most is whether the relief lasted. A shot that wore off actually strengthens the case for surgery.",
+      how: "Nothing to request right now. Just tell us if you had one and how it went. Your doctor's office can confirm it from your chart.",
       followup: {
         q: "Did it help?",
         options: [
@@ -223,12 +223,12 @@ window.APPEAL = {
       title: "Physical therapy",
       default: "yes",
       plain: "You went to a physical therapist, or did the exercises they gave you.",
-      why: "Insurers like to see you gave physical therapy a real try. You don't need to count the visits — just letting us know you did it is enough here.",
-      how: "Nothing to hunt down right now — just tell us you went. Later, your PT clinic can send over their notes if the insurer asks.",
+      why: "Insurers like to see you gave physical therapy a real try. You don't need to count the visits. Just letting us know you did it is enough here.",
+      how: "Nothing to hunt down right now. Just tell us you went. Later, your PT clinic can send over their notes if the insurer asks.",
     },
   ],
 
-  // OPTIONAL demo only — loaded when the user clicks "See an example".
+  // OPTIONAL demo only, loaded when the user clicks "See an example".
   example: {
     name: "Maria Torres",
     plan: "Aetna Open Choice PPO",
@@ -239,11 +239,11 @@ window.APPEAL = {
       "We are unable to approve the requested right total knee arthroplasty at this time. The clinical information submitted does not demonstrate that the member has completed and failed the required course of nonsurgical treatment. The submission also does not include sufficient radiographic documentation of qualifying advanced joint disease. The records did not include physical therapy attendance or progress records, dates and outcomes of other conservative treatment, or the formal knee radiology report.",
     // Her plain-language answers, keyed to the requirement ids (from the source).
     answers: {
-      activity: "Yes — I stopped taking the stairs and gave up my morning walks because of the pain.",
-      meds: "Yes — I took ibuprofen for the pain, but it only helped a little and the relief didn't last.",
-      injection: "Yes — one cortisone injection that helped for a couple of weeks, then the pain came back.",
-      pt: "Yes — I did physical therapy at Harbor Rehabilitation for a while.",
-      xray: "Yes — X-rays at Suncoast Imaging, but I don't have the written report at home.",
+      activity: "Yes. I stopped taking the stairs and gave up my morning walks because of the pain.",
+      meds: "Yes. I took ibuprofen for the pain, but it only helped a little and the relief didn't last.",
+      injection: "Yes. I had one cortisone injection that helped for a couple of weeks, then the pain came back.",
+      pt: "Yes. I did physical therapy at Harbor Rehabilitation for a while.",
+      xray: "Yes. I had X-rays at Suncoast Imaging, but I don't have the written report at home.",
     },
   },
 };

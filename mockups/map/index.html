@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>OrthoAppeals — appeal a denied surgery</title>
+<title>OrthoAppeals: appeal a denied surgery</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;640;680&display=swap" rel="stylesheet" />
@@ -75,7 +75,7 @@
   <div class="brand">
     <div class="mark">◆</div>
     <div class="name">Ortho<span>Appeals</span></div>
-    <div class="tag">Version A · Guided, one question at a time</div>
+    <div class="tag">Free help appealing a denied surgery</div>
   </div>
 
   <div class="stage" id="stage"><div id="app"></div></div>
@@ -84,6 +84,17 @@
   <script>
     const D = window.APPEAL;
     const REQ = D.requirements;
+
+    // One page serves both devices. Layout adapts through the media query below;
+    // this flag adapts the WORDING, so a phone visitor is told to photograph the
+    // letter and a computer visitor is told to attach a file, instead of both.
+    const IS_PHONE = Math.min(
+      window.innerWidth,
+      window.screen ? window.screen.width : window.innerWidth) <= 768;
+    document.documentElement.dataset.device = IS_PHONE ? 'phone' : 'desktop';
+    const LETTER_HINT = IS_PHONE
+      ? 'Take a picture of it with your phone, or add a PDF or screenshot.'
+      : 'Add a PDF, a photo, or a screenshot from your computer.';
     const app = document.getElementById('app');
     const stage = document.getElementById('stage');
 
@@ -137,7 +148,7 @@
             <button class="example-link" id="ex">Or see how it works with an example</button>
           </div>
           <div class="trust">
-            <span>🔒 Private — nothing leaves your computer</span>
+            <span>🔒 Private. Nothing leaves your ${IS_PHONE ? 'phone' : 'computer'}</span>
             <span>💬 No insurance jargon</span>
             <span>📄 Ends with a ready appeal packet</span>
           </div>
@@ -166,7 +177,7 @@
           <span class="rmark">${mark}</span><span class="rname">${stepName(key)}</span></button>`;
       }).join('');
       return `<div class="railhead">Your appeal</div>
-        <p class="railsub">${done} of ${flow.length} steps done — every step is right here.</p>${steps}`;
+        <p class="railsub">${done} of ${flow.length} steps done. Every step is right here.</p>${steps}`;
     }
 
     function render() {
@@ -181,7 +192,7 @@
             <aside class="rail card">${railHTML()}</aside>
             <section>
               <div id="q"></div>
-              <div class="trustwrap"><div class="trustbar">🔒 Always free · No email or credit card — ever.</div></div>
+              <div class="trustwrap"><div class="trustbar">🔒 Always free · No email or credit card, ever.</div></div>
               <div id="backwrap" style="text-align:center"></div>
             </section>
           </div>`;
@@ -208,7 +219,7 @@
         if (idx === i) btn.setAttribute('aria-current', 'step'); else btn.removeAttribute('aria-current');
       });
       const sub = rail.querySelector('.railsub');
-      if (sub) sub.textContent = `${i} of ${flow.length} steps done — every step is right here.`;
+      if (sub) sub.textContent = `${i} of ${flow.length} steps done. Every step is right here.`;
     }
 
     function updateBack() {
@@ -258,8 +269,8 @@
 
     function drawCategory() {
       panel(`
-        <h2>Let's start simple — what kind of surgery did they say no to?</h2>
-        <p class="help">Pick the part of the body. Next you'll choose the exact surgery — or you can type your own.</p>
+        <h2>Let's start simple. What kind of surgery did they say no to?</h2>
+        <p class="help">Pick the part of the body. Next you'll choose the exact surgery, or you can type your own.</p>
         <div class="answers">
           ${D.procedureCategories.map(c => `<button class="btn btn-ghost btn-lg" data-cat="${c.id}">${c.label}</button>`).join('')}
           <button class="btn btn-ghost btn-lg" data-cat="__other">My surgery isn't listed here</button>
@@ -298,7 +309,7 @@
         <p class="help">Pick the closest one, or type your own. This is just so we use the right words in your appeal.</p>
         <div class="answers">
           ${cat.procedures.map(p => `<button class="btn btn-ghost btn-lg" data-p="${p.id}">${p.label}<span style="display:block;font-size:12px;font-weight:500;color:var(--ink-soft);margin-top:2px">CPT ${p.cpt}</span></button>`).join('')}
-          <input class="field" id="sother" placeholder="My procedure isn't listed — type it here" value="${A.surgery && !cat.procedures.some(p=>p.label===A.surgery) ? A.surgery : ''}" />
+          <input class="field" id="sother" placeholder="My procedure isn't listed. Type it here" value="${A.surgery && !cat.procedures.some(p=>p.label===A.surgery) ? A.surgery : ''}" />
           <button class="btn btn-ghost btn-lg" id="s-back-cat">← Pick a different body part</button>
         </div>`);
       document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
@@ -337,7 +348,7 @@
         <p class="help">${isCurated ? `Here are plans we often see in ${A.state}.` : `Here are common plans.`} Pick yours, or type it in if it's not here.</p>
         <div class="answers">
           ${options.map(name => `<button class="btn btn-ghost btn-lg" data-ins="${name}"${A.insurer === name ? ' style="border-color:var(--teal)"' : ''}>${name}</button>`).join('')}
-          <input class="field" id="ins" placeholder="My plan isn't listed — type it here" value="${A.insurer && !options.includes(A.insurer) ? A.insurer : ''}" />
+          <input class="field" id="ins" placeholder="My plan isn't listed. Type it here" value="${A.insurer && !options.includes(A.insurer) ? A.insurer : ''}" />
           <button class="btn btn-primary btn-lg" id="ins-next">Continue →</button>
         </div>`);
       document.querySelectorAll('[data-ins]').forEach(b => b.onclick = () => { A.insurer = b.dataset.ins; next(); });
@@ -351,14 +362,14 @@
       const chosen = A.letterFiles && A.letterFiles.length;
       panel(`
         <h2>Let's start with your denial letter</h2>
-        <p class="help">This is the most important step. Your letter is the only place that says exactly what was turned down — so a clear photo or copy of it helps us the most.</p>
+        <p class="help">This is the most important step. Your letter is the only place that says exactly what was turned down, so a clear photo or copy of it helps us the most.</p>
         <div class="answers">
           <label class="letter-up${chosen ? ' chosen' : ''}" id="lt-drop">
-            <input type="file" id="lt-file" accept="image/*,application/pdf" capture="environment" multiple />
-            <span class="up-ic">${chosen ? '✓' : '📷'}</span>
-            <span class="up-head" id="lt-head">${chosen ? 'Letter attached' : 'Upload or photograph your denial letter'}</span>
-            <p class="up-sub" id="lt-sub">${chosen ? A.letterName : 'On your phone you can take a picture of it. On a computer, add a PDF, photo, or screenshot.'}</p>
-            <div class="up-formats">Photo · PDF · Screenshot — whatever you have is fine</div>
+            <input type="file" id="lt-file" accept="image/*,application/pdf" ${IS_PHONE ? 'capture="environment"' : ''} multiple />
+            <span class="up-ic">${chosen ? '✓' : (IS_PHONE ? '📷' : '📄')}</span>
+            <span class="up-head" id="lt-head">${chosen ? 'Letter attached' : (IS_PHONE ? 'Take a photo of your denial letter' : 'Upload your denial letter')}</span>
+            <p class="up-sub" id="lt-sub">${chosen ? A.letterName : LETTER_HINT}</p>
+            <div class="up-formats">Photo, PDF, or screenshot: whatever you have is fine</div>
           </label>
 
           <details class="letter-paste"${A.letter ? ' open' : ''}>
@@ -377,16 +388,17 @@
         A.letterName = files.length === 1 ? files[0].name
           : (files.length ? files.length + ' files attached' : '');
         drop.classList.toggle('chosen', !!files.length);
-        document.getElementById('lt-head').textContent = files.length ? 'Letter attached' : 'Upload or photograph your denial letter';
-        drop.querySelector('.up-ic').textContent = files.length ? '✓' : '📷';
-        document.getElementById('lt-sub').textContent = files.length ? A.letterName : 'On your phone you can take a picture of it. On a computer, add a PDF, photo, or screenshot.';
+        document.getElementById('lt-head').textContent = files.length ? 'Letter attached'
+          : (IS_PHONE ? 'Take a photo of your denial letter' : 'Upload your denial letter');
+        drop.querySelector('.up-ic').textContent = files.length ? '✓' : (IS_PHONE ? '📷' : '📄');
+        document.getElementById('lt-sub').textContent = files.length ? A.letterName : LETTER_HINT;
       };
       document.getElementById('lt-yes').onclick = () => { A.letter = document.getElementById('lt').value.trim(); next(); };
       document.getElementById('lt-no').onclick = () => { A.letter = ''; A.letterFiles = []; A.letterName = ''; next(); };
     }
 
     // How many of the four conservative-care questions the patient has said "yes"
-    // to so far — drives the gentle 2-of-4 reassurance (never a hard gate).
+    // to so far. It drives the gentle 2-of-4 reassurance (never a hard gate).
     function reqYesCount() {
       return REQ.filter(x => A.req[x.id]?.have).length;
     }
@@ -394,7 +406,7 @@
     function drawReq(r) {
       // Prepopulate from the clinical default ("yes" for the conservative-care
       // questions) the first time this step is shown, so most patients can just
-      // confirm. The patient can still change it — nothing here is locked.
+      // confirm. The patient can still change it; nothing here is locked.
       if (A.req[r.id] === undefined && r.default) {
         A.req[r.id] = { have: r.default === 'yes', answer: r.default };
       }
@@ -457,13 +469,13 @@
     // ---- Optional "tell us your story" free-text + voice-to-text -----------
     // Feature-detect the Web Speech API (Chrome/Edge-ish; Firefox/Safari may
     // lack it). If missing, the mic is never rendered and typing stays the only
-    // path — so the control is never broken. Typing is always available.
+    // path, so the control is never broken. Typing is always available.
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     A.story = A.story || '';
 
     // Heuristic for "thin structured input": did the patient give us enough to
     // build a strong appeal, or should we gently ask them to tell their story?
-    // Keys entirely off the existing in-memory state (A) — non-blocking.
+    // Keys entirely off the existing in-memory state (A), non-blocking.
     function structuredThin() {
       const noLetter = !(A.letter && A.letter.trim()) && !(A.letterFiles && A.letterFiles.length);
       const cat = D.procedureCategories.find(c => c.id === A.catId);
@@ -481,8 +493,8 @@
       if (!wrap) return;
       const thin = structuredThin();
       const prompt = thin
-        ? `<p class="help story-nudge">We still need a bit more to build a strong appeal — tell us your story in your own words${SpeechRec ? ' (you can speak it)' : ''}. A few sentences about how this has affected your day-to-day life can make a real difference.</p>`
-        : `<p class="help">Optional — but a few sentences in your own words about how this has affected your life can strengthen your appeal.</p>`;
+        ? `<p class="help story-nudge">We still need a bit more to build a strong appeal. Tell us your story in your own words${SpeechRec ? ' (you can speak it)' : ''}. A few sentences about how this has affected your day-to-day life can make a real difference.</p>`
+        : `<p class="help">Optional, but a few sentences in your own words about how this has affected your life can strengthen your appeal.</p>`;
       const micBtn = SpeechRec
         ? `<button type="button" class="mic-btn" id="mic" aria-pressed="false" aria-label="Dictate your story with your voice">
              <span class="mic-ic" aria-hidden="true">🎙️</span><span class="mic-lbl">Speak instead</span>
