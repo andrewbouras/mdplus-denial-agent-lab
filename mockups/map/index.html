@@ -61,6 +61,19 @@
   .sum .item p { font-size: 15.5px; color: var(--ink-soft); margin: 0; }
   .sum .item .chip { margin-top: 8px; }
 
+  /* live run + finished packet */
+  .runbox { display: flex; gap: 16px; align-items: center; justify-content: center; text-align: left; max-width: 460px; margin: 0 auto; padding: 18px 20px; border: 2px solid var(--line); border-radius: 14px; background: var(--paper); }
+  .spin { width: 26px; height: 26px; flex: none; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--teal); animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .runline { font-size: 16px; font-weight: 640; }
+  .runtime { font-size: 14px; color: var(--ink-soft); margin-top: 2px; }
+  .pkt { text-align: left; max-width: 620px; margin: 0 auto 18px; padding: 18px 20px; border: 2px solid var(--line); border-radius: 14px; background: var(--paper); }
+  .pkt h3 { font-size: 19px; margin-bottom: 6px; }
+  .pkt p { font-size: 16px; color: var(--ink-soft); margin: 0; }
+  .pkt ul, .pkt ol { font-size: 16px; color: var(--ink-soft); margin: 0; padding-left: 22px; }
+  .pkt li { margin-bottom: 7px; }
+  .pkt.warn { border-color: var(--amber); background: var(--amber-tint); }
+
   @media (max-width: 760px) {
     .cols { grid-template-columns: 1fr; gap: 14px; }
     .rail { position: static; display: flex; overflow-x: auto; gap: 6px; padding: 12px; -webkit-overflow-scrolling: touch; }
@@ -128,7 +141,7 @@
 
     let started = false, i = 0;
     // catId = chosen category, bodyPart drives imaging + insurer/state gating.
-    const A = { catId: '', surgery: '', bodyPart: '', state: '', insurer: '', letter: '', letterFiles: [], letterName: '', req: {} }; // starts EMPTY
+    const A = { catId: '', surgery: '', cpt: '', bodyPart: '', state: '', insurer: '', letter: '', letterFiles: [], letterName: '', req: {} }; // starts EMPTY
     buildFlow(); // now safe: A exists
 
     // The imaging steps (and therefore flow length + the rail) change with the
@@ -277,10 +290,10 @@
         </div>`);
       document.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
         if (b.dataset.cat === '__other') {
-          A.catId = '__other'; A.bodyPart = ''; A.surgery = '';
+          A.catId = '__other'; A.bodyPart = ''; A.surgery = ''; A.cpt = '';
         } else {
           const c = D.procedureCategories.find(x => x.id === b.dataset.cat);
-          A.catId = c.id; A.bodyPart = c.bodyPart; A.surgery = '';
+          A.catId = c.id; A.bodyPart = c.bodyPart; A.surgery = ''; A.cpt = '';
         }
         buildFlow(); rebuildShell(); A.req = {}; render(); // re-draw same step (now the subtype view)
       });
@@ -314,9 +327,9 @@
         </div>`);
       document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
         const p = cat.procedures.find(x => x.id === b.dataset.p);
-        A.surgery = p.label; A.bodyPart = p.bodyPart; buildFlow(); rebuildShell(); A.req={}; next();
+        A.surgery = p.label; A.bodyPart = p.bodyPart; A.cpt = p.cpt; buildFlow(); rebuildShell(); A.req={}; next();
       });
-      document.getElementById('sother').onkeydown = e => { if (e.key === 'Enter' && e.target.value.trim()) { A.surgery = e.target.value.trim(); A.bodyPart = cat.bodyPart; buildFlow(); rebuildShell(); A.req={}; next(); } };
+      document.getElementById('sother').onkeydown = e => { if (e.key === 'Enter' && e.target.value.trim()) { A.surgery = e.target.value.trim(); A.cpt = ''; A.bodyPart = cat.bodyPart; buildFlow(); rebuildShell(); A.req={}; next(); } };
       document.getElementById('s-back-cat').onclick = () => { A.catId=''; A.bodyPart=''; A.surgery=''; buildFlow(); A.req={}; render(); };
     }
 
@@ -566,11 +579,12 @@
         ${gather.length ? `<p class="help" style="margin-top:6px"><b>Next, gather these:</b></p><div class="sum">${gather.map(r => item(r, 'gather')).join('')}</div>` : ''}
         <div id="storywrap"></div>
         <div class="answers">
-          <button class="btn btn-primary btn-lg">Build my appeal packet for ${who}</button>
+          <button class="btn btn-primary btn-lg" id="build">Build my appeal packet for ${who}</button>
           <button class="btn btn-ghost btn-lg" id="restart">Start over</button>
         </div>`);
       drawStory();
-      document.getElementById('restart').onclick = () => { A.catId=''; A.surgery=''; A.bodyPart=''; A.state=''; A.insurer=''; A.letter=''; A.letterFiles=[]; A.letterName=''; A.req={}; A.story=''; buildFlow(); showHero(); };
+      document.getElementById('build').onclick = onBuild;
+      document.getElementById('restart').onclick = resetAll;
     }
 
     function item(r, mode) {
@@ -582,6 +596,208 @@
         <div class="ic">${mode === 'have' ? '✅' : '📎'}</div>
         <div><h3>${r.title}</h3>${note}${chip}</div>
       </div>`;
+    }
+
+    // ---- Live run against the retrieval agent -----------------------------
+    // The harness also serves this page, at /patient/, so the final button can
+    // reach the API on the same origin. Served as a plain static preview there
+    // is no API behind it, and the button says so rather than doing nothing.
+    let apiReady = null;
+    async function hasApi() {
+      if (apiReady !== null) return apiReady;
+      try {
+        const r = await fetch('/api/health', { cache: 'no-store' });
+        const j = await r.json();
+        apiReady = r.ok && j.ok === true;
+      } catch (e) { apiReady = false; }
+      return apiReady;
+    }
+
+    function esc(t) {
+      return String(t == null ? '' : t).replace(/[&<>"]/g,
+        c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+    function li(items) { return (items || []).filter(Boolean).map(t => '<li>' + esc(t) + '</li>').join(''); }
+
+    // Everything the patient told us, as plain lines the agent can read.
+    function careNotes() {
+      const lines = [];
+      reqList().forEach(r => {
+        const a = A.req[r.id];
+        if (!a || !a.answer) return;
+        const label = a.answer === 'yes' ? 'yes' : (a.answer === 'no' ? 'no / not yet' : 'not sure');
+        let line = r.title + ': ' + label;
+        if (a.followup && r.followup) {
+          const o = r.followup.options.find(x => x.id === a.followup);
+          if (o) line += ' (' + o.label + ')';
+        }
+        lines.push(line);
+      });
+      if (A.story && A.story.trim()) lines.push("In the patient's own words: " + A.story.trim());
+      return lines.join('\n');
+    }
+
+    // The API needs denial-letter text. A photo cannot be sent through this
+    // endpoint, so say plainly that the text is missing instead of inventing it.
+    function submissionBody() {
+      const names = (A.letterFiles || []).map(f => f.name).join(', ');
+      const pasted = (A.letter || '').trim();
+      const denial = pasted || [
+        'The patient did not paste the text of the denial letter.',
+        names ? 'They attached these files: ' + names + '.' : 'They could not find the letter.',
+        (A.insurer || 'Their insurer') + ' denied ' + (A.surgery || 'the surgery')
+          + (A.cpt ? ' (CPT ' + A.cpt + ')' : '') + '.'
+      ].join(' ');
+      return {
+        denial_letter: denial,
+        payer: A.insurer || '',
+        plan_name: '',
+        state: A.state || '',
+        product_clue: '',
+        procedure: A.surgery || '',
+        cpt: A.cpt || '',
+        treating_practice: '',
+        patient_notes: careNotes(),
+        retrieval_mode: 'web_only'
+      };
+    }
+
+    const RUN = { id: null, timer: null, poll: null, startedAt: 0 };
+    function stopRun() {
+      if (RUN.timer) clearInterval(RUN.timer);
+      if (RUN.poll) clearInterval(RUN.poll);
+      RUN.timer = null; RUN.poll = null;
+    }
+    function setRunLine(text) {
+      const el = document.getElementById('runline');
+      if (el && text) el.textContent = text;
+    }
+
+    function runPanel(note) {
+      panel(`
+        <div class="eyebrow">Working on your appeal</div>
+        <h2>Finding the exact rule ${esc(A.insurer || 'your plan')} used</h2>
+        <p class="help">We are reading the published policy for ${esc((A.surgery || 'your surgery').toLowerCase())}. This takes a few minutes. You can leave this page open.</p>
+        <div class="runbox">
+          <div class="spin" aria-hidden="true"></div>
+          <div>
+            <div class="runline" id="runline">${esc(note)}</div>
+            <div class="runtime" id="runtime">0:00 elapsed</div>
+          </div>
+        </div>
+        <div class="answers" style="margin-top:20px">
+          <button class="btn btn-ghost btn-lg" id="run-cancel">Stop and go back</button>
+        </div>`);
+      document.getElementById('run-cancel').onclick = () => { stopRun(); render(); };
+      RUN.timer = setInterval(() => {
+        const el = document.getElementById('runtime');
+        if (!el) return;
+        const s = Math.floor((Date.now() - RUN.startedAt) / 1000);
+        el.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + ' elapsed';
+      }, 1000);
+    }
+
+    function previewPanel() {
+      panel(`
+        <div class="eyebrow">Preview only</div>
+        <h2>This copy cannot run your appeal</h2>
+        <p class="help">You are looking at the preview copy of the site, which has no agent behind it. The working version runs the search against your insurer's real policy. Ask Andrew for the working address.</p>
+        <div class="answers"><button class="btn btn-ghost btn-lg" id="prev-back">← Go back</button></div>`);
+      document.getElementById('prev-back').onclick = () => render();
+    }
+
+    function failPanel(message) {
+      panel(`
+        <div class="eyebrow">Something went wrong</div>
+        <h2>We could not finish the search</h2>
+        <p class="help">Nothing you entered was lost. You can try again.</p>
+        <div class="pkt warn"><h3>What happened</h3><p>${esc(message)}</p></div>
+        <div class="answers">
+          <button class="btn btn-primary btn-lg" id="fail-retry">Try again</button>
+          <button class="btn btn-ghost btn-lg" id="fail-back">← Go back</button>
+        </div>`);
+      document.getElementById('fail-retry').onclick = onBuild;
+      document.getElementById('fail-back').onclick = () => render();
+    }
+
+    async function onBuild() {
+      if (!(await hasApi())) return previewPanel();
+      stopRun();
+      RUN.startedAt = Date.now();
+      runPanel('Sending your answers.');
+      let snap;
+      try {
+        const r = await fetch('/api/episodes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submissionBody())
+        });
+        snap = await r.json();
+        if (!r.ok) throw new Error(snap.error || 'The server refused the request.');
+      } catch (e) {
+        stopRun();
+        return failPanel(e.message || String(e));
+      }
+      RUN.id = snap.manifest && snap.manifest.episode_id;
+      if (!RUN.id) { stopRun(); return failPanel('The server did not return a case number.'); }
+      setRunLine('Searching for the policy that covers your plan.');
+      RUN.poll = setInterval(pollRun, 5000);
+    }
+
+    async function pollRun() {
+      if (!RUN.id) return;
+      let snap;
+      try {
+        snap = await fetch('/api/episodes/' + RUN.id, { cache: 'no-store' }).then(r => r.json());
+      } catch (e) { return; }
+      const arm = (snap.arms && snap.arms.web_only) || {};
+      const status = (arm.runtime && arm.runtime.status) || 'running';
+      // The harness writes engineering-language events. A patient should never
+      // read them, so report the stage in plain words instead of echoing them.
+      const events = (snap.events || []).filter(e => e.arm === 'web_only' && e.summary);
+      if (events.length) {
+        const mins = (Date.now() - RUN.startedAt) / 60000;
+        setRunLine(mins < 1 ? 'Looking up the published rules for your plan.'
+          : mins < 4 ? 'Reading the policy document your plan follows.'
+          : 'Checking your answers against that policy.');
+      }
+      if (status === 'completed' && arm.result) { stopRun(); packetPanel(arm.result); return; }
+      if (status === 'failed') {
+        stopRun();
+        failPanel((arm.runtime && arm.runtime.error) || 'The search did not finish.');
+      }
+    }
+
+    function packetPanel(res) {
+      const src = (res.retrieval && res.retrieval.selected_source) || {};
+      const pa = res.policy_analysis || {};
+      const ns = res.next_steps || {};
+      const qs = ((res.patient_interaction || {}).questions) || [];
+      const gaps = pa.documentation_gaps || [];
+      const acts = (ns.ordered_actions || []).map(a => a.action || a);
+      panel(`
+        <div class="eyebrow">Your appeal plan</div>
+        <h2>Here is the rule ${esc(A.insurer || 'your plan')} used</h2>
+        ${src.title ? `<div class="band">${esc(src.title)}</div>` : ''}
+        ${src.url ? `<p class="help"><a href="${esc(src.url)}" target="_blank" rel="noopener">Read the policy yourself</a>${src.effective_date ? '. Applies to: ' + esc(src.effective_date) : ''}</p>` : ''}
+        ${pa.apparent_reason ? `<div class="pkt"><h3>Why they said no</h3><p>${esc(pa.apparent_reason)}</p></div>` : ''}
+        ${gaps.length ? `<div class="pkt"><h3>What your doctor still needs to show</h3><ul>${li(gaps)}</ul></div>` : ''}
+        ${ns.primary_action ? `<div class="pkt"><h3>The most useful next step</h3><p>${esc(ns.primary_action)}</p></div>` : ''}
+        ${acts.length ? `<div class="pkt"><h3>In order</h3><ol>${li(acts)}</ol></div>` : ''}
+        ${qs.length ? `<div class="pkt"><h3>We still need to ask you</h3><ul>${li(qs.map(q => q.text))}</ul></div>` : ''}
+        ${ns.safety_caveat ? `<div class="pkt warn"><h3>Please read this before you act</h3><p>${esc(ns.safety_caveat)}</p></div>` : ''}
+        <div class="answers" style="margin-top:22px">
+          <button class="btn btn-ghost btn-lg" id="restart2">Start over</button>
+        </div>`);
+      document.getElementById('restart2').onclick = resetAll;
+    }
+
+    function resetAll() {
+      stopRun();
+      RUN.id = null;
+      A.catId=''; A.surgery=''; A.cpt=''; A.bodyPart=''; A.state=''; A.insurer='';
+      A.letter=''; A.letterFiles=[]; A.letterName=''; A.req={}; A.story='';
+      buildFlow(); showHero();
     }
 
     function next() { i = Math.min(flow.length - 1, i + 1); render(); }

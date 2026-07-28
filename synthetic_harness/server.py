@@ -54,6 +54,7 @@ EPISODES_ROOT = Path(
     )
 ).expanduser().resolve()
 UI_DIST = WORKSPACE / "ui" / "dist"
+PATIENT_UI = WORKSPACE / "mockups"
 RUNS: dict[str, dict[str, Any]] = {}
 RUNS_LOCK = threading.Lock()
 EVALUATION_RUNS: dict[str, dict[str, Any]] = {}
@@ -672,6 +673,16 @@ def episode_snapshot(episode: Episode) -> dict[str, Any]:
 class Handler(SimpleHTTPRequestHandler):
     def translate_path(self, path: str) -> str:
         parsed = urlparse(path).path
+        # The patient-facing site is served here so it shares an origin with the
+        # API; a cross-origin page cannot reach it from the static preview host.
+        if parsed == "/patient" or parsed.startswith("/patient/"):
+            relative = parsed[len("/patient") :].lstrip("/") or "map/index.html"
+            candidate = (PATIENT_UI / relative).resolve()
+            if not candidate.is_relative_to(PATIENT_UI.resolve()):
+                return str(PATIENT_UI / "map" / "index.html")
+            if candidate.is_dir():
+                candidate = candidate / "index.html"
+            return str(candidate)
         relative = parsed.lstrip("/") or "index.html"
         candidate = UI_DIST / relative
         if not candidate.exists() and "." not in Path(relative).name:
