@@ -35,7 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from policy_eval.common import sha256_text  # noqa: E402
 
 CLAUDE_BIN = os.environ.get("CLAUDE_BIN", "/home/clawd/.local/bin/claude")
-DEFAULT_ADJUDICATOR = "claude-opus-4-7"
+DEFAULT_ADJUDICATOR = "claude-opus-5"
 TEMPERATURE_NOTE = (
     "not settable via Claude CLI print mode; fixed prompt, fixed field "
     "whitelist and closed grade vocabulary used instead"

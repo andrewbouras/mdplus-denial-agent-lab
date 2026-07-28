@@ -34,7 +34,7 @@ from .integrity import write_json_atomic
 WORKSPACE = Path(__file__).resolve().parents[1]
 CLAUDE_BIN = os.environ.get("CLAUDE_BIN", "/home/clawd/.local/bin/claude")
 MCP_SERVER = WORKSPACE / "scripts" / "policy_eval" / "mcp_tools_server.py"
-DEFAULT_MODEL = os.environ.get("MDPLUS_AGENT_MODEL", "claude-opus-4-7")
+DEFAULT_MODEL = os.environ.get("MDPLUS_AGENT_MODEL", "claude-opus-5")
 MCP_TOOLS = ["mcp__policyeval__web_search", "mcp__policyeval__http_fetch"]
 DENY_TOOLS = [
     "Read",
