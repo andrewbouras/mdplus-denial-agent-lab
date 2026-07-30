@@ -458,7 +458,7 @@
           fu.querySelectorAll('[data-fu]').forEach(b => b.onclick = () => {
             const o = r.followup.options.find(x => x.id === b.dataset.fu);
             A.req[r.id].followup = o.id; A.req[r.id].lasting = o.lasting;
-            drawFollowup();
+            next();
           });
         } else {
           fu.innerHTML = '';
@@ -467,11 +467,16 @@
       drawFollowup();
 
       document.querySelectorAll('[data-h]').forEach(b => b.onclick = () => {
+        // Answering is the action, so move on. These questions are prefilled
+        // with the common answer, so staying put made a tap on the already
+        // highlighted button look dead. Only stop when the tap reveals the
+        // followup, which is a visible change; if the followup is already on
+        // screen the tap is a confirmation and should carry on.
+        const followupShowing = !!document.querySelector('[data-fu]');
         const have = b.dataset.h === 'yes';
         A.req[r.id] = { have, answer: b.dataset.h };
-        // Re-render so the selection highlight, reassurance count, and the
-        // yes-only followup all update in place (answer stays editable).
-        drawReq(r);
+        if (r.followup && have && !followupShowing) return drawReq(r);
+        next();
       });
       document.getElementById('req-next').onclick = () => {
         if (!A.req[r.id]?.answer) A.req[r.id] = { have: false, answer: 'no' };
