@@ -290,29 +290,33 @@ def run_claude_arm(
     )
 
     prompt = claude_prompt(work_order)
-    argv = [
-        CLAUDE_BIN,
-        "-p",
-        prompt,
-        "--model",
-        model,
-        "--output-format",
-        "json",
-        "--tools",
-        "",
-        "--mcp-config",
-        str(mcp_config),
-        "--strict-mcp-config",
-        "--allowedTools",
-        ",".join(MCP_TOOLS),
-        "--disallowedTools",
-        ",".join(DENY_TOOLS),
-        "--permission-mode",
-        "default",
-        "--disable-slash-commands",
-        "--system-prompt",
-        SYSTEM_PROMPT,
-    ]
+
+    def build_argv(text: str, resume: str | None = None) -> list[str]:
+        head = [CLAUDE_BIN, "-p", text]
+        if resume:
+            head += ["--resume", resume]
+        return head + [
+            "--model",
+            model,
+            "--output-format",
+            "json",
+            "--tools",
+            "",
+            "--mcp-config",
+            str(mcp_config),
+            "--strict-mcp-config",
+            "--allowedTools",
+            ",".join(MCP_TOOLS),
+            "--disallowedTools",
+            ",".join(DENY_TOOLS),
+            "--permission-mode",
+            "default",
+            "--disable-slash-commands",
+            "--system-prompt",
+            SYSTEM_PROMPT,
+        ]
+
+    argv = build_argv(prompt)
     env = dict(os.environ)
     env["POLICY_EVAL_TOOL_LOG"] = str(tool_log)
     env["POLICY_EVAL_ROW_ID"] = work_order["episode_id"]
@@ -329,13 +333,12 @@ def run_claude_arm(
             timeout=timeout,
         )
     except subprocess.TimeoutExpired:
+        shutil.rmtree(workdir, ignore_errors=True)
         return {
             "returncode": 124,
             "error": f"agent timed out after {timeout}s",
             "elapsed_s": round(time.time() - started, 1),
         }
-    finally:
-        shutil.rmtree(workdir, ignore_errors=True)
 
     elapsed = round(time.time() - started, 1)
     (arm_dir / "agent_stderr.log").write_text(proc.stderr[:200000], encoding="utf-8")
@@ -347,6 +350,7 @@ def run_claude_arm(
         (arm_dir / "agent_stdout.txt").write_text(
             proc.stdout[:200000], encoding="utf-8"
         )
+        shutil.rmtree(workdir, ignore_errors=True)
         return {
             "returncode": proc.returncode or 1,
             "error": "agent output was not a valid JSON envelope",
@@ -369,6 +373,7 @@ def run_claude_arm(
     write_json_atomic(arm_dir / "agent_run_meta.json", meta)
 
     if envelope.get("is_error"):
+        shutil.rmtree(workdir, ignore_errors=True)
         return {
             "returncode": 1,
             "error": f"agent reported an error: {envelope.get('api_error_status')}",
@@ -380,14 +385,88 @@ def run_claude_arm(
         (arm_dir / "agent_stdout.txt").write_text(
             (envelope.get("result") or "")[:200000], encoding="utf-8"
         )
+        shutil.rmtree(workdir, ignore_errors=True)
         return {
             "returncode": 1,
             "error": "agent final response contained no JSON object",
             "elapsed_s": elapsed,
         }
 
+    # A long answer sometimes stops after the retrieval sections, which failed the
+    # whole run and threw away several minutes of correct research. Ask the SAME
+    # session for the missing sections instead, so the agent still has the policy
+    # it already read and does not have to search again.
+    repair = _repair_missing_sections(
+        result, arm_dir, build_argv=build_argv, workdir=workdir,
+        session_id=envelope.get("session_id"), env=env, timeout=timeout,
+    )
+    shutil.rmtree(workdir, ignore_errors=True)
+    if repair:
+        meta["repair"] = repair
+        write_json_atomic(arm_dir / "agent_run_meta.json", meta)
+
     # The identifiers are the controller's to assert, not the model's.
     result["episode_id"] = work_order["episode_id"]
     result["arm"] = arm
     write_json_atomic(arm_dir / "result.json", result)
     return {"returncode": 0, "elapsed_s": elapsed}
+
+
+def _repair_missing_sections(
+    result: dict[str, Any],
+    arm_dir: Path,
+    build_argv,
+    workdir: Path,
+    session_id: str | None,
+    env: dict[str, str],
+    timeout: int,
+) -> dict[str, Any] | None:
+    """Ask the same session to supply top-level sections it left out.
+
+    Mutates `result` in place. Returns a record of what was attempted, or None
+    when nothing was missing. Runs at most once.
+    """
+    from .arms import result_contract
+
+    required = result_contract()["required_top_level_fields"]
+    controller_owned = {"episode_id", "arm"}
+    missing = [f for f in required if f not in result and f not in controller_owned]
+    if not missing:
+        return None
+    record: dict[str, Any] = {"missing": missing, "session_id": session_id}
+    if not session_id:
+        record["outcome"] = "no session to resume"
+        return record
+
+    ask = (
+        "Your previous answer stopped early and left out these required "
+        "top-level fields: " + ", ".join(missing) + ". Do not repeat the work you "
+        "already did and do not search again unless you must. Reply with ONE JSON "
+        "object that contains ONLY those missing fields, filled in from the policy "
+        "you already read. Use the same schema as before."
+    )
+    started = time.time()
+    try:
+        proc = subprocess.run(
+            build_argv(ask, resume=session_id),
+            cwd=str(workdir),
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        record["outcome"] = "repair timed out"
+        return record
+    record["elapsed_s"] = round(time.time() - started, 1)
+    try:
+        patch = extract_json(json.loads(proc.stdout).get("result", "")) or {}
+    except (json.JSONDecodeError, AttributeError):
+        patch = {}
+    filled = [f for f in missing if f in patch]
+    for field in filled:
+        result[field] = patch[field]
+    record["filled"] = filled
+    record["outcome"] = "repaired" if len(filled) == len(missing) else "partial"
+    write_json_atomic(arm_dir / "repair_attempt.json", record)
+    return record

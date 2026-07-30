@@ -602,11 +602,17 @@
     // The harness also serves this page, at /patient/, so the final button can
     // reach the API on the same origin. Served as a plain static preview there
     // is no API behind it, and the button says so rather than doing nothing.
+    // The API sits beside the page, wherever the page is mounted. Served straight
+    // from the harness the page is at /patient/map/, so the API is at /api. Behind
+    // a proxy that mounts the harness under a prefix the page is at
+    // /<prefix>/patient/map/, so the API is at /<prefix>/api. Deriving the base
+    // from our own path keeps both cases working without a build step.
+    const API = location.pathname.replace(/\/patient\/.*$/, '') + '/api';
     let apiReady = null;
     async function hasApi() {
       if (apiReady !== null) return apiReady;
       try {
-        const r = await fetch('/api/health', { cache: 'no-store' });
+        const r = await fetch(API + '/health', { cache: 'no-store' });
         const j = await r.json();
         apiReady = r.ok && j.ok === true;
       } catch (e) { apiReady = false; }
@@ -727,7 +733,7 @@
       runPanel('Sending your answers.');
       let snap;
       try {
-        const r = await fetch('/api/episodes', {
+        const r = await fetch(API + '/episodes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(submissionBody())
@@ -748,7 +754,7 @@
       if (!RUN.id) return;
       let snap;
       try {
-        snap = await fetch('/api/episodes/' + RUN.id, { cache: 'no-store' }).then(r => r.json());
+        snap = await fetch(API + '/episodes/' + RUN.id, { cache: 'no-store' }).then(r => r.json());
       } catch (e) { return; }
       const arm = (snap.arms && snap.arms.web_only) || {};
       const status = (arm.runtime && arm.runtime.status) || 'running';
