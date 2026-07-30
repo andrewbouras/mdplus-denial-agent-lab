@@ -1,0 +1,18 @@
+[Unit]
+Description=MDplus OrthoAppeals harness (patient app + retrieval API on :8781)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=clawd
+Group=clawd
+WorkingDirectory=/home/clawd/mdplus-denial-agent-lab
+ExecStart=/usr/bin/python3 -m synthetic_harness.server --port 8781 --host 0.0.0.0
+Restart=always
+RestartSec=3
+StandardOutput=append:/home/clawd/mdplus-denial-agent-lab/harness_server.log
+StandardError=append:/home/clawd/mdplus-denial-agent-lab/harness_server.log
+
+[Install]
+WantedBy=multi-user.target
