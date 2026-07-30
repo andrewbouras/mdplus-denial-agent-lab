@@ -74,6 +74,63 @@
   .pkt li { margin-bottom: 7px; }
   .pkt.warn { border-color: var(--amber); background: var(--amber-tint); }
 
+  /* the finished appeal plan */
+  .res { text-align: left; max-width: 640px; margin: 0 auto; }
+  .lead { background: var(--teal-tint); color: var(--teal-deep); border-radius: 14px; padding: 15px 18px; font-size: 17px; font-weight: 640; margin: 0 0 18px; }
+  .now { border: 2px solid var(--teal); border-radius: 16px; background: var(--card); padding: 20px; margin: 0 0 22px; box-shadow: var(--shadow-sm); }
+  .now .lbl { font-size: 13.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--teal-deep); }
+  .now h3 { font-size: 23px; margin: 7px 0 9px; }
+  .now p { font-size: 17.5px; line-height: 1.55; margin: 0; }
+  .sec { margin: 0 0 26px; }
+  .sec > h3 { font-size: 22px; margin: 0 0 5px; }
+  .sec > .note { font-size: 15.5px; color: var(--ink-soft); margin: 0 0 14px; }
+  .prog { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .prog .bar { flex: 1; height: 10px; border-radius: 999px; background: var(--paper-2); overflow: hidden; }
+  .prog .bar i { display: block; height: 100%; width: 0; background: var(--green); transition: width .25s; }
+  .prog .cnt { font-size: 14.5px; font-weight: 640; color: var(--ink-soft); white-space: nowrap; }
+  .task { border: 2px solid var(--line); border-radius: 14px; background: var(--card); margin-bottom: 11px; overflow: hidden; }
+  .task.done { border-color: var(--green); background: var(--green-tint); }
+  .thead { display: flex; align-items: stretch; }
+  .tick { flex: none; width: 58px; border: none; border-right: 2px solid var(--line); background: transparent; color: transparent; font-size: 25px; font-weight: 700; cursor: pointer; }
+  .task.done .tick { color: var(--green); border-right-color: var(--green); }
+  .tick:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+  .topen { flex: 1; text-align: left; background: none; border: none; font-family: var(--sans); color: var(--ink); padding: 14px 16px; min-height: 64px; cursor: pointer; }
+  .topen .ttitle { display: block; font-size: 17px; font-weight: 640; line-height: 1.35; }
+  .topen .tmeta { display: block; margin-top: 5px; font-size: 13.5px; font-weight: 640; color: var(--ink-soft); }
+  .task.done .ttitle { color: var(--ink-soft); text-decoration: line-through; }
+  .tdetail { padding: 0 16px 16px; border-top: 2px dashed var(--line); }
+  .tdetail p { font-size: 16.5px; line-height: 1.55; margin: 14px 0 0; }
+  .tdetail .need { margin-top: 14px; font-size: 15.5px; color: var(--ink-soft); }
+  .tdetail .need b { color: var(--ink); }
+  .tdetail ul { margin: 6px 0 0; padding-left: 20px; }
+  .qa { border: 2px solid var(--line); border-radius: 14px; background: var(--card); padding: 16px; margin-bottom: 11px; }
+  .qa label { display: block; font-size: 16.5px; font-weight: 640; line-height: 1.45; margin-bottom: 8px; }
+  .qa textarea.field { min-height: 78px; font-size: 17px; padding: 12px 14px; }
+  .why { background: none; border: none; padding: 2px 0 10px; color: var(--teal-deep); font-family: var(--sans); font-size: 15px; font-weight: 640; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .whytext { font-size: 15px; color: var(--ink-soft); margin: 0 0 10px; }
+  .acc { border: 2px solid var(--line); border-radius: 14px; background: var(--card); margin-bottom: 10px; }
+  .acc > summary { list-style: none; cursor: pointer; padding: 16px; font-size: 17px; font-weight: 640; min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .acc > summary::-webkit-details-marker { display: none; }
+  .acc > summary::after { content: "+"; font-size: 25px; color: var(--teal-deep); }
+  .acc[open] > summary::after { content: "\2212"; }
+  .acc .body { padding: 0 16px 16px; font-size: 16px; color: var(--ink-soft); line-height: 1.55; }
+  .acc .body p { margin: 0 0 12px; }
+  .acc .body ul, .acc .body ol { margin: 0 0 12px; padding-left: 20px; }
+  .acc .body li { margin-bottom: 8px; }
+  .acc .body h4 { font-family: var(--sans); font-size: 15px; font-weight: 700; color: var(--ink); margin: 16px 0 6px; }
+  .quote { border-left: 4px solid var(--line); padding-left: 12px; margin: 6px 0 0; font-style: italic; }
+  .caveat { border: 2px solid var(--amber); background: var(--amber-tint); border-radius: 14px; padding: 18px; margin: 0 0 22px; }
+  .caveat h3 { font-size: 19px; margin: 0 0 7px; }
+  .caveat p { font-size: 16px; line-height: 1.55; margin: 0; }
+  .rowbtns { display: grid; gap: 11px; margin-top: 14px; }
+  .btn-sm { font-size: 17px; padding: 15px 20px; min-height: 56px; width: 100%; }
+
+  @media print {
+    .brand .tag, .rail, .btn, .tick, .why, .prog { display: none !important; }
+    .acc .body, .tdetail, .whytext { display: block !important; }
+    .card, .task, .acc, .qa, .now, .caveat { break-inside: avoid; box-shadow: none; }
+  }
+
   @media (max-width: 760px) {
     .cols { grid-template-columns: 1fr; gap: 14px; }
     .rail { position: static; display: flex; overflow-x: auto; gap: 6px; padding: 12px; -webkit-overflow-scrolling: touch; }
@@ -845,28 +902,327 @@
       }
     }
 
+    // ---- the finished appeal plan ---------------------------------------
+    // The agent returns far more than one screen of text, and a patient holding
+    // a phone cannot act on a wall of prose. Nothing the agent said is dropped
+    // here. It is reordered around doing: one thing to start, a checklist she
+    // can tick and come back to, her own answers to type, and one list to hand
+    // the surgeon's office. The reasoning stays one tap away.
+
+    const URL_RE = /https?:\/\/[^\s<>"]+/g;
+    const MAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+    // Real separators are required, so a case or reference number can never be
+    // mistaken for a telephone number.
+    const TEL_RE = /\b1?[-.\s]?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/g;
+
+    // A number she can tap is the difference between calling today and never
+    // calling. Only ever linkify what the agent itself returned. A guessed
+    // payer number would send her to the wrong place, so we never add one.
+    function rich(raw) {
+      const text = esc(raw);
+      const inline = s => s
+        .replace(MAIL_RE, m => `<a href="mailto:${m}">${m}</a>`)
+        .replace(TEL_RE, m => `<a href="tel:${m.replace(/[^\d]/g, '')}">${m}</a>`);
+      let out = '', last = 0, m;
+      URL_RE.lastIndex = 0;
+      while ((m = URL_RE.exec(text))) {
+        out += inline(text.slice(last, m.index));
+        const u = m[0].replace(/[.,;:)]+$/, '');
+        out += `<a href="${u}" target="_blank" rel="noopener">${u}</a>` + m[0].slice(u.length);
+        last = m.index + m[0].length;
+      }
+      return out + inline(text.slice(last));
+    }
+    function richLi(items) {
+      return (items || []).filter(Boolean).map(t => '<li>' + rich(t) + '</li>').join('');
+    }
+
+    function firstLine(t, cap) {
+      const s = String(t == null ? '' : t).trim();
+      const m = s.match(/^[\s\S]*?[.!?](?=\s|$)/);
+      let out = (m ? m[0] : s).trim();
+      const max = cap || 78;
+      if (out.length > max) out = out.slice(0, max - 4).replace(/[\s,;:]+\S*$/, '') + '...';
+      return out;
+    }
+    function restLine(t) {
+      const s = String(t == null ? '' : t).trim();
+      const m = s.match(/^[\s\S]*?[.!?](?=\s|$)/);
+      return m ? s.slice(m[0].length).trim() : '';
+    }
+    function words(token) { return String(token || '').replace(/_/g, ' '); }
+
+    // An appeal takes weeks, so the plan has to survive her closing the page.
+    const PLAN = { id: '', done: [], ans: {} };
+    function planLoad(id) {
+      PLAN.id = id || 'anon'; PLAN.done = []; PLAN.ans = {};
+      try {
+        const v = JSON.parse(localStorage.getItem('oa.plan.' + PLAN.id) || '{}');
+        if (Array.isArray(v.done)) PLAN.done = v.done;
+        if (v.ans && typeof v.ans === 'object') PLAN.ans = v.ans;
+      } catch (e) { /* a locked down browser just means nothing is remembered */ }
+    }
+    function planSave() {
+      try {
+        localStorage.setItem('oa.plan.' + PLAN.id,
+          JSON.stringify({ done: PLAN.done, ans: PLAN.ans }));
+      } catch (e) { /* out of storage is not worth an error message */ }
+    }
+
+    function flash(btn, msg) {
+      const was = btn.textContent;
+      btn.textContent = msg;
+      setTimeout(() => { btn.textContent = was; }, 1900);
+    }
+    async function copyOut(text, btn) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); ta.remove();
+        }
+        flash(btn, '✓ Copied');
+      } catch (e) { flash(btn, 'Could not copy'); }
+    }
+
+    const ANSWER_HINT = {
+      text_or_document_upload: 'What the letter says, in your own words',
+      short_text: 'Your answer',
+      yes_no_with_date_and_place: 'Yes or no, then roughly when and where',
+      dates: 'Dates, as close as you can remember',
+      date_and_reference_number: 'The date on the letter, and any reference number'
+    };
+
+    function doctorNote(res) {
+      const pi = res.patient_interaction || {};
+      const ns = res.next_steps || {};
+      const src = (res.retrieval && res.retrieval.selected_source) || {};
+      const out = ['For the surgeon\'s office, about my denied ' + (A.surgery || 'surgery')
+        + (A.cpt ? ' (CPT ' + A.cpt + ')' : '') + ' with ' + (A.insurer || 'my insurer') + '.'];
+      if (src.title) { out.push('', 'The policy the plan uses: ' + src.title); }
+      if (src.url) out.push(src.url);
+      const forOffice = (ns.ordered_actions || []).filter(a => a && a.party === 'provider');
+      if (forOffice.length) {
+        out.push('', 'What the office would need to do:');
+        forOffice.forEach((a, n) => out.push((n + 1) + '. ' + (a.action || '')));
+      }
+      const recs = pi.provider_records_needed || [];
+      if (recs.length) {
+        out.push('', 'Records the appeal needs:');
+        recs.forEach(r => out.push('- ' + r));
+      }
+      out.push('', 'Prepared with OrthoAppeals. This is help with insurance paperwork, not medical advice.');
+      return out.join('\n');
+    }
+
+    function answerNote(qs) {
+      const out = ['My answers for the appeal of my ' + (A.surgery || 'surgery') + ':', ''];
+      qs.forEach((q, n) => {
+        out.push((n + 1) + '. ' + q.text);
+        out.push('   ' + ((PLAN.ans[q.question_id || ('q' + n)] || '').trim() || '(not answered yet)'));
+        out.push('');
+      });
+      return out.join('\n');
+    }
+
     function packetPanel(res) {
       const src = (res.retrieval && res.retrieval.selected_source) || {};
+      const cites = (res.retrieval && res.retrieval.citations) || [];
+      const cands = ((res.retrieval && res.retrieval.candidates) || []).filter(c => !c.selected);
       const pa = res.policy_analysis || {};
       const ns = res.next_steps || {};
-      const qs = ((res.patient_interaction || {}).questions) || [];
+      const pi = res.patient_interaction || {};
+      const ci = res.case_identification || {};
+      const conf = res.confidence || {};
+      const dl = ns.deadline || {};
+      const qs = pi.questions || [];
       const gaps = pa.documentation_gaps || [];
-      const acts = (ns.ordered_actions || []).map(a => a.action || a);
+      const blockers = res.blockers || [];
+      const acts = (ns.ordered_actions || []).map((a, n) => (typeof a === 'string'
+        ? { action: a, order: n + 1, party: '', records_needed: [] } : a));
+      const mine = acts.filter(a => a.party !== 'provider').length;
+      const theirs = acts.length - mine;
+      planLoad(res.episode_id);
+
+      const taskRow = (a, n) => {
+        const on = PLAN.done.indexOf(n) !== -1;
+        const who = a.party === 'provider' ? "Your surgeon's office" : 'You';
+        const recs = a.records_needed || [];
+        return `
+          <div class="task${on ? ' done' : ''}" data-task="${n}">
+            <div class="thead">
+              <button class="tick" data-tick="${n}" aria-pressed="${on}" aria-label="Mark step ${n + 1} done">✓</button>
+              <button class="topen" data-open="${n}" aria-expanded="false" aria-controls="td-${n}">
+                <span class="ttitle">${esc(firstLine(a.action))}</span>
+                <span class="tmeta">Step ${n + 1} of ${acts.length} · ${esc(who)} · tap to read it all</span>
+              </button>
+            </div>
+            <div class="tdetail" id="td-${n}" hidden>
+              <p>${rich(a.action)}</p>
+              ${recs.length ? `<div class="need"><b>Have this ready:</b><ul>${richLi(recs)}</ul></div>` : ''}
+            </div>
+          </div>`;
+      };
+
+      const qRow = (q, n) => {
+        const id = q.question_id || ('q' + n);
+        return `
+          <div class="qa">
+            <label for="ans-${esc(id)}">${n + 1}. ${rich(q.text)}</label>
+            ${q.rationale ? `<button class="why" data-why="${esc(id)}">Why we ask</button>
+              <p class="whytext" id="why-${esc(id)}" hidden>${rich(q.rationale)}</p>` : ''}
+            <textarea class="field" id="ans-${esc(id)}" data-ans="${esc(id)}" rows="2"
+              placeholder="${esc(ANSWER_HINT[q.answer_type] || 'Your answer')}"></textarea>
+          </div>`;
+      };
+
+      // The headline is the agent's own first sentence and the paragraph is the
+      // remainder, so the card never says the same thing twice. A very long
+      // first sentence falls back to plain body text rather than a cut headline.
+      const startHead = firstLine(ns.primary_action, 999);
+      const startBody = startHead.length <= 130 ? restLine(ns.primary_action) : ns.primary_action;
+
+      const deadline = dl.value
+        ? `<div class="caveat"><h3>Your deadline</h3><p>${rich(dl.value)}${dl.source ? ' Source: ' + esc(dl.source) + '.' : ''}${dl.verification_needed ? ' Please confirm this date on your own letter before you rely on it.' : ''}</p></div>`
+        : `<div class="caveat"><h3>Find your deadline first</h3><p>Every plan sets its own time limit to appeal, and we could not confirm yours. When you get the denial letter, look for the date you must appeal by, and write it on your calendar. Ask for that date when you call the number on your card.</p></div>`;
+
       panel(`
         <div class="eyebrow">Your appeal plan</div>
-        <h2>Here is the rule ${esc(A.insurer || 'your plan')} used</h2>
-        ${src.title ? `<div class="band">${esc(src.title)}</div>` : ''}
-        ${src.url ? `<p class="help"><a href="${esc(src.url)}" target="_blank" rel="noopener">Read the policy yourself</a>${src.effective_date ? '. Applies to: ' + esc(src.effective_date) : ''}</p>` : ''}
-        ${pa.apparent_reason ? `<div class="pkt"><h3>Why they said no</h3><p>${esc(pa.apparent_reason)}</p></div>` : ''}
-        ${gaps.length ? `<div class="pkt"><h3>What your doctor still needs to show</h3><ul>${li(gaps)}</ul></div>` : ''}
-        ${ns.primary_action ? `<div class="pkt"><h3>The most useful next step</h3><p>${esc(ns.primary_action)}</p></div>` : ''}
-        ${acts.length ? `<div class="pkt"><h3>In order</h3><ol>${li(acts)}</ol></div>` : ''}
-        ${qs.length ? `<div class="pkt"><h3>We still need to ask you</h3><ul>${li(qs.map(q => q.text))}</ul></div>` : ''}
-        ${ns.safety_caveat ? `<div class="pkt warn"><h3>Please read this before you act</h3><p>${esc(ns.safety_caveat)}</p></div>` : ''}
-        <div class="answers" style="margin-top:22px">
-          <button class="btn btn-ghost btn-lg" id="restart2">Start over</button>
+        <h2>You can appeal this. Here is how.</h2>
+        <div class="res">
+          ${acts.length ? `<div class="lead">${acts.length} steps in all. ${mine} ${mine === 1 ? 'is' : 'are'} yours to do. ${theirs} ${theirs === 1 ? 'is' : 'are'} for your surgeon's office.</div>` : ''}
+          ${ns.primary_action ? `
+            <div class="now">
+              <div class="lbl">Start here</div>
+              ${startHead.length <= 130 ? `<h3>${rich(startHead)}</h3>` : ''}
+              ${startBody ? `<p>${rich(startBody)}</p>` : ''}
+            </div>` : ''}
+          ${deadline}
+          ${gaps.length ? `
+            <div class="sec">
+              <h3>The most likely problem</h3>
+              <p class="note">This is our best read of your file. The full list is further down.</p>
+              <div class="pkt"><p>${rich(gaps[0])}</p></div>
+            </div>` : ''}
+          ${acts.length ? `
+            <div class="sec">
+              <h3>Your checklist</h3>
+              <p class="note">Tap a step to read it in full. Tap the box on the left when it is done. This page remembers your ticks, so you can come back to it.</p>
+              <div class="prog"><div class="bar"><i id="pbar"></i></div><span class="cnt" id="pcnt"></span></div>
+              ${acts.map(taskRow).join('')}
+            </div>` : ''}
+          ${qs.length ? `
+            <div class="sec">
+              <h3>${qs.length} things only you can answer</h3>
+              <p class="note">Write what you know and skip the rest. Your words stay on this ${IS_PHONE ? 'phone' : 'computer'}. Tap Copy when you want to paste them into an email or read them out on the phone.</p>
+              ${qs.map(qRow).join('')}
+              ${pi.question_stop_reason ? `<details class="acc"><summary>Why only these ${qs.length}?</summary><div class="body"><p>${rich(pi.question_stop_reason)}</p></div></details>` : ''}
+              <div class="rowbtns"><button class="btn btn-ghost btn-sm" id="q-copy">Copy my answers</button></div>
+            </div>` : ''}
+          ${(pi.provider_records_needed || []).length || theirs ? `
+            <div class="sec">
+              <h3>Send this to your surgeon's office</h3>
+              <p class="note">Your doctor's office does the medical part of the appeal. This is the exact list they need. Copy it into an email or a text message.</p>
+              ${(pi.provider_records_needed || []).length ? `
+                <details class="acc"><summary>The records they need (${pi.provider_records_needed.length})</summary>
+                  <div class="body"><ul>${richLi(pi.provider_records_needed)}</ul></div></details>` : ''}
+              <div class="rowbtns">
+                <button class="btn btn-primary btn-sm" id="doc-copy">Copy the list for my doctor</button>
+                ${navigator.share ? '<button class="btn btn-ghost btn-sm" id="doc-share">Share it</button>' : ''}
+              </div>
+            </div>` : ''}
+          <div class="sec">
+            <h3>If you want to know more</h3>
+            <p class="note">Everything we found, in plain sight. Open only what you want.</p>
+            ${pa.apparent_reason ? `
+              <details class="acc"><summary>Why they said no</summary>
+                <div class="body">
+                  <p>${rich(pa.apparent_reason)}</p>
+                  ${(pa.unmet_criteria || []).length ? `<h4>The rule points they say were not met</h4><ul>${richLi(pa.unmet_criteria)}</ul>` : ''}
+                  ${pa.denial_category ? `<h4>How we filed this case</h4><p>${esc(words(pa.denial_category))}</p>` : ''}
+                </div></details>` : ''}
+            ${(pa.criteria_at_issue || []).length ? `
+              <details class="acc"><summary>What the rule asks for (${pa.criteria_at_issue.length})</summary>
+                <div class="body"><ul>${richLi(pa.criteria_at_issue)}</ul></div></details>` : ''}
+            ${gaps.length ? `
+              <details class="acc"><summary>Everything missing from your file (${gaps.length})</summary>
+                <div class="body"><ul>${richLi(gaps)}</ul></div></details>` : ''}
+            ${src.title || cites.length ? `
+              <details class="acc"><summary>The exact rule we found</summary>
+                <div class="body">
+                  ${src.title ? `<p><b>${esc(src.title)}</b></p>` : ''}
+                  ${src.effective_date ? `<p>In force from ${esc(src.effective_date)}.</p>` : ''}
+                  ${src.url ? `<p><a href="${esc(src.url)}" target="_blank" rel="noopener">Read the policy yourself</a></p>` : ''}
+                  ${cites.length ? `<h4>How we know this is the right rule (${cites.length})</h4>${cites.map(c => `
+                    <p>${rich(c.claim || '')}${c.excerpt ? `<span class="quote">${rich(c.excerpt)}</span>` : ''}${c.reference ? `<br>${rich(c.reference)}` : ''}</p>`).join('')}` : ''}
+                  ${cands.length ? `<h4>Other sources we checked (${cands.length})</h4><ul>${cands.map(c => `
+                    <li>${rich(c.title || c.url || '')}${c.decision_summary ? '<br>' + rich(c.decision_summary) : ''}${c.url ? '<br>' + rich(c.url) : ''}</li>`).join('')}</ul>` : ''}
+                </div></details>` : ''}
+            ${blockers.length || (pa.uncertainty || []).length || conf.overall ? `
+              <details class="acc"><summary>What we could not confirm</summary>
+                <div class="body">
+                  ${conf.overall ? `<p>Our confidence overall: <b>${esc(words(conf.overall))}</b>.</p>` : ''}
+                  ${conf.rationale ? `<p>${rich(conf.rationale)}</p>` : ''}
+                  ${blockers.length ? `<h4>What stopped us (${blockers.length})</h4>${blockers.map(b => `
+                    <p>${rich(b.description || '')}${b.resolution ? `<br><b>How to settle it:</b> ${rich(b.resolution)}` : ''}</p>`).join('')}` : ''}
+                  ${(pa.uncertainty || []).length ? `<h4>Still uncertain</h4><ul>${richLi(pa.uncertainty)}</ul>` : ''}
+                  ${(ci.unresolved_fields || []).length ? `<h4>Details we do not have yet</h4><ul>${richLi(ci.unresolved_fields)}</ul>` : ''}
+                </div></details>` : ''}
+          </div>
+          ${ns.safety_caveat ? `<div class="caveat"><h3>Please read this before you act</h3><p>${rich(ns.safety_caveat)}</p></div>` : ''}
+          <div class="rowbtns">
+            <button class="btn btn-ghost btn-sm" id="plan-print">Print this plan or save it as a PDF</button>
+            <button class="btn btn-ghost btn-sm" id="restart2">Start over</button>
+          </div>
         </div>`);
-      document.getElementById('restart2').onclick = resetAll;
+
+      const el = id => document.getElementById(id);
+      const refreshProgress = () => {
+        const bar = el('pbar'), cnt = el('pcnt');
+        if (bar) bar.style.width = (acts.length ? Math.round(100 * PLAN.done.length / acts.length) : 0) + '%';
+        if (cnt) cnt.textContent = PLAN.done.length + ' of ' + acts.length + ' done';
+      };
+      document.querySelectorAll('[data-tick]').forEach(b => b.onclick = () => {
+        const n = Number(b.dataset.tick);
+        const at = PLAN.done.indexOf(n);
+        if (at === -1) PLAN.done.push(n); else PLAN.done.splice(at, 1);
+        planSave();
+        const on = PLAN.done.indexOf(n) !== -1;
+        document.querySelector('[data-task="' + n + '"]').classList.toggle('done', on);
+        b.setAttribute('aria-pressed', String(on));
+        refreshProgress();
+      });
+      document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => {
+        const d = el('td-' + b.dataset.open);
+        const opening = d.hasAttribute('hidden');
+        if (opening) d.removeAttribute('hidden'); else d.setAttribute('hidden', '');
+        b.setAttribute('aria-expanded', String(opening));
+      });
+      document.querySelectorAll('[data-why]').forEach(b => b.onclick = () => {
+        const p = el('why-' + b.dataset.why);
+        const opening = p.hasAttribute('hidden');
+        if (opening) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
+        b.textContent = opening ? 'Hide why we ask' : 'Why we ask';
+      });
+      document.querySelectorAll('[data-ans]').forEach(t => {
+        t.value = PLAN.ans[t.dataset.ans] || '';
+        t.oninput = () => { PLAN.ans[t.dataset.ans] = t.value; planSave(); };
+      });
+      if (el('q-copy')) el('q-copy').onclick = e => copyOut(answerNote(qs), e.currentTarget);
+      if (el('doc-copy')) el('doc-copy').onclick = e => copyOut(doctorNote(res), e.currentTarget);
+      if (el('doc-share')) el('doc-share').onclick = () => {
+        navigator.share({ title: 'Records my appeal needs', text: doctorNote(res) }).catch(() => {});
+      };
+      el('plan-print').onclick = () => {
+        document.querySelectorAll('.acc').forEach(d => { d.open = true; });
+        document.querySelectorAll('.tdetail, .whytext').forEach(d => d.removeAttribute('hidden'));
+        window.print();
+      };
+      el('restart2').onclick = resetAll;
+      refreshProgress();
     }
 
     function resetAll() {
