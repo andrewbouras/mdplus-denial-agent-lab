@@ -34,6 +34,7 @@ from .evaluation import (
     validate_verdict,
 )
 from .integrity import read_jsonl, utc_now, write_json_atomic
+from .letter_reader import decode_attachments, save_uploads, transcribe
 from .metrics import build_metrics
 from .results import ingest_arm_result
 from .run_log import build_record, log_run_async
@@ -75,8 +76,13 @@ def server_build_id() -> str:
 SERVER_BUILD_ID = server_build_id()
 
 
+MAX_REQUEST_BYTES = 64 * 1024 * 1024
+
+
 def json_body(handler: "Handler") -> dict[str, Any]:
     length = int(handler.headers.get("Content-Length", "0"))
+    if length > MAX_REQUEST_BYTES:
+        raise ValueError("request body is too large")
     raw = handler.rfile.read(length) if length else b"{}"
     value = json.loads(raw.decode("utf-8"))
     if not isinstance(value, dict):
@@ -114,6 +120,29 @@ def submission_text(data: dict[str, Any]) -> str:
     return "Synthetic patient submission:\n" + json.dumps(
         visible, ensure_ascii=False, indent=2
     )
+
+
+def merge_letter_text(pasted: str, reading: dict[str, Any]) -> str:
+    """Combine what the patient typed with what we read off their photo."""
+    pasted = (pasted or "").strip()
+    read = (reading.get("text") or "").strip()
+    if not read:
+        if pasted:
+            return pasted
+        reason = reading.get("reason") or reading.get("outcome") or "it could not be read"
+        raise ValueError(
+            "We could not read the picture of the letter. "
+            "Please take a clearer photo in good light, or type what the letter says. "
+            f"({reason})"
+        )
+    pages = reading.get("pages", 1)
+    header = (
+        f"Text read from the {pages} page(s) of the denial letter the patient "
+        "photographed. Treat this as the letter itself:"
+    )
+    if pasted:
+        return pasted + "\n\n" + header + "\n" + read
+    return header + "\n" + read
 
 
 def create_direct_episode(data: dict[str, Any]) -> Episode:
@@ -693,7 +722,37 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             if self.path == "/api/episodes":
                 data = json_body(self)
+                # A photo of the letter cannot reach the retrieval agent, which
+                # has no file access and no vision. Read it here first and pass
+                # the words along instead of the picture.
+                uploads = decode_attachments(data.pop("attachments", None))
+                reading = None
+                if uploads:
+                    reading = transcribe(uploads)
+                    data["denial_letter"] = merge_letter_text(
+                        data.get("denial_letter", ""), reading
+                    )
                 episode = create_direct_episode(data)
+                if uploads:
+                    folder = episode.root / "patient_uploads"
+                    save_uploads(uploads, folder)
+                    write_json_atomic(folder / "read_receipt.json", reading)
+                    episode.log_event(
+                        role="orchestrator",
+                        arm="shared",
+                        event_type="denial_letter_photo_read",
+                        status="succeeded",
+                        summary=(
+                            f"Read {reading.get('pages', 0)} uploaded page(s) of the "
+                            "denial letter into text."
+                        ),
+                        details={
+                            "pages": reading.get("pages"),
+                            "characters": reading.get("characters"),
+                            "elapsed_s": reading.get("elapsed_s"),
+                            "cost_usd": reading.get("cost_usd"),
+                        },
+                    )
                 requested = data.get("retrieval_mode", "both")
                 arms = (
                     ["library_only", "web_only"]

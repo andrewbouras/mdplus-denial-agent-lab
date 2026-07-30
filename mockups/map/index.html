@@ -643,19 +643,79 @@
       return lines.join('\n');
     }
 
-    // The API needs denial-letter text. A photo cannot be sent through this
-    // endpoint, so say plainly that the text is missing instead of inventing it.
-    function submissionBody() {
-      const names = (A.letterFiles || []).map(f => f.name).join(', ');
+    const MAX_PAGES = 8;
+    const MAX_EDGE = 1600; // the reader downsamples past this anyway
+
+    function fileToBase64(file) {
+      return new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(String(fr.result).split(',')[1] || '');
+        fr.onerror = () => rej(new Error('We could not open ' + file.name + '.'));
+        fr.readAsDataURL(file);
+      });
+    }
+
+    async function loadBitmap(file) {
+      // createImageBitmap applies the phone's rotation tag, so a sideways photo
+      // arrives upright. Older browsers fall back to a plain image element.
+      if (window.createImageBitmap) {
+        try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+        catch (e) { /* fall through */ }
+      }
+      const url = URL.createObjectURL(file);
+      try {
+        return await new Promise((res, rej) => {
+          const im = new Image();
+          im.onload = () => res(im);
+          im.onerror = () => rej(new Error('We could not open ' + file.name + '.'));
+          im.src = url;
+        });
+      } finally { setTimeout(() => URL.revokeObjectURL(url), 5000); }
+    }
+
+    // A phone photo is several megabytes and far larger than the reader can use.
+    // Shrinking it here keeps the upload quick on a mobile connection without
+    // losing any detail the reader would have seen.
+    async function shrinkImage(file) {
+      const bmp = await loadBitmap(file);
+      const w0 = bmp.width || bmp.naturalWidth, h0 = bmp.height || bmp.naturalHeight;
+      if (!w0 || !h0) throw new Error('We could not open ' + file.name + '.');
+      const scale = Math.min(1, MAX_EDGE / Math.max(w0, h0));
+      const w = Math.max(1, Math.round(w0 * scale)), h = Math.max(1, Math.round(h0 * scale));
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(bmp, 0, 0, w, h);
+      if (bmp.close) bmp.close();
+      return { name: file.name, mime: 'image/jpeg', data: c.toDataURL('image/jpeg', 0.85).split(',')[1] };
+    }
+
+    async function letterAttachments() {
+      const files = (A.letterFiles || []).slice(0, MAX_PAGES);
+      const out = [];
+      for (const f of files) {
+        if ((f.type || '').startsWith('image/')) out.push(await shrinkImage(f));
+        else if (f.type === 'application/pdf') {
+          if (f.size > 12 * 1024 * 1024) throw new Error(f.name + ' is too large to send. Please attach a smaller file.');
+          out.push({ name: f.name, mime: 'application/pdf', data: await fileToBase64(f) });
+        }
+      }
+      return out;
+    }
+
+    // The server reads any attached photo into text before the search starts, so
+    // send the picture itself. Only describe the gap when there is no letter.
+    async function submissionBody() {
+      const attachments = await letterAttachments();
       const pasted = (A.letter || '').trim();
-      const denial = pasted || [
+      const denial = pasted || (attachments.length ? '' : [
         'The patient did not paste the text of the denial letter.',
-        names ? 'They attached these files: ' + names + '.' : 'They could not find the letter.',
+        'They could not find the letter.',
         (A.insurer || 'Their insurer') + ' denied ' + (A.surgery || 'the surgery')
           + (A.cpt ? ' (CPT ' + A.cpt + ')' : '') + '.'
-      ].join(' ');
+      ].join(' '));
       return {
         denial_letter: denial,
+        attachments: attachments,
         payer: A.insurer || '',
         plan_name: '',
         state: A.state || '',
@@ -733,10 +793,16 @@
       runPanel('Sending your answers.');
       let snap;
       try {
+        const body = await submissionBody();
+        if (body.attachments.length) {
+          setRunLine(body.attachments.length > 1
+            ? 'Reading the ' + body.attachments.length + ' pages you sent.'
+            : 'Reading the letter you sent.');
+        }
         const r = await fetch(API + '/episodes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(submissionBody())
+          body: JSON.stringify(body)
         });
         snap = await r.json();
         if (!r.ok) throw new Error(snap.error || 'The server refused the request.');

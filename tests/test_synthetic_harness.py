@@ -478,5 +478,73 @@ I am not sure when physical therapy started.
             self.assertEqual(restored["payer"], "Example")
 
 
+class LetterAttachmentTests(unittest.TestCase):
+    """A patient can upload a photo, so the upload path is an attack surface."""
+
+    def test_client_filename_never_becomes_a_path(self) -> None:
+        from synthetic_harness.letter_reader import decode_attachments
+
+        files = decode_attachments(
+            [
+                {
+                    "name": "../../etc/passwd",
+                    "mime": "image/jpeg",
+                    "data": base64.b64encode(b"jpegbytes").decode(),
+                }
+            ]
+        )
+        self.assertEqual(files[0]["safe_name"], "page_1.jpg")
+        self.assertEqual(files[0]["original_name"], "../../etc/passwd")
+
+    def test_rejects_unsupported_type_and_bad_data(self) -> None:
+        from synthetic_harness.letter_reader import (
+            AttachmentError,
+            decode_attachments,
+        )
+
+        with self.assertRaises(AttachmentError):
+            decode_attachments([{"mime": "text/html", "data": "AAAA"}])
+        with self.assertRaises(AttachmentError):
+            decode_attachments([{"mime": "image/png", "data": "not base64!!"}])
+        with self.assertRaises(AttachmentError):
+            decode_attachments([{"mime": "image/png", "data": ""}])
+
+    def test_rejects_too_many_files(self) -> None:
+        from synthetic_harness.letter_reader import (
+            MAX_FILES,
+            AttachmentError,
+            decode_attachments,
+        )
+
+        one = {"mime": "image/png", "data": base64.b64encode(b"x").decode()}
+        with self.assertRaises(AttachmentError):
+            decode_attachments([one] * (MAX_FILES + 1))
+
+    def test_data_url_prefix_is_tolerated(self) -> None:
+        from synthetic_harness.letter_reader import decode_attachments
+
+        payload = base64.b64encode(b"jpegbytes").decode()
+        files = decode_attachments(
+            [{"mime": "image/jpeg", "data": "data:image/jpeg;base64," + payload}]
+        )
+        self.assertEqual(files[0]["bytes"], b"jpegbytes")
+
+    def test_unreadable_photo_with_no_typed_text_is_refused(self) -> None:
+        from synthetic_harness.server import merge_letter_text
+
+        with self.assertRaises(ValueError):
+            merge_letter_text("", {"outcome": "unreadable", "text": ""})
+        self.assertEqual(
+            merge_letter_text("typed text", {"outcome": "unreadable", "text": ""}),
+            "typed text",
+        )
+
+    def test_transcription_becomes_the_letter(self) -> None:
+        from synthetic_harness.server import merge_letter_text
+
+        merged = merge_letter_text("", {"text": "CPT 29827 DENIED", "pages": 1})
+        self.assertIn("CPT 29827 DENIED", merged)
+
+
 if __name__ == "__main__":
     unittest.main()
